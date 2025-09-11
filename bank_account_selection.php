@@ -34,6 +34,7 @@ if (!isset($showAmountInput)) {
     }
 </style>
 
+
 <!-- ======= Bank Transfer Section ======= -->
 <section id="bank-transfer" class=" m-0 p-0">
     <div class="" style="width:100%;">
