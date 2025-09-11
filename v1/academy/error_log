@@ -1,0 +1,8 @@
+[14-May-2023 09:57:41 UTC] PHP Warning:  include(connect_to_mysqli.php): failed to open stream: No such file or directory in /home/oshofree/public_html/chbluxuryempire.com/academy/header.php on line 3
+[14-May-2023 09:57:41 UTC] PHP Warning:  include(): Failed opening 'connect_to_mysqli.php' for inclusion (include_path='.:/opt/cpanel/ea-php74/root/usr/share/pear') in /home/oshofree/public_html/chbluxuryempire.com/academy/header.php on line 3
+[14-May-2023 09:57:41 UTC] PHP Warning:  mysqli_query() expects parameter 1 to be mysqli, null given in /home/oshofree/public_html/chbluxuryempire.com/academy/academy.php on line 22
+[14-May-2023 09:57:41 UTC] PHP Warning:  mysqli_fetch_array() expects parameter 1 to be mysqli_result, null given in /home/oshofree/public_html/chbluxuryempire.com/academy/academy.php on line 23
+[14-May-2023 12:33:05 UTC] PHP Warning:  mysqli_query() expects parameter 1 to be mysqli, null given in /home/oshofree/public_html/chbluxuryempire.com/academy/check_out.php on line 9
+[14-May-2023 12:33:05 UTC] PHP Warning:  mysqli_fetch_array() expects parameter 1 to be mysqli_result, null given in /home/oshofree/public_html/chbluxuryempire.com/academy/check_out.php on line 10
+[14-May-2023 12:33:05 UTC] PHP Warning:  mysqli_query() expects parameter 1 to be mysqli, null given in /home/oshofree/public_html/chbluxuryempire.com/academy/check_out.php on line 18
+[14-May-2023 12:33:05 UTC] PHP Warning:  mysqli_error() expects parameter 1 to be mysqli, null given in /home/oshofree/public_html/chbluxuryempire.com/academy/check_out.php on line 18

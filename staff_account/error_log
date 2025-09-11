@@ -1,0 +1,7 @@
+[21-Aug-2023 22:20:35 UTC] PHP Warning:  include(addcategory.php): failed to open stream: No such file or directory in /home/oshofree/public_html/chbluxuryempirenew/staff_account/dashboard.php on line 38
+[21-Aug-2023 22:20:35 UTC] PHP Warning:  include(): Failed opening 'addcategory.php' for inclusion (include_path='.:/opt/cpanel/ea-php74/root/usr/share/pear') in /home/oshofree/public_html/chbluxuryempirenew/staff_account/dashboard.php on line 38
+[21-Aug-2023 22:20:57 UTC] PHP Warning:  include(addcategory.php): failed to open stream: No such file or directory in /home/oshofree/public_html/chbluxuryempirenew/staff_account/dashboard.php on line 38
+[21-Aug-2023 22:20:57 UTC] PHP Warning:  include(): Failed opening 'addcategory.php' for inclusion (include_path='.:/opt/cpanel/ea-php74/root/usr/share/pear') in /home/oshofree/public_html/chbluxuryempirenew/staff_account/dashboard.php on line 38
+[21-Aug-2023 23:23:53 Africa/Lagos] PHP Warning:  include(addcategory.php): failed to open stream: No such file or directory in /home/oshofree/public_html/chbluxuryempirenew/staff_account/dashboard.php on line 38
+[21-Aug-2023 23:23:53 Africa/Lagos] PHP Warning:  include(): Failed opening 'addcategory.php' for inclusion (include_path='.:/opt/cpanel/ea-php74/root/usr/share/pear') in /home/oshofree/public_html/chbluxuryempirenew/staff_account/dashboard.php on line 38
+[21-Aug-2023 22:36:36 UTC] PHP Parse error:  syntax error, unexpected '$row' (T_VARIABLE) in /home/oshofree/public_html/chbluxuryempirenew/staff_account/dashboard.php on line 51
