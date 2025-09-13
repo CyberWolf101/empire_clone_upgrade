@@ -1,9 +1,11 @@
 <?php ob_start(); session_save_path("/tmp"); session_start(); include "connect.php";
 
-// <?php
-// ob_start();
-// session_start();
-// include "connect.php";
+// Set PHP timezone
+date_default_timezone_set('Africa/Lagos');
+
+// Set MySQL session timezone
+mysqli_query($con, "SET time_zone = '+01:00'") or die("Cannot set timezone: " . mysqli_error($con));
+
 
 
 // Turn on error reporting
@@ -86,7 +88,7 @@ if (isset($_COOKIE['foodID'])) {
     die("Step 6 FAILED: Could not fetch saloon order → " . mysqli_error($con));
   }
   $row = mysqli_fetch_array($sql2);
-  $$type = isset($row["bookingtype"]) && $row["bookingtype"] !== '' 
+  $type = isset($row["bookingtype"]) && $row["bookingtype"] !== '' 
           ? (int)$row["bookingtype"] 
           : 0;
 $kit      = $row["saloonkit"] ?? null;

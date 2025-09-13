@@ -76,7 +76,7 @@ if (!isset($showAmountInput)) {
                                                     You have already paid ₦<?php echo number_format($totalPaid); ?>.
                                                     Your remaining balance is ₦<?php echo number_format($balance); ?>.
                                                 <?php else: ?>
-                                                    You must pay at least 25% (₦<?php echo number_format($minRequired); ?>)
+                                                    You must pay at least 70% (₦<?php echo number_format($minRequired); ?>)
                                                     of the total (₦<?php echo number_format($expectedAmount); ?>).
                                                 <?php endif; ?>
                                             </small>

@@ -1,11 +1,3 @@
-<!-- Floating Cart Button -->
-<!-- <button onclick="openCartModal()" id="cartFloatingBtn" class="btn-buya"
-  style="position:fixed; bottom:20px; right:20px; border-radius:50%; width:60px; height:60px; font-size:20px; z-index:999;">
-  🛒
-</button> -->
-
-
-<!-- Floating Cart Button -->
 <?php
 // Calculate total cart item count
 $cartItemCount = 0;

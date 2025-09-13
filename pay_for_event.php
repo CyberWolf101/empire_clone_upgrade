@@ -37,7 +37,7 @@ $balance = $expectedAmount - $totalPaid;
 // echo $balance;
 
 // Min required: 25% only if nothing paid yet
-$minRequired = ($totalPaid > 0) ? 1 : ceil($expectedAmount * 0.25);
+$minRequired = ($totalPaid > 0) ? 1 : ceil($expectedAmount * 0.7);
 // Fetch cart items
 $items_sql = "SELECT * FROM event_order_items WHERE orderid='" . $order['id'] . "'";
 $items_result = mysqli_query($con, $items_sql);
@@ -47,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
     $errors = []; // <--- ADD THIS
 
     $expectedAmount = ($order['edited_price'] > 0) ? $order['edited_price'] : $order['total_amount'];
-    $minAmount = ceil($expectedAmount * 0.25);
+    $minAmount = ceil($expectedAmount * 0.7);
     $enteredAmount = isset($_POST['amount_to_pay']) ? (float) $_POST['amount_to_pay'] : 0;
 
 
@@ -115,13 +115,23 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
 
 ?>
 
+<?php
+$discountPercent = 0;
+if ($expectedAmount > 0) {
+    $discountPercent = (( $order['total_amount']- $expectedAmount) / $order['total_amount']) * 100;
+}
+?>
 <div class="container mt-4 text-white">
     <h5>Event Order #<?php echo htmlspecialchars($order['order_ref']); ?></h5>
     <div class='grid2 mt-4'>
         <p><strong>Name:</strong> <?php echo htmlspecialchars($order['customer_name']); ?></p>
         <p><strong>Email:</strong> <?php echo htmlspecialchars($order['email']); ?></p>
         <p><strong>Phone:</strong> <?php echo htmlspecialchars($order['phone_number']); ?></p>
-        <p><strong>Total:</strong> ₦<?php echo number_format($expectedAmount); ?></p>
+        <p><strong>Actual price:</strong> ₦<?php echo number_format($order['total_amount']); ?></p>
+        <p><strong>Discounted price:</strong> ₦<?php echo number_format($expectedAmount); ?></p>
+        <?php if ($discountPercent > 0): ?>
+            <p><strong>Discount %:</strong> <?php echo number_format($discountPercent); ?>%</p>
+        <?php endif; ?>
         <p><strong>Amount Paid:</strong> ₦<?php echo number_format($totalPaid); ?></p>
         <p><strong>Due Amount:</strong> ₦<?php echo number_format($balance); ?></p>
 
@@ -168,7 +178,7 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
     <?php
     // Expected amount: edited_price takes priority
     $expectedAmount = ($order['edited_price'] > 0) ? $order['edited_price'] : $order['total_amount'];
-    $minAmount = ceil($expectedAmount * 0.25); // round up
+    $minAmount = ceil($expectedAmount * 0.70); // round up
     ?>
 
 

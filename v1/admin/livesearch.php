@@ -26,7 +26,7 @@ $q=$_GET["q"];
 				else
 				{
 				    
-			$show='<p style="color: #FFC700;">Out Of Stock</p>';
+			$show='<p style="color: #FFC700;">Out Of Stock.</p>';
 				}
 
 echo'<form action="" method="post">

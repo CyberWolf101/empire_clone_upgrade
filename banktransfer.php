@@ -2,11 +2,7 @@
 include "header.php";
 include 'process.form.php';
 
-// $amount = floatval($_POST['amount'] ?? 0);
-// $c_email = mysqli_real_escape_string($con, $_POST['customer']['email'] ?? '');
-// $c_phone = mysqli_real_escape_string($con, $_POST['customer']['phone_number'] ?? '');
-// $username = mysqli_real_escape_string($con, $_POST['customer']['name'] ?? '');
-// var_dump($_SESSION);
+
 $amount = floatval($_SESSION['cart_total'] ?? 0);
 $c_email = mysqli_real_escape_string($con, $_SESSION['email'] ?? '');
 $c_phone = mysqli_real_escape_string($con, $_SESSION['phone'] ?? '');

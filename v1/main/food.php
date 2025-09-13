@@ -176,7 +176,7 @@ $sql = "SELECT all* from food WHERE type='food' ORDER By name DESC LIMIT 100";
 				else
 				{
 				    
-			$show='<p style="color: #FFC700;">Out Of Stock</p>';
+			$show='<p style="color: #FFC700;">Out Of Stock.</p>';
 				}
 
 echo'<form action="" method="post">
@@ -326,7 +326,7 @@ $sql = "SELECT all* from food WHERE type='Alcohol'  ORDER By name DESC LIMIT 100
 				else
 				{
 				    
-			$show='<p style="color: #FFC700;">Out Of Stock</p>';
+			$show='<p style="color: #FFC700;">Out Of Stock.</p>';
 				}
 
 echo'<form action="" method="post">
@@ -392,7 +392,7 @@ $sql = "SELECT all* from food WHERE type='Non-Alcohol' ORDER By name DESC LIMIT 
 				else
 				{
 				    
-			$show='<p style="color: #FFC700;">Out Of Stock</p>';
+			$show='<p style="color: #FFC700;">Out Of Stock.</p>';
 				}
 
 echo'<form action="" method="post">

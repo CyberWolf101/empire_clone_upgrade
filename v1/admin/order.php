@@ -305,7 +305,7 @@ $sql = "SELECT all* from food ORDER By name ASC LIMIT 1000";
 				else
 				{
 				    
-			$show='<p style="color: #FFC700;">Out Of Stock</p>';
+			$show='<p style="color: #FFC700;">Out Of Stock.</p>';
 				}
 
 echo'<form action="" method="post">
@@ -339,7 +339,7 @@ echo'<form action="" method="post">
 				else
 				{
 				    
-			$show='<p style="color: #FFC700;">Out Of Stock</p>';
+			$show='<p style="color: #FFC700;">Out Of Stock.</p>';
 				}
 
 echo'<form action="" method="post">

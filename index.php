@@ -1,4 +1,24 @@
-<?php include "header.php"; ?>
+<?php include "header.php"; 
+
+// Helper function to check if a menu link is enabled
+function isMenuLinkEnabled($con, $name) {
+    $sql = "SELECT isEnabled FROM menu_links WHERE name = ? AND parent_id IS NULL";
+    $stmt = mysqli_prepare($con, $sql);
+    mysqli_stmt_bind_param($stmt, "s", $name);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $row = mysqli_fetch_array($result);
+    mysqli_free_result($result);
+    mysqli_stmt_close($stmt);
+    return $row['isEnabled'] ?? 0;
+}
+
+
+// Display error or success messages
+if (isset($_GET['error'])) {
+    echo "<script>alert('" . addslashes($_GET['error']) . "');</script>";
+}
+?>
 <main class="pt-3">
     <div id="main">
         <div style="width: 90%;">
@@ -26,34 +46,34 @@
             <div id="bg"></div>
             <!-- **** CHECK POINT ****** -->
             <div class="d-flex flex-wrap justify-content-center mt-5" style="margin-bottom:20%;">
-               <?php
-$sql = "SELECT * FROM category ORDER BY order_no ASC";
-$sql2 = mysqli_query($con, $sql);
-echo '<div class="row">'; // Add Bootstrap row
-while ($row = mysqli_fetch_array($sql2)) {
-    $imageURL = 'category/' . $row["file_name"];
-    echo '<div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
+                <?php
+                $sql = "SELECT * FROM category ORDER BY order_no ASC";
+                $sql2 = mysqli_query($con, $sql);
+                echo '<div class="row">'; // Add Bootstrap row
+                while ($row = mysqli_fetch_array($sql2)) {
+                    $imageURL = 'category/' . $row["file_name"];
+                    echo '<div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
             <h4 class="mb-3" style="text-transform:uppercase;">' . htmlspecialchars($row["name"]) . '</h4>
             <img src="' . $imageURL . '" class="category-image" alt="" />
             <p class="mt-4">' . htmlspecialchars($row["description"]) . '</p>
             <div class="mt-4 button_container">';
-    if ($row['isEnabled']) {
-        echo '<a href="saloon/subcategory.php?category=' . $row['id'] . '">
+                    if ($row['isEnabled']) {
+                        echo '<a href="saloon/subcategory.php?category=' . $row['id'] . '">
                 <button class="btn-anim"><span>CLICK TO BOOK</span></button>
               </a>';
-    } else {
-        echo '<button class="btn-anim" disabled style="background:#ccc; cursor:not-allowed;">
+                    } else {
+                        echo '<button class="btn-anim" disabled style="background:#ccc; cursor:not-allowed;">
                 <span>UNAVAILABLE</span>
               </button>';
-    }
-    echo '</div></div>'; // Close button_container and box
-}
-echo '</div>'; // Close row
-?>
+                    }
+                    echo '</div></div>'; // Close button_container and box
+                }
+                echo '</div>'; // Close row
+                ?>
 
 
-
-                <div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
+                <!-- THE SECTION -->
+                <!-- <div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
                     <div>
                         <h4 class="mb-3" style="text-transform:uppercase;">ORISHIRISHI</h4>
                         <img src="food.png" alt="" />
@@ -165,8 +185,95 @@ echo '</div>'; // Close row
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
+                <!-- THE SECTION -->
 
+                  <!-- THE SECTION -->
+                <?php if (isMenuLinkEnabled($con, 'Orishirishi')): ?>
+                <div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
+                    <div>
+                        <h4 class="mb-3" style="text-transform:uppercase;">ORISHIRISHI</h4>
+                        <img src="food.png" alt="" />
+                        <p class="mt-4">Get all kind of drinks, meals, or snacks at chbluxuryempire. Order Now</p>
+                        <div class="mt-4 button_container">
+                            <a href="food_page.php"><button class="btn-anim"><span>CLICK TO ORDER</span></button></a>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+                <?php if (isMenuLinkEnabled($con, 'Repair Center')): ?>
+                <div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
+                    <div>
+                        <h4 class="mb-3" style="text-transform:uppercase;">REPAIR CENTER</h4>
+                        <img src="repair.jpeg" alt="" />
+                        <p class="mt-4">Effective repairs of nail salon equipment</p>
+                        <div class="mt-4 button_container">
+                            <a href="repaircenter.php"><button class="btn-anim"><span>CLICK TO ORDER</span></button></a>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+                <?php if (isMenuLinkEnabled($con, 'Delta Kitchen')): ?>
+                <div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
+                    <div>
+                        <h4 class="mb-3" style="text-transform:uppercase;">DELTA KITCHEN</h4>
+                        <img src="delta.jpeg" alt="" />
+                        <p class="mt-4">Your one stop for specially made Urhobo delicacies</p>
+                        <div class="mt-4 button_container">
+                            <a href="deltakitchen.php"><button class="btn-anim"><span>CLICK TO ORDER</span></button></a>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+                <?php if (isMenuLinkEnabled($con, 'E-Giftcard')): ?>
+                <div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
+                    <div>
+                        <h4 class="mb-3" style="text-transform:uppercase;">E-GIFTCARD</h4>
+                        <img src="gift.png" alt="" />
+                        <p class="mt-4">Buy an e-gift card for your friends, loved ones, and family. Buy Now</p>
+                        <div class="mt-4 button_container">
+                            <a href="giftcard.php"><button class="btn-anim"><span>CLICK TO ORDER</span></button></a>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+                <?php if (isMenuLinkEnabled($con, 'Rental for Beauty and Skill Training')): ?>
+                <div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
+                    <div>
+                        <h4 class="mb-3" style="text-transform:uppercase;">RENTAL FOR BEAUTY AND SKILL TRAINING</h4>
+                        <img src="rental.jpeg" alt="" />
+                        <p class="mt-4">Request a rental for your beauty and skills training</p>
+                        <div class="mt-4 button_container">
+                            <a href="rental/index.php"><button class="btn-anim"><span>CLICK TO ORDER</span></button></a>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+                <?php if (isMenuLinkEnabled($con, 'E-Gift Voucher Spa Packages')): ?>
+                <div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
+                    <div>
+                        <h4 class="mb-3" style="text-transform:uppercase;">E-GIFT VOUCHER SPA PACKAGES</h4>
+                        <img src="voucher.jpeg" alt="" />
+                        <p class="mt-4">We have selected special services to gift that special person</p>
+                        <div class="mt-4 button_container">
+                            <a href="voucher/index.php"><button class="btn-anim"><span>CLICK TO ORDER</span></button></a>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+                <?php if (isMenuLinkEnabled($con, 'CHB Luxury Academy')): ?>
+                <div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
+                    <div>
+                        <h4 class="mb-3" style="text-transform:uppercase;">CHB LUXURY ACADEMY</h4>
+                        <img src="academy.jpeg" alt="" />
+                        <p class="mt-4">You can rely on us at CHB Luxury Academy to help you realize your aspirations</p>
+                        <div class="mt-4 button_container">
+                            <a href="academy/index.php"><button class="btn-anim"><span>CLICK TO ORDER</span></button></a>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+                <!-- End THE SECTION -->
             </div>
         </div>
     </div>

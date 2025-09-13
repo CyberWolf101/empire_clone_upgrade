@@ -240,7 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                     echo "<input type='hidden' name='food' value='$itemId' />Quantity<input class='form-control' type='number' max='$quantity' min='1' name='value' value='1' /><br><button type='submit' name='addtocart' class='btn-buya'>Add To Cart</button>";
                                                 }
                                             } else {
-                                                echo "<p style='font-size:14px; color:#FFC700;'>Out Of Stock</p><button type='button' class='btn-buya' onclick=\"openPreorderModal('" . addslashes($row['item']) . "', '$itemId', '{$row['price']}')\">Preorder</button>";
+                                                echo "<p style='font-size:14px; color:#FFC700;'>Out Of Stock.</p><button type='button' class='btn-buya' onclick=\"openPreorderModal('" . addslashes($row['item']) . "', '$itemId', '{$row['price']}')\">Preorder</button>";
                                             }
                                             ?>
                                         </td>
