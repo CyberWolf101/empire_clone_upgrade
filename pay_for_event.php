@@ -130,7 +130,7 @@ if ($expectedAmount > 0) {
         <p><strong>Actual price:</strong> ₦<?php echo number_format($order['total_amount']); ?></p>
         <p><strong>Discounted price:</strong> ₦<?php echo number_format($expectedAmount); ?></p>
         <?php if ($discountPercent > 0): ?>
-            <p><strong>Discount %:</strong> <?php echo number_format($discountPercent); ?>%</p>
+            <p><strong>Discount (%):</strong> <?php echo number_format($discountPercent); ?>%</p>
         <?php endif; ?>
         <p><strong>Amount Paid:</strong> ₦<?php echo number_format($totalPaid); ?></p>
         <p><strong>Due Amount:</strong> ₦<?php echo number_format($balance); ?></p>
@@ -156,6 +156,8 @@ if ($expectedAmount > 0) {
             <tr>
                 <th>Item</th>
                 <th>Quantity</th>
+                <th>Unit price</th>
+                <th>Total price</th>
                 <!-- <th>Price</th> -->
             </tr>
         </thead>
@@ -165,6 +167,8 @@ if ($expectedAmount > 0) {
                     <tr>
                         <td><?php echo htmlspecialchars($item['item']); ?></td>
                         <td><?php echo $item['quantity']; ?></td>
+                        <td>₦ <?php echo $item['unitprice']; ?></td>
+                        <td>₦ <?php echo $item['totalprice']; ?></td>
                         <!-- <td>₦<?php echo number_format($item['unitprice']); ?></td> -->
                     </tr>
                 <?php endwhile; ?>

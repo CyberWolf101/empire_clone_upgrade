@@ -2,11 +2,35 @@
 include "header.php";
 include 'process.form.php';
 
-
-$amount = floatval($_SESSION['cart_total'] ?? 0);
+$subtotal = floatval($_SESSION['cart_total'] ?? 0);
+$shipping_fee = floatval($_SESSION['shipping_fee'] ?? 0);
+$shipping_type = $_SESSION['shipping_type'] ?? 'pickup';
+$selected_place = $_SESSION['selected_place'] ?? '';
 $c_email = mysqli_real_escape_string($con, $_SESSION['email'] ?? '');
 $c_phone = mysqli_real_escape_string($con, $_SESSION['phone'] ?? '');
 $username = mysqli_real_escape_string($con, $_SESSION['username'] ?? '');
+
+echo $c_phone;
+echo $c_email;
+// Decode selected_place JSON string for display
+$selected_place_data = $selected_place ? json_decode($selected_place, true) : [];
+$selected_place_description = isset($selected_place_data['description']) ? htmlspecialchars($selected_place_data['description']) : 'Not specified';
+
+$amount = $subtotal + $shipping_fee; // Include shipping fee
+
+// Fallback to saloon_orders if session data is missing
+if ($shipping_fee === 0 && !empty($saloon)) {
+    $sql_shipping = "SELECT shipping_fee FROM saloon_orders WHERE id='$saloon'";
+    $res_shipping = mysqli_query($con, $sql_shipping);
+    if ($res_shipping && $row_shipping = mysqli_fetch_assoc($res_shipping)) {
+        $shipping_fee = (int) $row_shipping['shipping_fee'];
+        $_SESSION['shipping_fee'] = $shipping_fee; // Update session
+        $amount = $subtotal + $shipping_fee; // Recalculate amount
+        error_log("Banktransfer.php: Retrieved shipping fee $shipping_fee from saloon_orders for order $saloon");
+    } else {
+        error_log("Banktransfer.php: Failed to fetch shipping fee from saloon_orders: " . mysqli_error($con));
+    }
+}
 
 if (empty($saloon)) {
     echo "Invalid order id $saloon $amount";
@@ -21,12 +45,22 @@ if (mysqli_num_rows($result) == 0) {
     mysqli_query($con, "UPDATE saloon_orders SET payment_confirmed = 1 WHERE method != 'Bank Transfer'") or die('Could not update payment_confirmed: ' . mysqli_error($con));
 }
 
+// Check if place_details column exists
+$checkPlaceDetailsSql = "SHOW COLUMNS FROM saloon_orders LIKE 'place_details'";
+$result = mysqli_query($con, $checkPlaceDetailsSql);
+if (mysqli_num_rows($result) == 0) {
+    mysqli_query($con, "ALTER TABLE saloon_orders ADD place_details TEXT DEFAULT NULL") or die('Could not add place_details column: ' . mysqli_error($con));
+    error_log("Banktransfer.php: Added place_details column to saloon_orders");
+}
 
-// Update order with customer details and pending status
-// $query = "UPDATE saloon_orders SET pay_status='pending', method='Bank Transfer', payment_confirmed=0, name='$username', email='$c_email', phone='$c_phone' WHERE id='$saloon'";
-$query = "UPDATE saloon_orders SET pay_status='pending',status='pending', method='Bank Transfer', payment_confirmed=0, name='$username' WHERE id='$saloon'";
+// Update order with customer details, shipping fee, shipping type, and place details
+$selected_place_escaped = mysqli_real_escape_string($con, $selected_place);
+// $query = "UPDATE saloon_orders SET pay_status='pending', status='pending', method='Bank Transfer', payment_confirmed=0, name='$username', email='$c_email', phone='$c_phone', shipping_fee='$shipping_fee', shipping_type='$shipping_type', place_details='$selected_place_escaped' WHERE id='$saloon'";
+$query = "UPDATE saloon_orders SET pay_status='pending', status='pending', method='Bank Transfer', payment_confirmed=0, name='$username', shipping_fee='$shipping_fee', shipping_type='$shipping_type', place_details='$selected_place_escaped' WHERE id='$saloon'";
 if (!mysqli_query($con, $query)) {
     error_log("Banktransfer.php: Failed to update saloon_orders: " . mysqli_error($con) . " | Query: $query");
+} else {
+    error_log("Banktransfer.php: Successfully updated saloon_orders with place_details: $selected_place_escaped");
 }
 
 // Fetch bank accounts
@@ -37,24 +71,18 @@ while ($row = mysqli_fetch_array($result)) {
     $bank_accounts[] = $row;
 }
 
-
 if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
-    $errors = []; // <--- ADD THIS
+    $errors = [];
 
     $options = [
-        'allowedTypes' => ['pdf', 'jpg', 'jpeg', 'png', 'gif'], // Restrict to common receipt formats
+        'allowedTypes' => ['pdf', 'jpg', 'jpeg', 'png', 'gif'],
         'maxSize' => 5 * 1024 * 1024 // 5MB
     ];
     $result = uploadFile('file', 'Uploads/', $options);
 
     if (empty($result['errors'])) {
-        // Get filename and URL
-        $filename = $result['filename']; // e.g., 'receipt_123.pdf'
-        $fileUrl = $result['file_url']; // e.g., 'http://localhost/Uploads/receipt_123.pdf'
-        // echo "<pre> fileurl";
-        // print_r($result);
-        // echo "</pre>";
-        // exit;
+        $filename = $result['filename'];
+        $fileUrl = $result['file_url'];
         $paymentFor = 'cart_items';
         $itemId = $saloon;
         $bankId = isset($_POST['bank_account_id']) ? (int) $_POST['bank_account_id'] : 0;
@@ -72,7 +100,7 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
         if (!empty($bank)) {
             $paymentFor = mysqli_real_escape_string($con, $paymentFor);
             $sql = "INSERT INTO bank_transfers (fileUrl, payment_for, item_id, amount, bank) 
-            VALUES ('$fileUrl', '$paymentFor', '$itemId', $amount, '$bank')";
+                    VALUES ('$fileUrl', '$paymentFor', '$itemId', $amount, '$bank')";
             if (!mysqli_query($con, $sql)) {
                 $errors[] = "Database insertion failed: " . mysqli_error($con);
             }
@@ -81,24 +109,12 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
         }
 
         if (empty($errors)) {
-            // if (isset($_COOKIE['foodID'])) {
-            //     setcookie("foodID", "", time() - 3600, "/", "", true, true);
-            //     unset($_COOKIE['foodID']);
-            // }
-
-            error_log("Cookie unset code executed at " . date('Y-m-d H:i:s'), 3, "debug.log");
-
             if (isset($_COOKIE['foodID'])) {
-                // error_log("foodID cookie found: " . $_COOKIE['foodID'], 3, "debug.log");
-                // Try multiple variations to cover possible mismatches
+
                 setcookie("foodID", "", time() - 3600, "/", "", true, true); // Original
                 setcookie("foodID", "", time() - 3600, "/", "", false, true); // Non-secure
                 setcookie("foodID", "", time() - 3600, "", "", true, true); // No path
                 unset($_COOKIE['foodID']);
-                // error_log("Attempted to unset foodID cookie", 3, "debug.log");
-                // Redirect to confirm cookie is gone
-            } else {
-                // error_log("foodID cookie not set", 3, "debug.log");
             }
 
             unset($_SESSION['username']);
@@ -148,43 +164,22 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
 
     .txt {
         color: #FFC700;
-
     }
 </style>
 
 <div class="section-title p-3" style="color:#FFFFFF;">
     <h4>BANK TRANSFER PAYMENT</h4>
-    <p>Please select a bank account to make your payment. <?php echo $amount ?></p>
-
+    <p>Please select a bank account to make your payment.</p>
     <div class="text-white">
-        Due amount: <b class="txt"> ₦ <?php echo number_format($amount, 2); ?>
-        </b>
+        Due amount: <b class="txt"> ₦ <?php echo number_format($amount, 2); ?></b>
     </div>
+    <?php if ($shipping_type === 'delivery'): ?>
+        <div class="text-white">
+            Delivery Location: <b class="txt"><?php echo $selected_place_description; ?></b>
+        </div>
+    <?php endif; ?>
 </div>
 
-<?php
-include 'bank_account_selection.php';
-?>
-<!-- <script>
-function showBankDetails() {
-    var select = document.getElementById('bank_account');
-    var bankDetails = document.getElementById('bank_details');
-    var bankNameDisplay = document.getElementById('bank_name_display');
-    var accountNameDisplay = document.getElementById('account_name_display');
-    var accountNumberDisplay = document.getElementById('account_number_display');
-    var bankAccountId = document.getElementById('bank_account_id');
-
-    if (select.value) {
-        var selectedOption = select.options[select.selectedIndex];
-        bankNameDisplay.textContent = selectedOption.getAttribute('data-bank-name');
-        accountNameDisplay.textContent = selectedOption.getAttribute('data-account-name');
-        accountNumberDisplay.textContent = selectedOption.getAttribute('data-account-number');
-        bankAccountId.value = select.value;
-        bankDetails.style.display = 'block';
-    } else {
-        bankDetails.style.display = 'none';
-    }
-}
-</script> -->
+<?php include 'bank_account_selection.php'; ?>
 
 <?php include "footer.php"; ?>

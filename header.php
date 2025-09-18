@@ -1,4 +1,7 @@
-<?php ob_start(); session_save_path("/tmp"); session_start(); include "connect.php";
+<?php ob_start();
+session_save_path("/tmp");
+session_start();
+include "connect.php";
 
 // Set PHP timezone
 date_default_timezone_set('Africa/Lagos');
@@ -88,14 +91,14 @@ if (isset($_COOKIE['foodID'])) {
     die("Step 6 FAILED: Could not fetch saloon order → " . mysqli_error($con));
   }
   $row = mysqli_fetch_array($sql2);
-  $type = isset($row["bookingtype"]) && $row["bookingtype"] !== '' 
-          ? (int)$row["bookingtype"] 
-          : 0;
-$kit      = $row["saloonkit"] ?? null;
-$username = mysqli_real_escape_string($con, $_SESSION['username'] ?? '');
-$c_phone  = mysqli_real_escape_string($con, $_SESSION['phone'] ?? '');
-$c_email  = mysqli_real_escape_string($con, $_SESSION['email'] ?? '');
-$status   = $row["status"]    ?? null;
+  $type = isset($row["bookingtype"]) && $row["bookingtype"] !== ''
+    ? (int) $row["bookingtype"]
+    : 0;
+  $kit = $row["saloonkit"] ?? null;
+  $username = mysqli_real_escape_string($con, $_SESSION['username'] ?? '');
+  $c_phone = mysqli_real_escape_string($con, $_SESSION['phone'] ?? '');
+  $c_email = mysqli_real_escape_string($con, $_SESSION['email'] ?? '');
+  $status = $row["status"] ?? null;
 
 
   // echo "Step 6 SUCCESS: Loaded saloon order $saloon<br>";
@@ -108,12 +111,12 @@ $status   = $row["status"]    ?? null;
   }
   $row = mysqli_fetch_array($sam2);
   $total_items = $row[0];
-  
+
   // echo "Step 7 SUCCESS: Refreshments total = $total_items<br>";
-  
+
   // $total_all = $total_items;
-  $total_all = isset($row[0]) ? (int)$row[0] : 0;   // force integer
-  
+  $total_all = isset($row[0]) ? (int) $row[0] : 0;   // force integer
+
   $insert = mysqli_query($con, "UPDATE saloon_orders SET total_amount='$total_all' WHERE id='$saloon'");
   if (!$insert) {
     die("Step 8 FAILED: Could not update saloon order total → " . mysqli_error($con));
@@ -136,8 +139,9 @@ $kitprice = $row["pedicurekit"];
 $rentprice = $row["rental"];
 $late_fee = $row["latefee"];
 $walkinIncrease = $row["walk_in_fee"];
+$key = 'AIzaSyD6MS4bUOjkP0fYUklsVzIKYmGmb_MheGQ'
 
-// echo "Step 9 SUCCESS: Site settings loaded<br>";
+  // echo "Step 9 SUCCESS: Site settings loaded<br>";
 ?>
 
 

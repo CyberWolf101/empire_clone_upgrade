@@ -1,0 +1,6 @@
+[19-Sep-2025 00:19:08 Europe/Berlin] PHP Warning:  include(../connect.php): Failed to open stream: No such file or directory in /Applications/XAMPP/xamppfiles/htdocs/empire_clone_main/event_order_receipt.php on line 11
+[19-Sep-2025 00:19:08 Europe/Berlin] PHP Warning:  include(): Failed opening '../connect.php' for inclusion (include_path='.:/Applications/XAMPP/xamppfiles/lib/php') in /Applications/XAMPP/xamppfiles/htdocs/empire_clone_main/event_order_receipt.php on line 11
+[19-Sep-2025 00:19:08 Europe/Berlin] PHP Warning:  Undefined variable $con in /Applications/XAMPP/xamppfiles/htdocs/empire_clone_main/event_order_receipt.php on line 14
+[19-Sep-2025 00:19:08 Europe/Berlin] Database connection failed: 
+[19-Sep-2025 00:19:25 Europe/Berlin] Processing order_ref: 16
+[19-Sep-2025 00:19:25 Europe/Berlin] No order found for order_ref: 16

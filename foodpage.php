@@ -141,9 +141,16 @@ include "food_page_logic.php";
                             <?php } ?>
                         </tbody>
                     </table>
-                    <div class="btn-wrap">
-                        <a href="cart.php" name="submit" class="btn-buya">Proceed to Payment</a>
+
+                    <?php
+                    if (!empty($cartItems)) {
+                        echo "  
+                    <div class='btn-wrap'>
+                        <a href='cart.php' name='submit' class='btn-buya'>Proceed to Payment</a>
                     </div>
+                    ";
+                    }
+                    ?>
                     <?php if ($totalPages > 1): ?>
                         <nav aria-label="Page navigation">
                             <ul class="pagination justify-content-center">

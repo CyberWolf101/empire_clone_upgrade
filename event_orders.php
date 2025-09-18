@@ -1,80 +1,9 @@
 <?php
-// session_start();
 include "header.php";
 
-// Create event_orders table
-$createEventOrdersQuery = "
-    CREATE TABLE IF NOT EXISTS event_orders (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        customer_name VARCHAR(255) NOT NULL,
-        order_ref VARCHAR(20) UNIQUE NOT NULL,
-        phone_number VARCHAR(20) NOT NULL,
-        email VARCHAR(255) NOT NULL,
-        total_amount DECIMAL(10,2) DEFAULT 0,
-        edited_price DECIMAL(10,2) DEFAULT 0,
-        status VARCHAR(50) DEFAULT 'pending',
-        pay_status VARCHAR(50) DEFAULT 'pending',
-        section VARCHAR(50) DEFAULT 'refreshments',
-        type VARCHAR(50) DEFAULT 'event',
-        created_at DATETIME NOT NULL
-    ) ENGINE=InnoDB";
-if (!mysqli_query($con, $createEventOrdersQuery)) {
-    error_log("Failed to create event_orders table: " . mysqli_error($con));
-    echo "<script>alert('Error setting up event_orders table: " . addslashes(mysqli_error($con)) . "'); window.location.href='event_orders.php';</script>";
-    exit;
-}
-
-// Add phone_number and email columns if they don't exist
-$checkColumnsQuery = "SHOW COLUMNS FROM event_orders LIKE 'phone_number'";
-if (mysqli_num_rows(mysqli_query($con, $checkColumnsQuery)) == 0) {
-    $alterQuery = "ALTER TABLE event_orders ADD phone_number VARCHAR(20) NOT NULL AFTER customer_name";
-    if (!mysqli_query($con, $alterQuery)) {
-        error_log("Failed to add phone_number column: " . mysqli_error($con));
-        echo "<script>alert('Error updating event_orders table: " . addslashes(mysqli_error($con)) . "'); window.location.href='event_orders.php';</script>";
-        exit;
-    }
-}
-$checkColumnsQuery = "SHOW COLUMNS FROM event_orders LIKE 'email'";
-if (mysqli_num_rows(mysqli_query($con, $checkColumnsQuery)) == 0) {
-    $alterQuery = "ALTER TABLE event_orders ADD email VARCHAR(255) NOT NULL AFTER phone_number";
-    if (!mysqli_query($con, $alterQuery)) {
-        error_log("Failed to add email column: " . mysqli_error($con));
-        echo "<script>alert('Error updating event_orders table: " . addslashes(mysqli_error($con)) . "'); window.location.href='event_orders.php';</script>";
-        exit;
-    }
-}
-
-// Create event_order_items table
-$createItemsQuery = "
-    CREATE TABLE IF NOT EXISTS event_order_items (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        orderid INT NOT NULL,
-        itemid INT NOT NULL,
-        item VARCHAR(255) NOT NULL,
-        unitprice DECIMAL(10,2) NOT NULL,
-        quantity INT NOT NULL,
-        totalprice DECIMAL(10,2) NOT NULL,
-        edited_price DECIMAL(10,2) NOT NULL,
-        FOREIGN KEY (orderid) REFERENCES event_orders(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB";
-if (!mysqli_query($con, $createItemsQuery)) {
-    // Fallback: Create without foreign key
-    $createItemsQueryFallback = "
-        CREATE TABLE IF NOT EXISTS event_order_items (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            orderid INT NOT NULL,
-            itemid INT NOT NULL,
-            item VARCHAR(255) NOT NULL,
-            unitprice DECIMAL(10,2) NOT NULL,
-            quantity INT NOT NULL,
-            totalprice DECIMAL(10,2) NOT NULL,
-            edited_price DECIMAL(10,2) NOT NULL
-        ) ENGINE=InnoDB";
-    if (!mysqli_query($con, $createItemsQueryFallback)) {
-        error_log("Failed to create event_order_items table: " . mysqli_error($con));
-        echo "<script>alert('Error setting up event_order_items table: " . addslashes(mysqli_error($con)) . "'); window.location.href='event_orders.php';</script>";
-        exit;
-    }
+if (!empty($_SESSION['success_message'])) {
+    echo "<div class='alert alert-success'>" . htmlspecialchars($_SESSION['success_message']) . "</div>";
+    unset($_SESSION['success_message']); // Clear after showing
 }
 
 // Initialize event cart
@@ -146,137 +75,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
 
         // Clear event cart
         unset($_SESSION['eventCart']);
-        echo "<script>alert('Event order request submitted successfully!'); window.location.href='event_orders.php';</script>";
+        $_SESSION['success_message'] = "Event order request submitted successfully!";
+        header("Location: event_orders.php");
+
     } else {
         $error = mysqli_error($con);
         echo "<script>alert('Error submitting request: " . addslashes($error) . "'); window.location.href='event_orders.php';</script>";
     }
 }
 ?>
-
-<style>
-    .ter {
-        background-color: #fff;
-        padding: 0 10px;
-    }
-
-    .check {
-        padding: 2%;
-        font-size: 12px;
-        width: 25%;
-    }
-
-    .check span {
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-    .btn-buya {
-        display: inline-block;
-        padding: 6px !important;
-        border: none;
-        color: #fff;
-        font-size: 10px !important;
-        text-transform: uppercase;
-        font-family: "Poppins", sans-serif;
-        font-weight: 600;
-        transition: 0.3s;
-        background: #FEBF01;
-        margin: 4px;
-    }
-
-    .btn-buya:hover {
-        font-size: 12px !important;
-        font-weight: 800;
-        background: #000;
-    }
-
-    .form-control {
-        height: 40px;
-        border-radius: none !important;
-    }
-
-    .section-title h2::after {
-        content: "";
-        position: absolute;
-        display: block;
-        width: 80px;
-        background: none;
-        bottom: 0;
-        left: calc(2% - 25px);
-    }
-
-    .box {
-        border-radius: 0px;
-    }
-
-    .pricing .box {
-        padding: 20px 0 0;
-        background: #f8f8f8;
-        text-align: center;
-        box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.12);
-        border-radius: 0px;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .nav-tabs .nav-link.active {
-        background-color: #FEBF01;
-        color: #fff;
-    }
-
-    .nav-tabs .nav-link {
-        color: #000;
-    }
-
-    /* Search Bar and Suggestions Styles */
-    .search-container {
-        position: relative;
-        margin-bottom: 20px;
-        width: 100%;
-        max-width: 500px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .search-input {
-        flex-grow: 1;
-        padding: 10px;
-        font-size: 14px;
-        border: 2px solid #FEBF01;
-        border-radius: 5px;
-        outline: none;
-    }
-
-    .search-suggestions {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: #fff;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        max-height: 200px;
-        overflow-y: auto;
-        z-index: 1000;
-        display: none;
-    }
-
-    .search-suggestions div {
-        padding: 10px;
-        cursor: pointer;
-        border-bottom: 1px solid #eee;
-    }
-
-    .search-suggestions div:hover {
-        background: #f0f0f0;
-    }
-
-    .search-suggestions div:last-child {
-        border-bottom: none;
-    }
-</style>
 
 <!-- Event Orders Section -->
 <section id="pricing" class="pricing section-bg" style="margin-top:50px; background-color:none; border:none;">
@@ -320,7 +127,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                             <div class="tab-pane fade show active" id="menuItemsTab">
                                 <!-- Search Bar -->
                                 <div class="search-container">
-                                    <input type="text" id="searchInput" class="search-input" placeholder="Search food items...">
+                                    <input type="text" id="searchInput" class="search-input"
+                                        placeholder="Search food items...">
                                     <button type="button" class="btn-buya" onclick="triggerSearch()">Search</button>
                                     <div id="searchSuggestions" class="search-suggestions"></div>
                                 </div>
@@ -417,11 +225,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                 </div>
             </div>
         </div>
+    </div>
 </section>
+
+<!-- Floating Cart Button -->
+<button id="cartButton" class="btn" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; background-color: #ffc700;">
+   🛒
+</button>
+
+<!-- Cart Modal -->
+<div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cartModalLabel">Your Cart</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="cartModalForm" action="" method="post" onsubmit="return confirmSubmission()">
+                    <input type="hidden" name="customer_name" id="modal_customer_name">
+                    <input type="hidden" name="phone_number" id="modal_phone_number">
+                    <input type="hidden" name="email" id="modal_email">
+                    <input type="hidden" name="total_amount" id="modal_total_amount">
+                    <div class="table-responsive">
+                        <table class="table align-items-center table-flush" id="cartItemsTable">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cartItemsBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="form-group mt-4">
+                        <label for="modal_estimated_fee">Estimated Total</label>
+                        <input type="text" class="form-control" id="modal_estimated_fee" readonly>
+                    </div>
+                    <button type="submit" name="placeOrder" class="btn-buya mt-3">Submit Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+#cartButton {
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#cartItemsTable input[type="number"] {
+    width: 80px;
+}
+</style>
 
 <script>
     let customItemIndex = 1;
     let debounceTimeout;
+    let itemAdditionOrder = 0; // Track order of item additions
 
     function addCustomItem() {
         const customItems = document.getElementById('customItems');
@@ -441,11 +311,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
         </div>`;
         customItems.appendChild(newItem);
         customItemIndex++;
+        updateCartModal();
     }
 
     function removeCustomItem(button) {
         button.closest('.custom-item').remove();
         calculateEstimatedFee();
+        updateCartModal();
     }
 
     function calculateEstimatedFee() {
@@ -456,15 +328,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
             total += quantity * price;
         });
         document.getElementById('estimated_fee').value = total.toFixed(2);
+        document.getElementById('modal_estimated_fee').value = total.toFixed(2);
+        document.getElementById('modal_total_amount').value = total.toFixed(2);
+        updateCartModal();
     }
 
     function showCategory(category) {
         const searchInput = document.getElementById('searchInput').value.trim();
         if (searchInput) {
-            // If search is active, don't filter by category
             triggerSearch();
         } else {
-            console.log("Filtering by category:", category); // Debug log
+            console.log("Filtering by category:", category);
             document.querySelectorAll('.ter').forEach(item => item.style.display = 'none');
             document.querySelectorAll('.' + category).forEach(item => item.style.display = 'table-row');
         }
@@ -473,10 +347,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
     function showAllItems() {
         const searchInput = document.getElementById('searchInput').value.trim();
         if (searchInput) {
-            // If search is active, don't show all items
             triggerSearch();
         } else {
-            console.log("Showing all items"); // Debug log
+            console.log("Showing all items");
             document.querySelectorAll('.ter').forEach(item => item.style.display = 'table-row');
         }
     }
@@ -493,18 +366,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
 
         if (query.length > 0) {
             debounceTimeout = setTimeout(() => {
-                console.log("Fetching suggestions for query:", query); // Debug log
+                console.log("Fetching suggestions for query:", query);
                 fetchSuggestions(query, suggestionsDiv);
             }, 300);
         } else {
             suggestionsDiv.style.display = 'none';
             suggestionsDiv.innerHTML = '';
-            triggerSearch(); // Show all items when search is cleared
+            triggerSearch();
         }
     });
 
     function fetchSuggestions(query, suggestionsDiv) {
-        // Ensure jQuery is available
         if (typeof $ === 'undefined') {
             console.error("jQuery is not loaded. Please include jQuery.");
             suggestionsDiv.innerHTML = '<div>jQuery is not loaded. Contact support.</div>';
@@ -518,7 +390,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
             data: { search: query },
             dataType: 'json',
             success: function(data) {
-                console.log("Suggestions received:", data); // Debug log
+                console.log("Suggestions received:", data);
                 suggestionsDiv.innerHTML = '';
                 if (data.error) {
                     suggestionsDiv.innerHTML = '<div>Error: ' + data.error + '</div>';
@@ -541,7 +413,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                 }
             },
             error: function(xhr, status, error) {
-                console.error('Fetch suggestions error:', status, error, 'Status code:', xhr.status); // Debug log
+                console.error('Fetch suggestions error:', status, error, 'Status code:', xhr.status);
                 suggestionsDiv.innerHTML = '<div>Error loading suggestions: ' + (xhr.status === 404 ? 'search_api.php not found' : 'Server error') + '. Please try again.</div>';
                 suggestionsDiv.style.display = 'block';
             }
@@ -550,12 +422,138 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
 
     function triggerSearch() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
-        console.log("Triggering search for:", query); // Debug log
+        console.log("Triggering search for:", query);
         document.querySelectorAll('#menuItems .ter').forEach(row => {
             const itemName = row.querySelector('td:first-child').textContent.toLowerCase().replace('(out of stock)', '').trim();
             row.style.display = query ? (itemName.includes(query) ? 'table-row' : 'none') : 'table-row';
         });
         document.getElementById('searchSuggestions').style.display = 'none';
+    }
+
+    // Cart Modal Functionality
+    document.getElementById('cartButton').addEventListener('click', function() {
+        updateCartModal();
+        // Sync form inputs
+        document.getElementById('modal_customer_name').value = document.getElementById('customer_name').value;
+        document.getElementById('modal_phone_number').value = document.getElementById('phone_number').value;
+        document.getElementById('modal_email').value = document.getElementById('email').value;
+        // Show modal
+        var cartModal = new bootstrap.Modal(document.getElementById('cartModal'), {});
+        cartModal.show();
+    });
+
+    function updateCartModal() {
+        const cartItemsBody = document.getElementById('cartItemsBody');
+        cartItemsBody.innerHTML = '';
+
+        // Collect menu items and custom items with addition order
+        const allItems = [];
+
+        // Menu items
+        document.querySelectorAll('#menuItemsTab .quantity').forEach(input => {
+            const quantity = parseInt(input.value) || 0;
+            if (quantity > 0) {
+                const name = input.dataset.name;
+                const price = parseFloat(input.dataset.price) || 0;
+                const itemId = input.name.match(/\[menu\]\[(\d+)\]/)[1];
+                // Use dataset to store addition order, or assign new order if not set
+                if (!input.dataset.additionOrder) {
+                    input.dataset.additionOrder = itemAdditionOrder++;
+                }
+                allItems.push({
+                    type: 'menu',
+                    name,
+                    price,
+                    quantity,
+                    itemId,
+                    additionOrder: parseInt(input.dataset.additionOrder)
+                });
+            }
+        });
+
+        // Custom items
+        document.querySelectorAll('#customItems .custom-item').forEach((item, index) => {
+            const nameInput = item.querySelector('input[name$="[name]"]');
+            const quantityInput = item.querySelector('input[name$="[quantity]"]');
+            const name = nameInput.value;
+            const quantity = parseInt(quantityInput.value) || 0;
+            if (quantity > 0 && name) {
+                // Use dataset to store addition order, or assign new order if not set
+                if (!quantityInput.dataset.additionOrder) {
+                    quantityInput.dataset.additionOrder = itemAdditionOrder++;
+                }
+                allItems.push({
+                    type: 'custom',
+                    name,
+                    quantity,
+                    index,
+                    additionOrder: parseInt(quantityInput.dataset.additionOrder)
+                });
+            }
+        });
+
+        // Sort items by additionOrder (descending, so newest first)
+        allItems.sort((a, b) => b.additionOrder - a.additionOrder);
+
+        // Add items to cart table
+        allItems.forEach(item => {
+            const row = document.createElement('tr');
+            if (item.type === 'menu') {
+                const total = (item.quantity * item.price).toFixed(2);
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>₦${item.price.toFixed(2)}</td>
+                    <td><input type="number" class="form-control quantity" name="items[menu][${item.itemId}][quantity]" min="0" value="${item.quantity}" data-name="${item.name}" data-price="${item.price}" data-addition-order="${item.additionOrder}" onchange="syncQuantities(this, ${item.itemId})"></td>
+                    <td>₦${total}</td>
+                    <td><button type="button" class="btn btn-danger btn-sm" onclick="deleteCartItem('menu', ${item.itemId})">Delete</button></td>
+                    <input type="hidden" name="items[menu][${item.itemId}][name]" value="${item.name}">
+                    <input type="hidden" name="items[menu][${item.itemId}][price]" value="${item.price}">
+                `;
+            } else {
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>-</td>
+                    <td><input type="number" class="form-control quantity" name="items[custom][${item.index}][quantity]" min="0" value="${item.quantity}" data-addition-order="${item.additionOrder}" onchange="syncCustomQuantities(this, ${item.index})"></td>
+                    <td>-</td>
+                    <td><button type="button" class="btn btn-danger btn-sm" onclick="deleteCartItem('custom', ${item.index})">Delete</button></td>
+                    <input type="hidden" name="items[custom][${item.index}][name]" value="${item.name}">
+                `;
+            }
+            cartItemsBody.appendChild(row); // Append in sorted order
+        });
+    }
+
+    function syncQuantities(input, itemId) {
+        const mainInput = document.querySelector(`input[name="items[menu][${itemId}][quantity]"]`);
+        if (mainInput) {
+            mainInput.value = input.value;
+            mainInput.dataset.additionOrder = input.dataset.additionOrder || itemAdditionOrder++;
+        }
+        calculateEstimatedFee();
+    }
+
+    function syncCustomQuantities(input, index) {
+        const mainInput = document.querySelector(`input[name="items[custom][${index}][quantity]"]`);
+        if (mainInput) {
+            mainInput.value = input.value;
+            mainInput.dataset.additionOrder = input.dataset.additionOrder || itemAdditionOrder++;
+        }
+        calculateEstimatedFee();
+    }
+
+    function deleteCartItem(type, id) {
+        if (type === 'menu') {
+            const mainInput = document.querySelector(`input[name="items[menu][${id}][quantity]"]`);
+            if (mainInput) {
+                mainInput.value = 0;
+            }
+        } else if (type === 'custom') {
+            const mainInput = document.querySelector(`input[name="items[custom][${id}][quantity]"]`);
+            if (mainInput) {
+                mainInput.value = 0;
+            }
+        }
+        calculateEstimatedFee();
     }
 
     // Initialize estimated fee on page load
