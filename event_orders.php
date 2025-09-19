@@ -32,9 +32,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
         $check = mysqli_query($con, "SELECT id FROM event_orders WHERE order_ref='$order_ref'");
     } while (mysqli_num_rows($check) > 0);
 
-    // Insert into event_orders
-    $sql = "INSERT INTO event_orders (order_ref, customer_name, phone_number, email, total_amount, status, pay_status, section, type, created_at, edited_price) 
-            VALUES ('$order_ref','$customer_name', '$phone_number', '$email', $total_amount, 'pending', 'pending', 'refreshments', 'event', NOW(), 0)";
+    // change 2
+    $date = mysqli_real_escape_string($con, $_POST['date']);
+    $time = mysqli_real_escape_string($con, $_POST['time']);
+
+
+    $sql = "INSERT INTO event_orders (order_ref, customer_name, phone_number, email, total_amount, status, pay_status, section, type, created_at, edited_price, delivery_date, delivery_time) 
+            VALUES ('$order_ref','$customer_name', '$phone_number', '$email', $total_amount, 'pending', 'pending', 'refreshments', 'event', NOW(), 0, '$date', '$time')";
+    // change 2
+
     if (mysqli_query($con, $sql)) {
         $order_id = mysqli_insert_id($con);
 
@@ -111,6 +117,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                             <label for="email">Email</label>
                             <input type="email" class="form-control" id="email" name="email" required>
                         </div>
+                        <!-- CHANGE 1 -->
+                        <div class="form-group mb-4">
+                            <label for="date">Expected Date of delivery</label>
+                            <input type="date" class="form-control" id="date" name="date" required
+                                min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>">
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="time">Expected Time of delivery</label>
+                            <input type="time" class="form-control" id="time" name="time" required>
+                        </div>
+                        <!-- CHANGE 1 -->
+
 
                         <!-- Tabs -->
                         <ul class="nav nav-tabs mb-4">
@@ -229,8 +248,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
 </section>
 
 <!-- Floating Cart Button -->
-<button id="cartButton" class="btn" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; background-color: #ffc700;">
-   🛒
+<button id="cartButton" class="btn"
+    style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; background-color: #ffc700;">
+    🛒
 </button>
 
 <!-- Cart Modal -->
@@ -247,6 +267,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                     <input type="hidden" name="phone_number" id="modal_phone_number">
                     <input type="hidden" name="email" id="modal_email">
                     <input type="hidden" name="total_amount" id="modal_total_amount">
+                    <!-- Addition 3 -->
+                    <input type="hidden" name="date" id="modal_date">
+                    <input type="hidden" name="time" id="modal_time">
+                    <!-- Addition 3 -->
                     <div class="table-responsive">
                         <table class="table align-items-center table-flush" id="cartItemsTable">
                             <thead class="thead-light">
@@ -273,19 +297,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
 </div>
 
 <style>
-#cartButton {
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
+    #cartButton {
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
 
-#cartItemsTable input[type="number"] {
-    width: 80px;
-}
+    #cartItemsTable input[type="number"] {
+        width: 80px;
+    }
 </style>
 
 <script>
@@ -359,7 +383,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
     }
 
     // Search and Suggestions Functionality
-    document.getElementById('searchInput').addEventListener('input', function(e) {
+    document.getElementById('searchInput').addEventListener('input', function (e) {
         clearTimeout(debounceTimeout);
         const query = e.target.value.trim();
         const suggestionsDiv = document.getElementById('searchSuggestions');
@@ -389,7 +413,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
             type: 'POST',
             data: { search: query },
             dataType: 'json',
-            success: function(data) {
+            success: function (data) {
                 console.log("Suggestions received:", data);
                 suggestionsDiv.innerHTML = '';
                 if (data.error) {
@@ -412,7 +436,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                     suggestionsDiv.style.display = 'block';
                 }
             },
-            error: function(xhr, status, error) {
+            error: function (xhr, status, error) {
                 console.error('Fetch suggestions error:', status, error, 'Status code:', xhr.status);
                 suggestionsDiv.innerHTML = '<div>Error loading suggestions: ' + (xhr.status === 404 ? 'search_api.php not found' : 'Server error') + '. Please try again.</div>';
                 suggestionsDiv.style.display = 'block';
@@ -431,12 +455,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
     }
 
     // Cart Modal Functionality
-    document.getElementById('cartButton').addEventListener('click', function() {
+    document.getElementById('cartButton').addEventListener('click', function () {
         updateCartModal();
         // Sync form inputs
         document.getElementById('modal_customer_name').value = document.getElementById('customer_name').value;
         document.getElementById('modal_phone_number').value = document.getElementById('phone_number').value;
         document.getElementById('modal_email').value = document.getElementById('email').value;
+        // addition 4
+        document.getElementById('modal_date').value = document.getElementById('date').value;
+        document.getElementById('modal_time').value = document.getElementById('time').value;
+
+        // addition 4
+
         // Show modal
         var cartModal = new bootstrap.Modal(document.getElementById('cartModal'), {});
         cartModal.show();
