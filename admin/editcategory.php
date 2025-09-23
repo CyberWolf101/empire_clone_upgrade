@@ -1,0 +1,48 @@
+<?php include "header.php"; 
+
+if(isset($_GET['category'])){
+
+            $category = $_GET['category'];
+	        $sql = "SELECT * from category where id = '$category'  ";
+			$sql2 = mysqli_query($con,$sql);
+		    while($row = mysqli_fetch_array($sql2))
+				    
+					 {
+					  $id = $row["s"]; 
+					  $categoryname = $row["name"];   					
+					  $describe = $row['description'];
+					  }}
+					  
+					  else{
+					      header("location: categories.php");
+					  }
+					  
+?>
+
+             <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-primary-800"><?php echo $categoryname; ?></h1>
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="dashboard.php">Home</a></li>
+              <li class="breadcrumb-item active" aria-current="page">Edit Category</li>
+            </ol>
+          </div>
+          
+<div class="col-lg-12" ><?php include "updatecategory.php"; ?></div> 
+<form method="post" enctype="multipart/form-data">
+
+<p><label>Name</label>
+<input type="text" name="name" class="form-control" value="<?php echo  $categoryname; ?>"  required  /></p>
+
+
+
+<p><label>Description</label>
+<textarea type="text" class="form-control" name="described" placeholder="*About Category" required ><?php echo  $describe; ?></textarea></p>
+
+<p><label>Upload New Picture</label>
+<input type="file" name="file" class="form-control"/></p>
+	  
+<p><input  type="submit" value="Update Category" class="btn btn-primary" name="submit" /></p>
+</form>        
+          
+          
+<?php include "footer.php"; ?>
