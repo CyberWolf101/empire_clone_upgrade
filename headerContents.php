@@ -484,7 +484,7 @@ if ($result) {
             }
             mysqli_stmt_close($stmt);
             ?>
-            <li><a href="voucher/"
+            <li><a href="voucher/index.php"
                 style="background:none; outline:none; border:none; color: #FFC700; font-size:12px; text-transform:capitalize; font-weight:500;">E-GIFT
                 SPA PACKAGE</a></li><br>
           </div>

@@ -8,6 +8,24 @@ if (!empty($_SESSION['success_message'])) {
 
 // Initialize event cart
 $eventCart = $_SESSION['eventCart'] ?? [];
+$order_ref = '';
+$shipping_type = isset($_SESSION['shipping_type']) ? $_SESSION['shipping_type'] : 'delivery';
+$delivery_address = isset($_SESSION['delivery_address']) ? $_SESSION['delivery_address'] : '';
+
+function generateOrderRef($length = 7) {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyz';
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[random_int(0, strlen($characters) - 1)];
+    }
+    return $randomString;
+}
+
+// Ensure unique reference
+do {
+    $order_ref = generateOrderRef();
+    $check = mysqli_query($con, "SELECT id FROM event_orders WHERE order_ref='$order_ref'");
+} while (mysqli_num_rows($check) > 0);
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
@@ -15,31 +33,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
     $phone_number = mysqli_real_escape_string($con, $_POST['phone_number']);
     $email = mysqli_real_escape_string($con, $_POST['email']);
     $items = $_POST['items'] ?? [];
-    $total_amount = isset($_POST['total_amount']) ? (float) $_POST['total_amount'] : 0.00;
-    function generateOrderRef($length = 7)
-    {
-        $characters = '0123456789abcdefghijklmnopqrstuvwxyz';
-        $randomString = '';
-        for ($i = 0; $i < $length; $i++) {
-            $randomString .= $characters[random_int(0, strlen($characters) - 1)];
-        }
-        return $randomString;
-    }
-
-    // Ensure unique reference
-    do {
-        $order_ref = generateOrderRef();
-        $check = mysqli_query($con, "SELECT id FROM event_orders WHERE order_ref='$order_ref'");
-    } while (mysqli_num_rows($check) > 0);
-
-    // change 2
+    $total_amount = isset($_POST['total_amount']) ? (float)$_POST['total_amount'] : 0.00;
     $date = mysqli_real_escape_string($con, $_POST['date']);
     $time = mysqli_real_escape_string($con, $_POST['time']);
+    $shipping_type = mysqli_real_escape_string($con, $_POST['delivery_option'] ?? 'delivery');
+    $delivery_address = isset($_POST['delivery_address']) ? mysqli_real_escape_string($con, $_POST['delivery_address']) : '';
 
+    // Store delivery details in session
+    $_SESSION['shipping_type'] = $shipping_type;
+    $_SESSION['delivery_address'] = $delivery_address;
 
-    $sql = "INSERT INTO event_orders (order_ref, customer_name, phone_number, email, total_amount, status, pay_status, section, type, created_at, edited_price, delivery_date, delivery_time) 
-            VALUES ('$order_ref','$customer_name', '$phone_number', '$email', $total_amount, 'pending', 'pending', 'refreshments', 'event', NOW(), 0, '$date', '$time')";
-    // change 2
+    $sql = "INSERT INTO event_orders (order_ref, customer_name, phone_number, email, total_amount, status, pay_status, section, type, created_at, edited_price, delivery_date, delivery_time, shipping_type, delivery_address) 
+            VALUES ('$order_ref', '$customer_name', '$phone_number', '$email', $total_amount, 'pending', 'pending', 'refreshments', 'event', NOW(), 0, '$date', '$time', '$shipping_type', '$delivery_address')";
 
     if (mysqli_query($con, $sql)) {
         $order_id = mysqli_insert_id($con);
@@ -47,12 +52,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
         // Insert menu items into event_order_items
         if (!empty($items['menu'])) {
             foreach ($items['menu'] as $itemid => $data) {
-                $quantity = (int) $data['quantity'];
+                $quantity = (int)$data['quantity'];
                 if ($quantity > 0) {
                     $res = mysqli_query($con, "SELECT item, price FROM food_menu WHERE s='$itemid'");
                     if ($row = mysqli_fetch_assoc($res)) {
                         $item_name = mysqli_real_escape_string($con, $row['item']);
-                        $item_price = (float) $row['price'];
+                        $item_price = (float)$row['price'];
                         $total_price = $quantity * $item_price;
                         $query = "INSERT INTO event_order_items (orderid, itemid, item, unitprice, quantity, totalprice, edited_price) 
                                   VALUES ('$order_id', '$itemid', '$item_name', '$item_price', '$quantity', '$total_price', 0)";
@@ -67,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
         // Insert custom items into event_order_items
         if (!empty($items['custom'])) {
             foreach ($items['custom'] as $data) {
-                $quantity = (int) $data['quantity'];
+                $quantity = (int)$data['quantity'];
                 if ($quantity > 0) {
                     $item_name = mysqli_real_escape_string($con, $data['name']);
                     $query = "INSERT INTO event_order_items (orderid, itemid, item, unitprice, quantity, totalprice, edited_price) 
@@ -83,10 +88,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
         unset($_SESSION['eventCart']);
         $_SESSION['success_message'] = "Event order request submitted successfully!";
         header("Location: event_orders.php");
-
+        exit;
     } else {
         $error = mysqli_error($con);
         echo "<script>alert('Error submitting request: " . addslashes($error) . "'); window.location.href='event_orders.php';</script>";
+        exit;
     }
 }
 ?>
@@ -95,8 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
 <section id="pricing" class="pricing section-bg" style="margin-top:50px; background-color:none; border:none;">
     <div class="container" style="width:100%; margin:auto;">
         <div class="section-title" style="color:#000;">
-            <h3 style="text-decoration:none; color:#000;">EVENT ORDERS<br><span style="font-size:14px;">Request bulk
-                    orders from our menu or customize your items</span></h3>
+            <h3 style="text-decoration:none; color:#000;">EVENT ORDERS<br><span style="font-size:14px;">Request bulk orders from our menu or customize your items</span></h3>
         </div>
         <div class="row">
             <div class="col-lg-4 col-md-4">
@@ -117,20 +122,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                             <label for="email">Email</label>
                             <input type="email" class="form-control" id="email" name="email" required>
                         </div>
-                        <!-- CHANGE 1 -->
-                        <div class="form-group mb-4">
+                         <div class="form-group mb-4">
                             <label for="date">Expected Date of delivery</label>
-                            <input type="date" class="form-control" id="date" name="date" required
-                                min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>">
-                        </div>
+                            <center>
+                                <input type="date" style="width: 100%;" class="form-control" id="date" name="date"
+                                    required min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>">
+                            </center>
 
+                        </div>
                         <div class="form-group mb-4">
                             <label for="time">Expected Time of delivery</label>
-                            <input type="time" class="form-control" id="time" name="time" required>
+                            <center>
+                                <input type="time" style="width: 10%0;" class="form-control" id="time" name="time"
+                                    required>
+                            </center>
+                        <!-- Delivery Options -->
+                        <div class="delivery-options mt-4">
+                            <h6 style="color: black;">Delivery Options</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="delivery_option" id="pickup" value="pickup" <?php echo $shipping_type === 'pickup' ? 'checked' : ''; ?>>
+                                <label class="form-check-label" for="pickup" style="color: black;">
+                                    Pickup at Store
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="delivery_option" id="delivery" value="delivery" <?php echo $shipping_type === 'delivery' ? 'checked' : ''; ?>>
+                                <label class="form-check-label" for="delivery" style="color: black;">
+                                    Delivery within Lagos
+                                </label>
+                            </div>
+                            <!-- Pickup Details -->
+                            <div id="pickup-details" style="display: <?php echo $shipping_type === 'pickup' ? 'block' : 'none'; ?>;" class="border border-1 p-2 mt-4">
+                                <div class="mb-1">
+                                    <b>PICKUP ADDRESS:</b>
+                                </div>
+                                <p class="text-black"><b>Address:</b> 19 Olowu St, Opebi 101233, Ikeja, Lagos</p>
+                                <p class="text-black"><b>Phone:</b> 09025572552</p>
+                                <p class="text-black"><b>Pickup Code:</b> <?php echo htmlspecialchars($order_ref); ?></p>
+                            </div>
+                            <!-- Delivery Address Input -->
+                            <div id="delivery-details" style="display: <?php echo $shipping_type === 'delivery' ? 'block' : 'none'; ?>;" class="border border-1 p-2 mt-4">
+                                <div class="mb-1">
+                                    <b>DELIVERY ADDRESS:</b>
+                                </div>
+                                <div class="form-group">
+                                    <label for="delivery_address" style="color: black;">Enter your delivery address:</label>
+                                    <input type="text" class="form-control" id="delivery_address" name="delivery_address" value="<?php echo isset($delivery_address) ? htmlspecialchars($delivery_address) : ''; ?>" placeholder="Enter your address in Lagos" <?php echo $shipping_type === 'delivery' ? 'required' : ''; ?>>
+                                </div>
+                            </div>
                         </div>
-                        <!-- CHANGE 1 -->
-
-
                         <!-- Tabs -->
                         <ul class="nav nav-tabs mb-4">
                             <li class="nav-item">
@@ -140,18 +180,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                                 <a class="nav-link" data-bs-toggle="tab" href="#customItemsTab">Custom Items</a>
                             </li>
                         </ul>
-
                         <div class="tab-content">
                             <!-- Menu Items Tab -->
                             <div class="tab-pane fade show active" id="menuItemsTab">
                                 <!-- Search Bar -->
                                 <div class="search-container">
-                                    <input type="text" id="searchInput" class="search-input"
-                                        placeholder="Search food items...">
+                                    <input type="text" id="searchInput" class="search-input" placeholder="Search food items...">
                                     <button type="button" class="btn-buya" onclick="triggerSearch()">Search</button>
                                     <div id="searchSuggestions" class="search-suggestions"></div>
                                 </div>
-
                                 <p>
                                     <button type="button" onclick="showAllItems()" class="btn-buya">ALL ITEMS</button>
                                     <?php
@@ -182,12 +219,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                                                 echo "<tr><td colspan='3'>No menu items available.</td></tr>";
                                             } else {
                                                 while ($row = mysqli_fetch_array($result)) {
-                                                    $id = (int) $row['s'];
+                                                    $id = (int)$row['s'];
                                                     $name = htmlspecialchars($row['item'], ENT_QUOTES, 'UTF-8');
                                                     $price = htmlspecialchars($row['price'], ENT_QUOTES, 'UTF-8');
                                                     $type = htmlspecialchars($row['type'], ENT_QUOTES, 'UTF-8');
-                                                    $quantity = (int) $row['quantity'];
-                                                    $cartQty = isset($eventCart[$id]) ? (int) $eventCart[$id]['quantity'] : 0;
+                                                    $quantity = (int)$row['quantity'];
+                                                    $cartQty = isset($eventCart[$id]) ? (int)$eventCart[$id]['quantity'] : 0;
                                                     echo "
                                                         <tr class='ter $type'>
                                                             <td>$name</td>
@@ -206,39 +243,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                                     </table>
                                 </div>
                             </div>
-
                             <!-- Custom Items Tab -->
                             <div class="tab-pane fade" id="customItemsTab">
                                 <div id="customItems">
                                     <div class="custom-item mb-3">
                                         <div class="row">
                                             <div class="col-md-6">
-                                                <input type="text" class="form-control" name="items[custom][0][name]"
-                                                    placeholder="Item Name">
+                                                <input type="text" class="form-control" name="items[custom][0][name]" placeholder="Item Name">
                                             </div>
                                             <div class="col-md-4">
-                                                <input type="number" class="form-control quantity"
-                                                    name="items[custom][0][quantity]" placeholder="Quantity" min="0"
-                                                    value="0" onchange="calculateEstimatedFee()">
+                                                <input type="number" class="form-control quantity" name="items[custom][0][quantity]" placeholder="Quantity" min="0" value="0" onchange="calculateEstimatedFee()">
                                             </div>
                                             <div class="col-md-2">
-                                                <button type="button" class="btn btn-danger btn-sm"
-                                                    onclick="removeCustomItem(this)">Remove</button>
+                                                <button type="button" class="btn btn-danger btn-sm" onclick="removeCustomItem(this)">Remove</button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <button type="button" class="btn-buya mb-3" onclick="addCustomItem()">Add Custom
-                                    Item</button>
+                                <button type="button" class="btn-buya mb-3" onclick="addCustomItem()">Add Custom Item</button>
                             </div>
                         </div>
-
                         <!-- Estimated Fee -->
                         <div class="form-group mt-4">
                             <label for="estimated_fee">Estimated Fee</label>
                             <input type="text" class="form-control" id="estimated_fee" name="total_amount" readonly>
                         </div>
-
                         <button type="submit" name="placeOrder" class="btn-buya">Submit Request</button>
                     </form>
                 </div>
@@ -248,8 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
 </section>
 
 <!-- Floating Cart Button -->
-<button id="cartButton" class="btn"
-    style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; background-color: #ffc700;">
+<button id="cartButton" class="btn" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; background-color: #ffc700;">
     🛒
 </button>
 
@@ -267,10 +295,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                     <input type="hidden" name="phone_number" id="modal_phone_number">
                     <input type="hidden" name="email" id="modal_email">
                     <input type="hidden" name="total_amount" id="modal_total_amount">
-                    <!-- Addition 3 -->
                     <input type="hidden" name="date" id="modal_date">
                     <input type="hidden" name="time" id="modal_time">
-                    <!-- Addition 3 -->
+                    <input type="hidden" name="delivery_option" id="modal_delivery_option">
+                    <input type="hidden" name="delivery_address" id="modal_delivery_address">
                     <div class="table-responsive">
                         <table class="table align-items-center table-flush" id="cartItemsTable">
                             <thead class="thead-light">
@@ -306,7 +334,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
         justify-content: center;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
-
     #cartItemsTable input[type="number"] {
         width: 80px;
     }
@@ -315,10 +342,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
 <script>
     let customItemIndex = 1;
     let debounceTimeout;
-    let itemAdditionOrder = 0; // Track order of item additions
+    let itemAdditionOrder = 0;
 
     function addCustomItem() {
         const customItems = document.getElementById('customItems');
+        if (!customItems) {
+            console.warn('Element with ID "customItems" not found.');
+            return;
+        }
         const newItem = document.createElement('div');
         newItem.className = 'custom-item mb-3';
         newItem.innerHTML = `
@@ -345,21 +376,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
     }
 
     function calculateEstimatedFee() {
+        const estimatedFeeInput = document.getElementById('estimated_fee');
+        const modalEstimatedFeeInput = document.getElementById('modal_estimated_fee');
+        const modalTotalAmountInput = document.getElementById('modal_total_amount');
+        if (!estimatedFeeInput || !modalEstimatedFeeInput || !modalTotalAmountInput) {
+            console.warn('One or more estimated fee inputs not found.');
+            return;
+        }
         let total = 0;
         document.querySelectorAll('#menuItemsTab .quantity').forEach(input => {
             const quantity = parseFloat(input.value) || 0;
             const price = parseFloat(input.dataset.price) || 0;
             total += quantity * price;
         });
-        document.getElementById('estimated_fee').value = total.toFixed(2);
-        document.getElementById('modal_estimated_fee').value = total.toFixed(2);
-        document.getElementById('modal_total_amount').value = total.toFixed(2);
+        estimatedFeeInput.value = total.toFixed(2);
+        modalEstimatedFeeInput.value = total.toFixed(2);
+        modalTotalAmountInput.value = total.toFixed(2);
         updateCartModal();
     }
 
     function showCategory(category) {
-        const searchInput = document.getElementById('searchInput').value.trim();
-        if (searchInput) {
+        const searchInput = document.getElementById('searchInput');
+        if (!searchInput) {
+            console.warn('Element with ID "searchInput" not found.');
+            return;
+        }
+        const searchValue = searchInput.value.trim();
+        if (searchValue) {
             triggerSearch();
         } else {
             console.log("Filtering by category:", category);
@@ -369,8 +412,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
     }
 
     function showAllItems() {
-        const searchInput = document.getElementById('searchInput').value.trim();
-        if (searchInput) {
+        const searchInput = document.getElementById('searchInput');
+        if (!searchInput) {
+            console.warn('Element with ID "searchInput" not found.');
+            return;
+        }
+        const searchValue = searchInput.value.trim();
+        if (searchValue) {
             triggerSearch();
         } else {
             console.log("Showing all items");
@@ -381,24 +429,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
     function confirmSubmission() {
         return confirm('Are you sure you want to submit this event order request?');
     }
-
-    // Search and Suggestions Functionality
-    document.getElementById('searchInput').addEventListener('input', function (e) {
-        clearTimeout(debounceTimeout);
-        const query = e.target.value.trim();
-        const suggestionsDiv = document.getElementById('searchSuggestions');
-
-        if (query.length > 0) {
-            debounceTimeout = setTimeout(() => {
-                console.log("Fetching suggestions for query:", query);
-                fetchSuggestions(query, suggestionsDiv);
-            }, 300);
-        } else {
-            suggestionsDiv.style.display = 'none';
-            suggestionsDiv.innerHTML = '';
-            triggerSearch();
-        }
-    });
 
     function fetchSuggestions(query, suggestionsDiv) {
         if (typeof $ === 'undefined') {
@@ -424,9 +454,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                         const div = document.createElement('div');
                         div.textContent = item.item;
                         div.addEventListener('click', () => {
-                            document.getElementById('searchInput').value = item.item;
-                            suggestionsDiv.style.display = 'none';
-                            triggerSearch();
+                            const searchInput = document.getElementById('searchInput');
+                            if (searchInput) {
+                                searchInput.value = item.item;
+                                suggestionsDiv.style.display = 'none';
+                                triggerSearch();
+                            }
                         });
                         suggestionsDiv.appendChild(div);
                     });
@@ -445,38 +478,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
     }
 
     function triggerSearch() {
-        const query = document.getElementById('searchInput').value.trim().toLowerCase();
+        const searchInput = document.getElementById('searchInput');
+        const searchSuggestions = document.getElementById('searchSuggestions');
+        if (!searchInput || !searchSuggestions) {
+            console.warn('Search input or suggestions div not found.');
+            return;
+        }
+        const query = searchInput.value.trim().toLowerCase();
         console.log("Triggering search for:", query);
         document.querySelectorAll('#menuItems .ter').forEach(row => {
             const itemName = row.querySelector('td:first-child').textContent.toLowerCase().replace('(out of stock)', '').trim();
             row.style.display = query ? (itemName.includes(query) ? 'table-row' : 'none') : 'table-row';
         });
-        document.getElementById('searchSuggestions').style.display = 'none';
+        searchSuggestions.style.display = 'none';
     }
-
-    // Cart Modal Functionality
-    document.getElementById('cartButton').addEventListener('click', function () {
-        updateCartModal();
-        // Sync form inputs
-        document.getElementById('modal_customer_name').value = document.getElementById('customer_name').value;
-        document.getElementById('modal_phone_number').value = document.getElementById('phone_number').value;
-        document.getElementById('modal_email').value = document.getElementById('email').value;
-        // addition 4
-        document.getElementById('modal_date').value = document.getElementById('date').value;
-        document.getElementById('modal_time').value = document.getElementById('time').value;
-
-        // addition 4
-
-        // Show modal
-        var cartModal = new bootstrap.Modal(document.getElementById('cartModal'), {});
-        cartModal.show();
-    });
 
     function updateCartModal() {
         const cartItemsBody = document.getElementById('cartItemsBody');
+        if (!cartItemsBody) {
+            console.warn('Element with ID "cartItemsBody" not found.');
+            return;
+        }
         cartItemsBody.innerHTML = '';
 
-        // Collect menu items and custom items with addition order
         const allItems = [];
 
         // Menu items
@@ -486,7 +510,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                 const name = input.dataset.name;
                 const price = parseFloat(input.dataset.price) || 0;
                 const itemId = input.name.match(/\[menu\]\[(\d+)\]/)[1];
-                // Use dataset to store addition order, or assign new order if not set
                 if (!input.dataset.additionOrder) {
                     input.dataset.additionOrder = itemAdditionOrder++;
                 }
@@ -508,7 +531,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
             const name = nameInput.value;
             const quantity = parseInt(quantityInput.value) || 0;
             if (quantity > 0 && name) {
-                // Use dataset to store addition order, or assign new order if not set
                 if (!quantityInput.dataset.additionOrder) {
                     quantityInput.dataset.additionOrder = itemAdditionOrder++;
                 }
@@ -522,7 +544,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
             }
         });
 
-        // Sort items by additionOrder (descending, so newest first)
+        // Sort items by additionOrder (descending)
         allItems.sort((a, b) => b.additionOrder - a.additionOrder);
 
         // Add items to cart table
@@ -549,7 +571,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                     <input type="hidden" name="items[custom][${item.index}][name]" value="${item.name}">
                 `;
             }
-            cartItemsBody.appendChild(row); // Append in sorted order
+            cartItemsBody.appendChild(row);
         });
     }
 
@@ -586,8 +608,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
         calculateEstimatedFee();
     }
 
-    // Initialize estimated fee on page load
-    document.addEventListener('DOMContentLoaded', calculateEstimatedFee);
+    // Initialize JavaScript with null checks
+    document.addEventListener('DOMContentLoaded', function () {
+        // Search input
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function (e) {
+                clearTimeout(debounceTimeout);
+                const query = e.target.value.trim();
+                const suggestionsDiv = document.getElementById('searchSuggestions');
+                if (!suggestionsDiv) {
+                    console.warn('Element with ID "searchSuggestions" not found.');
+                    return;
+                }
+                if (query.length > 0) {
+                    debounceTimeout = setTimeout(() => {
+                        console.log("Fetching suggestions for query:", query);
+                        fetchSuggestions(query, suggestionsDiv);
+                    }, 300);
+                } else {
+                    suggestionsDiv.style.display = 'none';
+                    suggestionsDiv.innerHTML = '';
+                    triggerSearch();
+                }
+            });
+        } else {
+            console.warn('Element with ID "searchInput" not found.');
+        }
+
+        // Cart button
+        const cartButton = document.getElementById('cartButton');
+        if (cartButton) {
+            cartButton.addEventListener('click', function () {
+                updateCartModal();
+                const customerName = document.getElementById('customer_name');
+                const phoneNumber = document.getElementById('phone_number');
+                const email = document.getElementById('email');
+                const date = document.getElementById('date');
+                const time = document.getElementById('time');
+                const deliveryAddress = document.getElementById('delivery_address');
+                const modalCustomerName = document.getElementById('modal_customer_name');
+                const modalPhoneNumber = document.getElementById('modal_phone_number');
+                const modalEmail = document.getElementById('modal_email');
+                const modalDate = document.getElementById('modal_date');
+                const modalTime = document.getElementById('modal_time');
+                const modalDeliveryOption = document.getElementById('modal_delivery_option');
+                const modalDeliveryAddress = document.getElementById('modal_delivery_address');
+
+                if (customerName && modalCustomerName) modalCustomerName.value = customerName.value;
+                if (phoneNumber && modalPhoneNumber) modalPhoneNumber.value = phoneNumber.value;
+                if (email && modalEmail) modalEmail.value = email.value;
+                if (date && modalDate) modalDate.value = date.value;
+                if (time && modalTime) modalTime.value = time.value;
+                if (modalDeliveryOption) {
+                    modalDeliveryOption.value = document.querySelector('input[name="delivery_option"]:checked')?.value || 'delivery';
+                }
+                if (deliveryAddress && modalDeliveryAddress) modalDeliveryAddress.value = deliveryAddress.value;
+
+                const cartModal = new bootstrap.Modal(document.getElementById('cartModal'), {});
+                cartModal.show();
+            });
+        } else {
+            console.warn('Element with ID "cartButton" not found.');
+        }
+
+        // Delivery toggle logic
+        const pickupRadio = document.getElementById('pickup');
+        const deliveryRadio = document.getElementById('delivery');
+        const pickupDetails = document.getElementById('pickup-details');
+        const deliveryDetails = document.getElementById('delivery-details');
+        const deliveryAddressInput = document.getElementById('delivery_address');
+
+        if (pickupRadio && deliveryRadio && pickupDetails && deliveryDetails && deliveryAddressInput) {
+            function toggleDetails() {
+                if (pickupRadio.checked) {
+                    pickupDetails.style.display = 'block';
+                    deliveryDetails.style.display = 'none';
+                    deliveryAddressInput.removeAttribute('required');
+                } else if (deliveryRadio.checked) {
+                    pickupDetails.style.display = 'none';
+                    deliveryDetails.style.display = 'block';
+                    deliveryAddressInput.setAttribute('required', 'required');
+                }
+            }
+
+            pickupRadio.addEventListener('change', toggleDetails);
+            deliveryRadio.addEventListener('change', toggleDetails);
+            deliveryAddressInput.addEventListener('input', function () {
+                const modalDeliveryAddress = document.getElementById('modal_delivery_address');
+                if (deliveryRadio.checked && modalDeliveryAddress) {
+                    modalDeliveryAddress.value = deliveryAddressInput.value;
+                }
+            });
+
+            toggleDetails();
+        } else {
+            console.warn('One or more delivery form elements not found.');
+        }
+
+        // Initialize estimated fee
+        calculateEstimatedFee();
+    });
 </script>
 
 <?php include "footer.php"; ?>

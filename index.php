@@ -52,7 +52,7 @@ if (isset($_GET['error'])) {
                 echo '<div class="row">'; // Add Bootstrap row
                 while ($row = mysqli_fetch_array($sql2)) {
                     $imageURL = 'category/' . $row["file_name"];
-                    echo '<div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
+                    echo '<div class="box px-4 py-5 text-center col-lg-5 col-md-5 mt-5">
             <h4 class="mb-3" style="text-transform:uppercase;">' . htmlspecialchars($row["name"]) . '</h4>
             <img src="' . $imageURL . '" class="category-image" alt="" />
             <p class="mt-4">' . htmlspecialchars($row["description"]) . '</p>
@@ -72,121 +72,6 @@ if (isset($_GET['error'])) {
                 ?>
 
 
-                <!-- THE SECTION -->
-                <!-- <div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
-                    <div>
-                        <h4 class="mb-3" style="text-transform:uppercase;">ORISHIRISHI</h4>
-                        <img src="food.png" alt="" />
-                        <p class="mt-4">
-                            Get all kind or drinks,meal or snacks at chbluxuryempire.Order Now
-                        </p>
-                        <div class="mt-4">
-                            <div class="button_container">
-                                <a href="food_page.php"><button class="btn-anim"><span>CLICK TO
-                                            ORDER</span></button></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
-                    <div>
-                        <h4 class="mb-3" style="text-transform:uppercase;">REPAIR CENTER</h4>
-                        <img src="repair.jpeg" alt="" />
-                        <p class="mt-4">
-                            Effective repairs of nail salon equipments
-                        </p>
-                        <div class="mt-4">
-                            <div class="button_container">
-                                <a href="repaircenter.php"><button class="btn-anim"><span>CLICK TO
-                                            ORDER</span></button></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
-                    <div>
-                        <h4 class="mb-3" style="text-transform:uppercase;">DELTA KITCHEN</h4>
-                        <img src="delta.jpeg" alt="" />
-                        <p class="mt-4">
-                            Your one stop for specially made urhobo delicacies
-                        </p>
-                        <div class="mt-4">
-                            <div class="button_container">
-                                <a href="deltakitchen.php"><button class="btn-anim"><span>CLICK TO
-                                            ORDER</span></button></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
-                    <div>
-                        <h4 class="mb-3" style="text-transform:uppercase;">E-GIFTCARD</h4>
-                        <img src="gift.png" alt="" />
-                        <p class="mt-4">
-                            Buy a e-gift card for your friends, loved ones and family.Buy Now
-                        </p>
-                        <div class="mt-4">
-                            <div class="button_container">
-                                <a href="giftcard.php"><button lass="btn-anim"><span>CLICK TO ORDER</span></button></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
-                    <div>
-                        <h4 class="mb-3" style="text-transform:uppercase;">RENTAL FOR BEAUTY AND SKILL TRAINING</h4>
-                        <img src="rental.jpeg" alt="" />
-                        <p class="mt-4">
-                            Request for a rental for your beauty and skills training
-                        </p>
-                        <div class="mt-4">
-                            <div class="button_container">
-                                <a href="rental/index.php"><button class="btn-anim"><span>CLICK TO
-                                            ORDER</span></button></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
-                    <div>
-                        <h4 class="mb-3" style="text-transform:uppercase;">E-GIFT VOUCHER SPA PACKAGES</h4>
-                        <img src="voucher.jpeg" alt="" />
-                        <p class="mt-4">
-                            We have Selected special services to gift that special person
-                        </p>
-                        <div class="mt-4">
-                            <div class="button_container">
-                                <a href="voucher/index.php"><button class="btn-anim"><span>CLICK TO
-                                            ORDER</span></button></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="box px-4 py-5 mx-2 text-center col-lg-5 col-md-5 mt-5">
-                    <div>
-                        <h4 class="mb-3" style="text-transform:uppercase;">CHB LUXURY ACADEMY</h4>
-                        <img src="academy.jpeg" alt="" />
-                        <p class="mt-4">
-                            You can rely on us at CHB LUXURY Academy to help you realize your aspirations
-                        </p>
-                        <div class="mt-4">
-                            <div class="button_container">
-                                <a href="academy/index.php"><button class="btn-anim"><span>CLICK TO
-                                            ORDER</span></button></a>
-                            </div>
-                        </div>
-                    </div>
-                </div> -->
-                <!-- THE SECTION -->
 
                   <!-- THE SECTION -->
                 <?php if (isMenuLinkEnabled($con, 'Orishirishi')): ?>
@@ -403,7 +288,8 @@ if (isset($_GET['error'])) {
         <div class="d-flex justify-content-center flex-wrap mt-4 mb-5">
             <div style="position: relative; z-index: 1000">
                 <div class="button_container">
-                    <button onclick="myFunction()" class="btn-anim"><span>CLICK TO BOOK</span></button>
+                    <!-- <button onclick="myFunction()" class="btn-anim"><span>CLICK TO BOOK</span></button> -->
+                    <a href="saloon/subcategory.php?category=001" class="btn-anim"><span>CLICK TO BOOK</span></a>
                 </div>
             </div>
         </div>
