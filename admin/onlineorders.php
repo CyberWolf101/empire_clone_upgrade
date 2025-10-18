@@ -9,6 +9,15 @@ if (isset($_GET['order']) && !empty($_GET['order'])) {
   mysqli_stmt_bind_param($stmt, "s", $order_id);
   if (mysqli_stmt_execute($stmt)) {
     if (mysqli_stmt_affected_rows($stmt) > 0) {
+
+      // Also update refreshments table where orderid matches
+      $sql2 = "UPDATE refreshments SET status = 'processed' WHERE orderid = ?";
+      $stmt2 = mysqli_prepare($con, $sql2);
+      mysqli_stmt_bind_param($stmt2, "s", $order_id);
+      mysqli_stmt_execute($stmt2);
+      mysqli_stmt_close($stmt2);
+
+
       echo "<script>alert('Order updated successfully!');</script>";
       header("Location: onlineorders.php");
     } else {
@@ -126,7 +135,7 @@ if (isset($_GET['order']) && !empty($_GET['order'])) {
             <td>" . $i++ . "</td>
             <td>" . $id . "</td>
             <td>" . htmlspecialchars($row['name']) . "</td>
-            <td>&#8358; " .$combined_total . "</td>
+            <td>&#8358; " . $combined_total . "</td>
             <td><span class='badge $bg' style='text-transform:capitalize;'>$status</span></td>
             <td>" . $date . "</td>
             <td>
