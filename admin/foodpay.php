@@ -91,45 +91,90 @@ if (isset($_POST['pay'])) {
         $stmt->execute();
         $sqlp = $stmt->get_result();
 
-        while ($rowe = $sqlp->fetch_assoc()) {
-            $food = $rowe['itemid'];
-            $value = $rowe['quantity'];
+        // while ($rowe = $sqlp->fetch_assoc()) {
+        //     $food = $rowe['itemid'];
+        //     $value = $rowe['quantity'];
 
-            // Fetch current stock quantity
-            $sql = "SELECT quantity FROM food_menu WHERE s = ?";
-            $stmt_food = $con->prepare($sql);
-            $stmt_food->bind_param("s", $food);
-            $stmt_food->execute();
-            $sql_food = $stmt_food->get_result();
+        //     // Fetch current stock quantity
+        //     $sql = "SELECT quantity FROM food_menu WHERE s = ?";
+        //     $stmt_food = $con->prepare($sql);
+        //     $stmt_food->bind_param("s", $food);
+        //     $stmt_food->execute();
+        //     $sql_food = $stmt_food->get_result();
 
-            if ($sql_food->num_rows > 0) {
-                $row_food = $sql_food->fetch_assoc();
-                $originalvalue = $row_food['quantity'];
-                $rem_value = $originalvalue - $value;
+        //     if ($sql_food->num_rows > 0) {
+        //         $row_food = $sql_food->fetch_assoc();
+        //         $originalvalue = $row_food['quantity'];
+        //         $rem_value = $originalvalue - $value;
 
-                // Update stock quantity in food_menu
-                $stmt_update = $con->prepare("UPDATE food_menu SET quantity = ? WHERE s = ?");
-                $stmt_update->bind_param("is", $rem_value, $food);
-                $stmt_update->execute() or die('Could not connect: ' . mysqli_error($con));
-                $stmt_update->close();
+        //         // Update stock quantity in food_menu
+        //         $stmt_update = $con->prepare("UPDATE food_menu SET quantity = ? WHERE s = ?");
+        //         $stmt_update->bind_param("is", $rem_value, $food);
+        //         $stmt_update->execute() or die('Could not connect: ' . mysqli_error($con));
+        //         $stmt_update->close();
 
-                // Update total_left and date in refreshments
-                $stmt_refresh = $con->prepare("UPDATE refreshments SET total_left = ?, date = ? WHERE orderid = ? AND itemid = ?");
-                $stmt_refresh->bind_param("issi", $rem_value, $datetime, $saloon, $food);
-                $stmt_refresh->execute() or die('Could not connect: ' . mysqli_error($con));
-                $stmt_refresh->close();
+        //         // Update total_left and date in refreshments
+        //         $stmt_refresh = $con->prepare("UPDATE refreshments SET total_left = ?, date = ? WHERE orderid = ? AND itemid = ?");
+        //         $stmt_refresh->bind_param("issi", $rem_value, $datetime, $saloon, $food);
+        //         $stmt_refresh->execute() or die('Could not connect: ' . mysqli_error($con));
+        //         $stmt_refresh->close();
 
-                // Log stock change
-                $stmt_log = $con->prepare("INSERT INTO stock_log (id, action, value, date) VALUES (?, 'minus', ?, ?)");
-                $stmt_log->bind_param("sis", $food, $value, $datetime);
-                $stmt_log->execute() or die('Could not connect: ' . mysqli_error($con));
-                $stmt_log->close();
-            } else {
-                error_log("Item with s='$food' not found in food_menu for orderid='$saloon'");
+        //         // Log stock change
+        //         $stmt_log = $con->prepare("INSERT INTO stock_log (id, action, value, date) VALUES (?, 'minus', ?, ?)");
+        //         $stmt_log->bind_param("sis", $food, $value, $datetime);
+        //         $stmt_log->execute() or die('Could not connect: ' . mysqli_error($con));
+        //         $stmt_log->close();
+        //     } else {
+        //         error_log("Item with s='$food' not found in food_menu for orderid='$saloon'");
+        //     }
+        //     $stmt_food->close();
+        // }
+        // $stmt->close();
+
+
+        $con->begin_transaction();
+
+        try {
+            $stmt = $con->prepare("SELECT itemid, quantity FROM refreshments WHERE orderid = ?");
+            $stmt->bind_param("s", $saloon);
+            $stmt->execute();
+            $items = $stmt->get_result();
+
+            while ($row = $items->fetch_assoc()) {
+                $food = $row['itemid'];
+                $qty = (int) $row['quantity'];
+
+                $stmt2 = $con->prepare("SELECT quantity FROM food_menu WHERE s = ? FOR UPDATE");
+                $stmt2->bind_param("s", $food);
+                $stmt2->execute();
+                $result = $stmt2->get_result();
+
+                if ($result->num_rows > 0) {
+                    $stock = (int) $result->fetch_assoc()['quantity'];
+                    $newQty = max(0, $stock - $qty);
+
+                    $upd = $con->prepare("UPDATE food_menu SET quantity = ? WHERE s = ?");
+                    $upd->bind_param("is", $newQty, $food);
+                    $upd->execute();
+
+                    $ref = $con->prepare("UPDATE refreshments SET total_left=?, date=? WHERE orderid=? AND itemid=?");
+                    $ref->bind_param("issi", $newQty, $datetime, $saloon, $food);
+                    $ref->execute();
+
+                    $log = $con->prepare("INSERT INTO stock_log (id, action, value, date) VALUES (?, 'minus', ?, ?)");
+                    $log->bind_param("sis", $food, $qty, $datetime);
+                    $log->execute();
+                }
             }
-            $stmt_food->close();
+
+            $con->commit();
+            $stmt->close();
+
+        } catch (Exception $e) {
+            $con->rollback();
+            error_log("Stock update failed: " . $e->getMessage());
         }
-        $stmt->close();
+
 
         // Generate receipt HTML
         $sql = "SELECT * FROM refreshments WHERE orderid = ?";
