@@ -253,7 +253,7 @@ if (isset($_GET['error'])) {
         </table>
       </div>
       <div class="card-footer text-right">
-        <button type="button" class="btn btn-secondary btn-sm" id="mark-all-restock">Mark All for Restock</button>
+        <!-- <button type="button" class="btn btn-secondary btn-sm" id="mark-all-restock">Mark All for Restock</button> -->
         <button type="submit" name="refund_selected" class="btn btn-primary btn-sm">Refund Selected</button>
         <button type="submit" name="refund_all" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to refund all items?');">Refund All</button>
       </div>
