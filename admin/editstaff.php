@@ -1,5 +1,18 @@
 <?php include "header.php";
 
+
+function ensureColumnExists($con, $table, $column, $definition) {
+    $check = mysqli_query($con, "SHOW COLUMNS FROM `$table` LIKE '$column'");
+    if (mysqli_num_rows($check) == 0) {
+        mysqli_query($con, "ALTER TABLE `$table` ADD `$column` $definition");
+    }
+}
+
+ensureColumnExists($con, 'admin', 'emergency_name', 'VARCHAR(255) NULL');
+ensureColumnExists($con, 'admin', 'emergency_phone', 'VARCHAR(50) NULL');
+ensureColumnExists($con, 'admin', 'emergency_address', 'TEXT NULL');
+
+
 if(isset($_GET['category'])){
 
             $category = $_GET['category'];
@@ -14,6 +27,9 @@ if(isset($_GET['category'])){
 					  $status = $row['status'];
 					  $categories = explode(',', $row['sections']); 
 					  $password = $row['password'];
+                      $emergency_name = $row['emergency_name'] ?? '';
+$emergency_phone = $row['emergency_phone'] ?? '';
+$emergency_address = $row['emergency_address'] ?? '';
 					  }}
 					   else{
 					      header("location: staff.php");
@@ -57,20 +73,53 @@ foreach ($options as $option) {
 
 <p><select class="form-control" name="role" required>
 <option value="">- Select Role -</option>
+
+
 <?php 
 	 
-$sql = "select DISTINCT status from admin where status!='superadmin'";
-$sql2 = mysqli_query($con,$sql);
-while ($row = mysqli_fetch_array($sql2)) {
-    $selected = ($row['status'] == $status) ? 'selected="selected"' : '';
-    echo '<option value="' . htmlspecialchars($row['status']) . '" ' . $selected . '>' . htmlspecialchars($row['status']) . '</option>';
+
+
+// $sql = "select DISTINCT status from admin where status!='superadmin'";
+// $sql2 = mysqli_query($con,$sql);
+// while ($row = mysqli_fetch_array($sql2)) {
+//     $selected = ($row['status'] == $status) ? 'selected="selected"' : '';
+//     echo '<option value="' . htmlspecialchars($row['status']) . '" ' . $selected . '>' . htmlspecialchars($row['status']) . '</option>';
+// }
+
+
+$roles = ['manager', 'cashier', 'subadmin', 'accountant', 'storekeeper']; // add any new status here
+
+foreach ($roles as $role) {
+    $selected = ($role == $status) ? 'selected="selected"' : '';
+    echo '<option value="' . htmlspecialchars($role) . '" ' . $selected . '>' . htmlspecialchars($role) . '</option>';
 }
 ?>
 </select></p>
+<hr>
+<h5>Emergency Contact Details</h5>
+
+<input type="text"
+       class="form-control"
+       name="emergency_name"
+       value="<?php echo htmlspecialchars($emergency_name ?? ''); ?>"
+       placeholder="Emergency Contact Name" /><br />
+
+<input type="text"
+       class="form-control"
+       name="emergency_phone"
+       value="<?php echo htmlspecialchars($emergency_phone ?? ''); ?>"
+       placeholder="Emergency Contact Phone Number" /><br />
+
+<textarea
+    class="form-control"
+    name="emergency_address"
+    rows="3"
+    placeholder="Emergency Contact Address"><?php echo htmlspecialchars($emergency_address ?? ''); ?></textarea><br />
 
 <input type='submit' name='register' value='Update Details' class='btn btn-primary' ></form>	
 </div></div>
           
+
  </div>
           
           

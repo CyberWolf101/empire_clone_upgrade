@@ -103,6 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
         <div class="section-title" style="color:#000;">
             <h3 style="text-decoration:none; color:#000;">EVENT ORDERS<br><span style="font-size:14px;">Request bulk orders from our menu or customize your items</span></h3>
         </div>
+        <?php include "event_order_warning.php"?>
         <div class="row">
             <div class="col-lg-4 col-md-4">
                 <p style="color:#FEBF01;">Food, Snacks, Drinks and much more...</p>

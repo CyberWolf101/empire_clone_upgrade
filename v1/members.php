@@ -38,7 +38,7 @@
 		<div class="justify-content-center" align="center">
       <form method="post" enctype="multipart/form-data">
 		<p><b>PERSONAL DETAILS</b></p>
-		<p style="text-transform:capitalize;">Fill in the required information below,choose package and proceed</p>
+		<p style="text-transform:capitalize;">Fill in the required information below,choose package and proceed </p>
         <div class="col-lg-4">
 	<p><input type="text" class="form-control" name="name" placeholder="Your First Name.." required/></p>
     <p><input type="text" class="form-control" name="last" placeholder="Your Last  Name.." required/></p>
@@ -73,7 +73,16 @@
   var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
   document.getElementById("currentDate").value = date;
   </script>
-	  <p><input type="checkbox" /><a href="terms.php" style="color:#FFC700; font-size:12px;">Terms and Conditions</a></p>
+	  <p><input type="checkbox" /><div  style="color:#FFC700; font-size:12px;">
+       <?php 
+        if (!empty($terms)) {
+            // Display formatted terms safely
+            echo nl2br(htmlspecialchars($terms));
+        } else {
+            echo "<p>No terms and conditions have been set yet.</p>";
+        }
+        ?>
+    </div></p>
 	  <p><input type="submit" value="REGISTER" name="submit" class="form-control btn-buya" name="mob" /></p>
 	</div></form></div></div>
 		  

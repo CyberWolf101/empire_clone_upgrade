@@ -219,7 +219,7 @@ $dateInWords = date("F j, Y", $timestamp); // Example format: September 20, 2023
 <?php } ?>
 
 
-
+<?php include "latest_deductions.php"; ?>
 
 
 <?php include "footer.php"; ?>

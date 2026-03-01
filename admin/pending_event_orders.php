@@ -1,4 +1,7 @@
-<?php include "header.php"; ?>
+<?php
+include "header.php";
+include '../mailer.php';
+?>
 
 <?php
 
@@ -43,6 +46,26 @@ if (isset($_GET['complete']) && !empty($_GET['complete'])) {
         echo "<script>alert('Error completing order: " . mysqli_error($con) . "');</script>";
     }
 }
+
+if (isset($_GET['order_prepared']) && !empty($_GET['order_prepared'])) {
+    $order_id = mysqli_real_escape_string($con, $_GET['order_prepared']);
+    $sql = "UPDATE event_orders SET isPrepared=1 WHERE id='$order_id'";
+
+    $to = $_GET['email'] ?? '';
+    $subject = "email subject";
+    $message = "email message";
+
+    if (sendEmail($to, $subject, $message)) {
+     
+    }
+    if (mysqli_query($con, $sql)) {
+        $_SESSION['success_message'] = 'Order marked as prepared.';
+        header("Location: pending_event_orders.php");
+    } else {
+        echo "<script>alert('Error completing order: " . mysqli_error($con) . "');</script>";
+    }
+}
+
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -91,6 +114,8 @@ if (isset($_GET['complete']) && !empty($_GET['complete'])) {
 
                     while ($row = mysqli_fetch_array($result)) {
                         $id = $row['id'];
+                        $email = $row['email'];
+                        $isPrepared = $row['isPrepared'] ?? 0;
                         $ref = $row['order_ref'];
                         $status = isset($row['status']) && $row['status'] !== '' ? $row['status'] : 'pending';
                         $pay_status = isset($row['pay_status']) && $row['pay_status'] === 'paid' || $row['pay_status'] === 'partly paid' ? $row['pay_status'] : 'unpaid';
@@ -137,8 +162,16 @@ if (isset($_GET['complete']) && !empty($_GET['complete'])) {
                         <a class='dropdown-item' href='#' onclick='openGenerateLinkModal(\"$ref\")'>Generate Link</a>
                           <a class='dropdown-item' href='#' onclick='openEditPriceModal(\"$id\")'>Edit Price</a>
                          <a class='dropdown-item' href='view_event_order.php?order=$id' onclick='viewOrder(\"$id\")'>View Order</a>
+                         
                          <a class='dropdown-item' href='event_order_receipt.php?order=" . htmlspecialchars($ref, ENT_QUOTES, 'UTF-8') . "' target='_blank'>Print Receipt</a>";
-                        if ($status !== "completed" && $pay_status === "paid") {
+
+
+                        if ($isPrepared == 0) {
+                            $url = "pending_event_orders.php?order_prepared=" . urlencode($id) . "&email=" . urlencode($email);
+                            echo "<a class='dropdown-item' href='" . htmlspecialchars($url) . "' onclick='return confirm(\"Mark this order as prepared?\")'>Mark as prepared</a>";
+                        }
+
+                        if ($status !== "completed" && $pay_status === "paid" && $isPrepared == 1) {
                             echo "<a class='dropdown-item text-success' 
                              href='pending_event_orders.php?complete=$id' 
                              onclick='return confirm(\"Mark this order as completed?\")'>

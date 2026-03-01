@@ -139,7 +139,7 @@ $kitprice = $row["pedicurekit"];
 $rentprice = $row["rental"];
 $late_fee = $row["latefee"];
 $walkinIncrease = $row["walk_in_fee"];
-$key = 'AIzaSyD6MS4bUOjkP0fYUklsVzIKYmGmb_MheGQ'
+$key = 'AIzaSyD6MS4bUOjkP0fYUklsVzIKYmGmb_MheGQ';
 
   // echo "Step 9 SUCCESS: Site settings loaded<br>";
 ?>

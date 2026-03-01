@@ -2,35 +2,93 @@
 
 <?php
 // Handle completion
+// if (isset($_GET['order']) && !empty($_GET['order'])) {
+//   $order_id = $_GET['order'];
+//   $sql = "UPDATE saloon_orders SET status = 'completed' WHERE id = ?";
+//   $stmt = mysqli_prepare($con, $sql);
+//   mysqli_stmt_bind_param($stmt, "s", $order_id);
+//   if (mysqli_stmt_execute($stmt)) {
+//     if (mysqli_stmt_affected_rows($stmt) > 0) {
+
+//       // Also update refreshments table where orderid matches
+//       $sql2 = "UPDATE refreshments SET status = 'processed' WHERE orderid = ?";
+//       $stmt2 = mysqli_prepare($con, $sql2);
+//       mysqli_stmt_bind_param($stmt2, "s", $order_id);
+//       mysqli_stmt_execute($stmt2);
+//       mysqli_stmt_close($stmt2);
+
+
+
+//       echo "<script>alert('Order updated successfully!');</script>";
+//       header("Location: onlineorders.php");
+//     } else {
+//       echo "<script>alert('No rows updated. Order may not exist or already marked as completed.');</script>";
+//       header("Location: onlineorders.php");
+//     }
+//   } else {
+//     $error = mysqli_error($con);
+//     echo "<script>alert('Error updating order status: " . addslashes($error) . "');</script>";
+//     header("Location: onlineorders.php");
+//   }
+//   mysqli_stmt_close($stmt);
+// }
+
+
 if (isset($_GET['order']) && !empty($_GET['order'])) {
   $order_id = $_GET['order'];
-  $sql = "UPDATE saloon_orders SET status = 'completed' WHERE id = ?";
-  $stmt = mysqli_prepare($con, $sql);
-  mysqli_stmt_bind_param($stmt, "s", $order_id);
-  if (mysqli_stmt_execute($stmt)) {
-    if (mysqli_stmt_affected_rows($stmt) > 0) {
 
-      // Also update refreshments table where orderid matches
-      $sql2 = "UPDATE refreshments SET status = 'processed' WHERE orderid = ?";
-      $stmt2 = mysqli_prepare($con, $sql2);
-      mysqli_stmt_bind_param($stmt2, "s", $order_id);
-      mysqli_stmt_execute($stmt2);
-      mysqli_stmt_close($stmt2);
+  // Start a transaction - very important for data consistency!
+  mysqli_begin_transaction($con);
 
+  try {
+    // 1. Mark the main order as completed
+    $sql = "UPDATE saloon_orders SET status = 'completed' WHERE id = ? AND status != 'completed'";
+    $stmt = mysqli_prepare($con, $sql);
+    mysqli_stmt_bind_param($stmt, "s", $order_id);
+    mysqli_stmt_execute($stmt);
 
-      echo "<script>alert('Order updated successfully!');</script>";
-      header("Location: onlineorders.php");
-    } else {
-      echo "<script>alert('No rows updated. Order may not exist or already marked as completed.');</script>";
-      header("Location: onlineorders.php");
+    if (mysqli_stmt_affected_rows($stmt) == 0) {
+      throw new Exception("Order not found or already completed.");
     }
-  } else {
-    $error = mysqli_error($con);
-    echo "<script>alert('Error updating order status: " . addslashes($error) . "');</script>";
-    header("Location: onlineorders.php");
+    mysqli_stmt_close($stmt);
+
+    // 2. Update refreshments status
+    $sql2 = "UPDATE refreshments SET status = 'processed' WHERE orderid = ?";
+    $stmt2 = mysqli_prepare($con, $sql2);
+    mysqli_stmt_bind_param($stmt2, "s", $order_id);
+    mysqli_stmt_execute($stmt2);
+    mysqli_stmt_close($stmt2);
+
+    // 3. RESTOCK pre-ordered items: add bought quantity back to food_menu stock
+    $restock_sql = "
+            UPDATE food_menu fm
+            INNER JOIN refreshments r ON fm.s = r.itemid
+            SET fm.quantity = fm.quantity + r.quantity
+            WHERE r.orderid = ?
+              AND r.preorder = 1
+        ";
+
+    $stmt_restock = mysqli_prepare($con, $restock_sql);
+    mysqli_stmt_bind_param($stmt_restock, "s", $order_id);
+    mysqli_stmt_execute($stmt_restock);
+    // Optional: you can check affected rows if you want to log how many items were restocked
+    mysqli_stmt_close($stmt_restock);
+
+    // Everything went well → commit
+    mysqli_commit($con);
+
+    echo "<script>alert('Order completed and pre-order stock updated successfully!');</script>";
+  } catch (Exception $e) {
+    // Something failed → rollback all changes
+    mysqli_rollback($con);
+    echo "<script>alert('Error: " . addslashes($e->getMessage()) . "');</script>";
   }
-  mysqli_stmt_close($stmt);
+
+  // Always redirect at the end
+  echo "<script>window.location='onlineorders.php';</script>";
+  exit;
 }
+
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">

@@ -1,5 +1,18 @@
 <?php include "header.php";
 
+
+// Ensure emergency columns exist
+function ensureColumnExists($con, $table, $column, $definition) {
+    $check = mysqli_query($con, "SHOW COLUMNS FROM `$table` LIKE '$column'");
+    if (mysqli_num_rows($check) == 0) {
+        mysqli_query($con, "ALTER TABLE `$table` ADD `$column` $definition");
+    }
+}
+
+ensureColumnExists($con, 'staff', 'emergency_name', 'VARCHAR(255) NULL');
+ensureColumnExists($con, 'staff', 'emergency_phone', 'VARCHAR(50) NULL');
+ensureColumnExists($con, 'staff', 'emergency_address', 'TEXT NULL');
+
 if(isset($_GET['category'])){
 
             $category = $_GET['category'];
@@ -15,13 +28,13 @@ if(isset($_GET['category'])){
 					  $gender = $row['gender'];
 					  $password = $row['password'];
 					  $section = $row['section'];
+                      $emergency_name = $row['emergency_name'];
+$emergency_phone = $row['emergency_phone'];
+$emergency_address = $row['emergency_address'];
 					  }}
 					   else{
 					      header("location: staff.php");
 					  }
-					  
-					  
-					  
 					  
 					  ?>
 
@@ -44,7 +57,26 @@ if(isset($_GET['category'])){
 <input type="text" class="form-control" name="email" value="<?php echo $email; ?>"  placeholder="*Email" required /><br />
 <input type="text" class="form-control" name="phone"  value="<?php echo $phone; ?>" placeholder="*Phone Number" required /><br />
 <input type="text" class="form-control" name="password"  value="<?php echo $password; ?>" placeholder="*Password" required /><br />
+<hr>
+<h5>Emergency Contact Details</h5>
 
+<input type="text" 
+       class="form-control" 
+       name="emergency_name" 
+       value="<?php echo htmlspecialchars($emergency_name ?? ''); ?>" 
+       placeholder="Emergency Contact Name" /><br />
+
+<input type="text" 
+       class="form-control" 
+       name="emergency_phone" 
+       value="<?php echo htmlspecialchars($emergency_phone ?? ''); ?>" 
+       placeholder="Emergency Contact Phone Number" /><br />
+
+<textarea 
+    class="form-control" 
+    name="emergency_address" 
+    rows="3"
+    placeholder="Emergency Contact Address"><?php echo htmlspecialchars($emergency_address ?? ''); ?></textarea><br />
 <p><input type="radio" value="male" name="type" <?php if($gender=="male"){ echo "checked"; } ?>/> <label>Male</label> <input type="radio" value="female"  <?php if($gender=="female"){ echo "checked"; } ?> name="type"/> <label>Female</label></p>
 <p>
     <select class="form-control" name="service" required>

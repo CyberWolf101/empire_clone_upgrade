@@ -447,7 +447,7 @@ if (!$stmt) {
           </li>
 
 
-          <li class="nav-item">
+          <!-- <li class="nav-item">
             <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVent" aria-expanded="true"
               aria-controls="collapseBootstrap">
               <i class="fas fa-fw fa-graduation-cap"></i>
@@ -460,7 +460,7 @@ if (!$stmt) {
                 <a class="collapse-item" href="inventory_system.php">Inventory System</a>
               </div>
             </div>
-          </li>
+          </li> -->
 
 
         <?php } ?>
@@ -489,7 +489,7 @@ if (!$stmt) {
                   <a class="collapse-item" href="onlineorders.php">Online Orders</a>
                   <a class="collapse-item" href="startorder.php">Start Transaction</a><?php } ?>
 
-                <?php if ($status == "stockkeeper") { ?>
+                <?php if ($status == "storekeeper") { ?>
                   <a class="collapse-item" href="itemsreport.php">Stocks Report</a><?php } ?>
 
               </div>
@@ -513,7 +513,7 @@ if (!$stmt) {
           </li>
         <?php } ?>
 
-        <?php if ($status == "stockkeeper") { ?>
+        <?php if ($status == "storekeeper") { ?>
           <li class="nav-item">
             <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVent" aria-expanded="true"
               aria-controls="collapseBootstrap">

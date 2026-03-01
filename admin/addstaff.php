@@ -30,7 +30,7 @@
             <option value="manager">Manager</option>
             <option value="subadmin">Sub admin</option>
             <option value="cashier">Cashier</option>
-            <option value="stockkeeper">Stock keeper</option>
+            <option value="storekeeper">Store keeper</option>
             <option value="accountant">Accountant</option>
           </select>
         </p>

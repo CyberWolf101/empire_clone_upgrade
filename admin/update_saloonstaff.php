@@ -9,18 +9,24 @@ $type=$_POST['type'];
 $category=$_POST['service'];
 $fileName = basename($_FILES["file"]["name"]);
 $date= date('Y-m-d H:i:s');
+$emergency_name = mysqli_real_escape_string($con, $_POST['emergency_name']);
+$emergency_phone = mysqli_real_escape_string($con, $_POST['emergency_phone']);
+$emergency_address = mysqli_real_escape_string($con, $_POST['emergency_address']);
 
 
 
-
-
-                              $insert = mysqli_query($con,"UPDATE staff SET name= '$name' where s='$id'") or die ('Could not connect: ' .mysqli_error($con));
-							  $insert = mysqli_query($con,"UPDATE staff SET email= '$email'  where s='$id'") or die ('Could not connect: ' .mysqli_error($con)); 
-							  $insert = mysqli_query($con,"UPDATE staff SET phone= '$phone'  where s='$id'") or die ('Could not connect: ' .mysqli_error($con)); 
-							  $insert = mysqli_query($con,"UPDATE staff SET password= '$password'  where s='$id'") or die ('Could not connect: ' .mysqli_error($con)); 
-							  $insert = mysqli_query($con,"UPDATE staff SET section= '$category'  where s='$id'") or die ('Could not connect: ' .mysqli_error($con)); 
-                              $insert = mysqli_query($con,"UPDATE staff SET gender= '$type'  where s='$id'") or die ('Could not connect: ' .mysqli_error($con)); 
-							
+                              $update = mysqli_query($con,"UPDATE staff SET 
+    name='$name',
+    email='$email',
+    phone='$phone',
+    password='$password',
+    section='$category',
+    gender='$type',
+    emergency_name='$emergency_name',
+    emergency_phone='$emergency_phone',
+    emergency_address='$emergency_address'
+WHERE s='$id'") 
+or die ('Could not connect: ' . mysqli_error($con));
 							 
 			
 	

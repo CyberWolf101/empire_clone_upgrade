@@ -21,6 +21,7 @@ while($row = mysqli_fetch_array($sql2))
 <section id="pricing" class="pricing section-bg" style="margin-top:50px; background-color:none;  border:none;">
 <div class="container" style="width:100%; margin:auto; ">
 <div class="section-title" style="color:#FFFFFF;">
+	<?php include '../becomeMember.php'?>
 <h5 style="text-transform:uppercase;">SUBCATEGORIES - <?php echo $name; ?></h5>
 </div>
 
