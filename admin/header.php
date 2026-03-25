@@ -1,7 +1,16 @@
 <?php
 ob_start();
-session_save_path("/tmp");
-session_start();
+// session_save_path("/tmp");
+// session_start();
+session_save_path("sessions");
+
+// Only start session if none exists
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Release session lock early if you don't need to write anymore
+session_write_close();
 
 // ENABLE ERROR REPORTING
 error_reporting(E_ALL);
@@ -204,6 +213,7 @@ if (!$stmt) {
               <a class="collapse-item" href="addfood.php">Add New Orishirishi</a>
               <a class="collapse-item" href="storeorders.php">Walk-in Orders</a>
               <a class="collapse-item" href="onlineorders.php">Online Orders</a>
+              <a class="collapse-item" href="deficientitems.php">Deficient Items</a>
               <a class="collapse-item" href="viewpreorders.php">Pre-Orders</a>
               <a class="collapse-item" href="startorder.php">Start Transaction</a>
               <a class="collapse-item" href="pending_event_orders.php">Event orders</a>

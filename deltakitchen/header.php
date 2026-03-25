@@ -1,8 +1,16 @@
 <?php 
-ob_start(); 
-session_save_path("/tmp"); 
-session_start();
+ob_start();
+// session_save_path("/tmp");
+// session_start();
+session_save_path("sessions");
 
+// Only start session if none exists
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Release session lock early if you don't need to write anymore
+session_write_close();
 // Always show errors while debugging
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
