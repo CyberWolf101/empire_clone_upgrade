@@ -1,7 +1,8 @@
 <?php ob_start();
 // session_save_path("/tmp");
 // session_start();
-session_save_path("sessions");
+session_save_path("../sessions");
+
 
 // Only start session if none exists
 if (session_status() === PHP_SESSION_NONE) {
