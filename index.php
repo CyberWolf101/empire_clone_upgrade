@@ -81,7 +81,7 @@ if (isset($_GET['error'])) {
                         <img src="food.png" alt="" />
                         <p class="mt-4">Get all kind of drinks, meals, or snacks at chbluxuryempire. Order Now</p>
                         <div class="mt-4 button_container">
-                            <a href="food_page.php"><button class="btn-anim"><span>CLICK TO ORDER</span></button></a>
+                        <a href="food_page.php?current_service=orishirishi"><button class="btn-anim"><span>CLICK TO ORDER</span></button></a>
                         </div>
                     </div>
                 </div>

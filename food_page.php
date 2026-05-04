@@ -1,20 +1,20 @@
-<?php 
+<?php
 include "header.php";
 
-
+$_SESSION["current_service"] = $_GET["current_service"];
+// $_COOKIE['current_service'] = $_GET["current_service"];
 //check if cookie exists
-if     (isset($_COOKIE['foodID'])){
-        $ran = $_COOKIE['foodID'];  
-        $_SESSION['order']=$ran;
-        header("location:foodpage.php");
-}   
-    
-else{
-$ran=substr(md5(mt_rand()), 0, 6);
-$date=date("Y-m-d");
+
+if (isset($_COOKIE['foodID'])) {
+    $ran = $_COOKIE['foodID'];
+    $_SESSION['order'] = $ran;
+    header("location:foodpage.php");
+} else {
+    $ran = substr(md5(mt_rand()), 0, 6);
+    $date = date("Y-m-d");
 
 
-$submit = mysqli_query($con,"INSERT INTO saloon_orders(
+    $submit = mysqli_query($con, "INSERT INTO saloon_orders(
     id,name,email,phone,bookingtype,method,pay_status,status,date,
     saloonkit,total_amount,card_amount,cash_amount,transfer_amount,pos_amount,
     type,section,preorder,preorder_date,giftcard,gift_amount
@@ -23,16 +23,11 @@ $submit = mysqli_query($con,"INSERT INTO saloon_orders(
     'online','refreshments',0,'',0,0
 )") or die('Insert failed: ' . mysqli_error($con));
 
-//setcookie
-setcookie("foodID", $ran, time() + (10 * 365 * 24 * 60 * 60));
+    //setcookie
+    setcookie("foodID", $ran, time() + (10 * 365 * 24 * 60 * 60));
+    setcookie("currentService", $_GET["current_service"], time() + (10 * 365 * 24 * 60 * 60));
 
 
-$_SESSION['order']=$ran;
-header("location:foodpage.php");
+    $_SESSION['order'] = $ran;
+    header("location:foodpage.php");
 }
-
-
-
-
-?>
-

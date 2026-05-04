@@ -5,7 +5,7 @@ $item_delete = mysqli_real_escape_string($con, $_GET['rowitem'] ?? '');
 if (!empty($item_delete)) {
     $del = mysqli_query($con, "DELETE FROM refreshments WHERE s='$item_delete'") or die('Could not connect: ' . mysqli_error($con));
 }
-
+$_SESSION['username'] = "Makinde Ayooluwa";
 if (empty($_SESSION['username'])) {
     header("location: userdetails.php");
     exit;
@@ -278,7 +278,7 @@ if (!empty($_SESSION['error_message'])) {
                                             echo '<td colspan="2" class="align-middle"><a href="foodpage.php" class="form-control" style="font-weight: 600; font-size: 0.8rem; color: #FFC700;">
                                                     Add Items To Cart</a></td>';
                                         } else {
-                                            echo '<td colspan="2" class="align-middle"><button type="submit" id="checkout-btn" class="form-control" style="font-weight: 600; font-size: 0.8rem; color: #FFC700;" disabled>
+                                            echo '<td colspan="2" class="align-middle"><button type="submit" id="checkout-btn" class="form-control" style="font-weight: 600; font-size: 0.8rem; color: #FFC700;">
                                                     Proceed To Checkout</button></td>';
                                         }
                                         ?>

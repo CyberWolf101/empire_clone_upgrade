@@ -1,13 +1,24 @@
 <?php
-
-// Fetch bank accounts
-$bank_accounts = [];
-$sql = "SELECT * FROM bank_accounts ORDER BY bank_name";
-$result = mysqli_query($con, $sql);
-while ($row = mysqli_fetch_array($result)) {
-    $bank_accounts[] = $row;
+if (isset($_COOKIE["currentService"])) {
+?>
+    <?php
+    $service_type = $_COOKIE["currentService"];
+    $sql = "SELECT * FROM bank_accounts WHERE service_type='$service_type' ORDER BY bank_name";
+    $result = mysqli_query($con, $sql);
+    while ($row = mysqli_fetch_array($result)) {
+        $bank_accounts = [];
+        $bank_accounts[] = $row;
+    }
+    ?>
+<?php
+} else {
+    $bank_accounts = [];
+    $sql = "SELECT * FROM bank_accounts ORDER BY bank_name";
+    $result = mysqli_query($con, $sql);
+    while ($row = mysqli_fetch_array($result)) {
+        $bank_accounts[] = $row;
+    }
 }
-
 ?>
 <?php
 if (!isset($showAmountInput)) {
@@ -63,13 +74,13 @@ if (!isset($showAmountInput)) {
                                         <div class="mb-3">
                                             <label for="amount_to_pay" class="form-label" style="color: #FFC700;">Enter Amount
                                                 to Pay</label>
-                                          <input type="number" 
-       class="form-control" 
-       id="amount_to_pay" 
-       name="amount_to_pay"
-       min="<?php echo ($totalPaid > 0) ? 1 : $minAmount; ?>"
-       max="<?php echo $balance; ?>"
-       value="<?php echo isset($_POST['amount_to_pay']) ? htmlspecialchars($_POST['amount_to_pay']) : ''; ?>">
+                                            <input type="number"
+                                                class="form-control"
+                                                id="amount_to_pay"
+                                                name="amount_to_pay"
+                                                min="<?php echo ($totalPaid > 0) ? 1 : $minAmount; ?>"
+                                                max="<?php echo $balance; ?>"
+                                                value="<?php echo isset($_POST['amount_to_pay']) ? htmlspecialchars($_POST['amount_to_pay']) : ''; ?>">
 
                                             <small class="form-text text-warning">
                                                 <?php if ($totalPaid > 0): ?>
@@ -88,6 +99,7 @@ if (!isset($showAmountInput)) {
                                     <select id="bank_account" name="bank_account_id" class="form-control"
                                         onchange="showBankDetails()" required>
                                         <option value="">-- Select a Bank --</option>
+
                                         <?php foreach ($bank_accounts as $account) { ?>
                                             <option value="<?php echo $account['id']; ?>"
                                                 data-bank-name="<?php echo htmlspecialchars($account['bank_name'] ?? 'Unknown Bank'); ?>"

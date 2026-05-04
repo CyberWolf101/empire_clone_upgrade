@@ -53,6 +53,7 @@ if (isset($_POST['add_bank'])) {
 if (isset($_POST['edit_bank'])) {
     $bank_id = intval($_POST['bank_id'] ?? 0);
     $bank_name = mysqli_real_escape_string($con, $_POST['bank_name'] ?? '');
+    $service_type = mysqli_real_escape_string($con, $_POST['service_type'] ?? '');
     $account_name = mysqli_real_escape_string($con, $_POST['account_name'] ?? '');
     $account_number = mysqli_real_escape_string($con, $_POST['account_number'] ?? '');
     $admin_username = mysqli_real_escape_string($con, $username);
@@ -66,7 +67,7 @@ if (isset($_POST['edit_bank'])) {
         exit;
     }
 
-    $updateSql = "UPDATE bank_accounts SET bank_name='$bank_name', account_name='$account_name', account_number='$account_number', username='$admin_username' WHERE id='$bank_id'";
+    $updateSql = "UPDATE bank_accounts SET bank_name='$bank_name', service_type='$service_type', account_name='$account_name', account_number='$account_number', username='$admin_username' WHERE id='$bank_id'";
     if (mysqli_query($con, $updateSql)) {
         echo "<script>alert('Bank account updated successfully!'); window.location='admin_bank_accounts.php';</script>";
         exit;
@@ -116,6 +117,7 @@ while ($row = mysqli_fetch_array($result)) {
                 <thead class="thead-light">
                     <tr>
                         <th>Bank Name</th>
+                        <th>Service Type</th>
                         <th>Account Name</th>
                         <th>Account Number</th>
                         <th>Added By</th>
@@ -132,6 +134,7 @@ while ($row = mysqli_fetch_array($result)) {
                         <?php foreach ($bank_accounts as $account) { ?>
                             <tr>
                                 <td><?php echo htmlspecialchars($account['bank_name']); ?></td>
+                                <td><?php echo htmlspecialchars($account['service_type']); ?></td>
                                 <td><?php echo htmlspecialchars($account['account_name']); ?></td>
                                 <td><?php echo htmlspecialchars($account['account_number']); ?></td>
                                 <td><?php echo htmlspecialchars($account['username']); ?></td>
@@ -210,6 +213,13 @@ while ($row = mysqli_fetch_array($result)) {
                     <div class="mb-3">
                         <label>Bank Name</label>
                         <input type="text" name="bank_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Service Type</label>
+                        <select class="form-control" name="service_type" required>
+                            <option value="">---- Select Service Type ----</option>
+                            <option value="orishirishi">Orishirishi</option>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label>Account Name</label>

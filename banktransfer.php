@@ -64,12 +64,12 @@ if (!mysqli_query($con, $query)) {
 }
 
 // Fetch bank accounts
-$bank_accounts = [];
-$sql = "SELECT * FROM bank_accounts ORDER BY bank_name";
-$result = mysqli_query($con, $sql);
-while ($row = mysqli_fetch_array($result)) {
-    $bank_accounts[] = $row;
-}
+// $bank_accounts = [];
+// $sql = "SELECT * FROM bank_accounts ORDER BY bank_name";
+// $result = mysqli_query($con, $sql);
+// while ($row = mysqli_fetch_array($result)) {
+//     $bank_accounts[] = $row;
+// }
 
 if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
     $errors = [];

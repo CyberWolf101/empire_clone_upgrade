@@ -87,8 +87,12 @@ if (isset($_POST['submitdetails'])) {
     $_SESSION['customer_email'] = $mail;
     $_SESSION['customer_phone'] = $mob;
     
-    echo "<script>alert('Personal details uploaded successfully!');</script>";
-    header("Refresh: 0; url=cart.php");
+    ?>
+    <script>alert('Personal details uploaded successfully!');
+        window.location.href = "cart.php"
+    </script>
+
+    <?php
     exit;
 }
 
