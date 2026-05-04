@@ -7,19 +7,20 @@ if (isset($_GET['categoryid'])) {
   echo "<script>alert('Item Deleted successfully!'); window.location.href = 'foodmenu.php';</script>";
   exit();
 }
-
 // Fetch all items from the database
+
 $sql = "SELECT * FROM food_menu ORDER BY item ASC";
 $sql2 = mysqli_query($con, $sql);
+
 $items = [];
 while ($row = mysqli_fetch_array($sql2)) {
   $items[] = [
-    'item' => htmlspecialchars($row['item']),
-    'price' => htmlspecialchars($row['price']),
-    'type' => htmlspecialchars($row['type']),
-    'quantity' => htmlspecialchars($row['quantity']),
-    's' => htmlspecialchars($row['s']),
-    'sub_category' => htmlspecialchars($row['sub_category'] ?? '')
+    'item' => ($row['item']),
+    'price' => ($row['price']),
+    'type' => ($row['type']),
+    'quantity' => ($row['quantity']),
+    's' => ($row['s']),
+    'sub_category' => ($row['sub_category'] ?? '')
   ];
 }
 // Convert items to JSON for JavaScript
@@ -167,8 +168,8 @@ $items_json = json_encode($items);
 
   function filterItems() {
     const filter = document.getElementById('searchInput').value.toLowerCase();
-    filteredItems = items.filter(item => 
-      item.item.toLowerCase().includes(filter) || 
+    filteredItems = items.filter(item =>
+      item.item.toLowerCase().includes(filter) ||
       item.type.toLowerCase().includes(filter)
     );
     currentPage = 1; // Reset to first page on filter change
