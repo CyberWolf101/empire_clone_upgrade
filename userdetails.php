@@ -97,4 +97,5 @@ if (isset($_POST['submitdetails'])) {
 }
 
 include "footer.php";
+unset($_SESSION["username"])
 ?>
