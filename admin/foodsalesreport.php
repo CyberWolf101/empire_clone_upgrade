@@ -24,7 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $from = $default_from;
         $to = $default_to;
     }
-
+    $default_from = $from;
+    $default_to = $to;
     // Redirect to GET to avoid form resubmission
     $redirect_url = "foodsalesreport.php?from=" . urlencode($from) . "&to=" . urlencode($to) . "&period=" . urlencode($period) . ($itemid ? "&itemid=" . urlencode($itemid) : "");
     header("Location: $redirect_url");
@@ -51,10 +52,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Ensure 'to' date includes the full day
-$to = date("Y-m-d", strtotime($to)) . " 23:59:59";
-
+$to_sql = date("Y-m-d 23:59:59", strtotime($to));
+$from_sql = date("Y-m-d 00:00:00", strtotime($from));
+$selectedFrom = new DateTime($from_sql);
+$selectedTo = new DateTime($to_sql);
 // Get unique items for dropdown
-$item_query = "SELECT DISTINCT itemid, item FROM refreshments WHERE status = 'processed' ORDER BY item";
+$item_query = "SELECT * FROM refreshments WHERE status = 'processed' ORDER BY item";
 $item_result = mysqli_query($con, $item_query);
 $items = [];
 while ($row = mysqli_fetch_assoc($item_result)) {
@@ -115,7 +118,6 @@ while ($row = mysqli_fetch_assoc($item_result)) {
         </div>
     </center>
 </div>
-
 <?php
 // Pagination settings
 $limit = 100; // Rows per page for daily and weekly
@@ -128,17 +130,17 @@ $group_by = '';
 $select_date = 'date';
 $order_by = 'date DESC';
 $count_distinct = '';
-if ($period === 'weekly') {
+if ($period == 'weekly') {
     $select_date = "DATE_FORMAT(r.date, '%Y-%u') AS period";
     $group_by = "GROUP BY DATE_FORMAT(r.date, '%Y-%u')";
     $order_by = "DATE_FORMAT(r.date, '%Y-%u') DESC";
     $count_distinct = "DATE_FORMAT(date, '%Y-%u')";
-} elseif ($period === 'monthly') {
+} elseif ($period == 'monthly') {
     $select_date = "DATE_FORMAT(r.date, '%Y-%m') AS period";
     $group_by = "GROUP BY DATE_FORMAT(r.date, '%Y-%m')";
     $order_by = "DATE_FORMAT(r.date, '%Y-%m') DESC";
     $count_distinct = "DATE_FORMAT(date, '%Y-%m')";
-} elseif ($period === 'yearly') {
+} elseif ($period == 'yearly') {
     $select_date = "DATE_FORMAT(r.date, '%Y') AS period";
     $group_by = "GROUP BY DATE_FORMAT(r.date, '%Y')";
     $order_by = "DATE_FORMAT(r.date, '%Y') DESC";
@@ -159,14 +161,14 @@ $sql_query = $itemid ? "
             AND r2.status = 'processed'
             ORDER BY r2.date DESC LIMIT 1) AS total_left
     FROM refreshments r
-    WHERE r.date BETWEEN ? AND ? AND r.status = 'processed' AND r.itemid = ?
+    WHERE r.date >= ? AND r.date <= ? AND r.status = 'processed' AND r.itemid = ?
     $group_by
     ORDER BY $order_by
     LIMIT ? OFFSET ?
 " : "
     SELECT $select_date, SUM(r.quantity) AS total_quantity, SUM(r.totalprice) AS total_price
     FROM refreshments r
-    WHERE r.date BETWEEN ? AND ? AND r.status = 'processed'
+    WHERE r.date >= ? AND r.date <= ? AND r.status = 'processed'
     $group_by
     ORDER BY $order_by
     LIMIT ? OFFSET ?
@@ -180,9 +182,9 @@ $count_query = "
 // Execute count query
 $count_stmt = mysqli_prepare($con, $count_query);
 if ($itemid) {
-    mysqli_stmt_bind_param($count_stmt, "sss", $from, $to, $itemid);
+    mysqli_stmt_bind_param($count_stmt, "sss", $from_sql, $to_sql, $itemid);
 } else {
-    mysqli_stmt_bind_param($count_stmt, "ss", $from, $to);
+    mysqli_stmt_bind_param($count_stmt, "ss", $from_sql, $to_sql);
 }
 mysqli_stmt_execute($count_stmt);
 $count_result = mysqli_stmt_get_result($count_stmt) or die("Database error: " . mysqli_error($con));
@@ -197,14 +199,17 @@ $offset = ($period === 'daily' || $period === 'weekly') ? ($page - 1) * $limit :
 // Execute main query
 $stmt = mysqli_prepare($con, $sql_query);
 if ($itemid) {
-    mysqli_stmt_bind_param($stmt, "sssssii", $from, $to, $from, $to, $itemid, $limit, $offset);
+    mysqli_stmt_bind_param($stmt, "sssssii", $from_sql, $to_sql, $from_sql, $to_sql, $itemid, $limit, $offset);
 } else {
-    mysqli_stmt_bind_param($stmt, "ssii", $from, $to, $limit, $offset);
+    mysqli_stmt_bind_param($stmt, "ssii", $from_sql, $to_sql, $limit, $offset);
 }
 mysqli_stmt_execute($stmt);
 $resultset = mysqli_stmt_get_result($stmt) or die("Database error: " . mysqli_error($con));
 
 if (mysqli_num_rows($resultset) > 0) {
+        $today = date("Y-m-d");
+        $filterToday = new DateTime($today);
+    $totalPrices = [];
     echo "<div class='table-responsive mt-4'>";
     echo "<table class='table table-bordered'>";
     echo "<thead><tr>
@@ -212,12 +217,26 @@ if (mysqli_num_rows($resultset) > 0) {
         . ($itemid ? "<th>Item</th>" : "") . "
             <th>Total Quantity</th>
             <th>Total Price</th>"
+             
         . ($itemid ? "<th>Total Left</th>" : "") . "
         " . ($itemid ? "<th>Action</th>" : "") . "
           </tr></thead><tbody>";
 
     while ($row = mysqli_fetch_assoc($resultset)) {
+
+        $totalPrices[] = $row['total_price'];
+        $calculatedPrice = 0;
+        foreach($totalPrices as $price){
+            $calculatedPrice += $price;
+        }
+        
         $display_date = $row['period'] ?? '';
+        $expensesSql = "SELECT SUM(amount) AS total FROM expenses";
+        $result = mysqli_query($con, $expensesSql);
+        $rowE = mysqli_fetch_assoc($result);
+
+        $totalExpenses = $rowE['total'];
+
         echo "<tr>
                 <td>" . htmlspecialchars($display_date, ENT_QUOTES, 'UTF-8') . "</td>";
         if ($itemid) {
@@ -232,7 +251,12 @@ if (mysqli_num_rows($resultset) > 0) {
         echo "</tr>";
     }
 
-    echo "</tbody></table></div>";
+    echo "
+    ". ($period == "daily" && $selectedFrom->format("d") == $filterToday->format("d") ? "<tr>
+    <td colspan='2'>Total price - Expenses(today)</td>
+    <td>&#8358;" . $calculatedPrice - $totalExpenses . "</td>
+    </tr>" : "")."
+    </tbody></table></div>";
 
     // Pagination links (only for daily and weekly)
     if (($period === 'daily' || $period === 'weekly') && $total_pages > 1) {

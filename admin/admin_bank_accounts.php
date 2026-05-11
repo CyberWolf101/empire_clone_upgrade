@@ -1,7 +1,6 @@
 <?php
 include "header.php";
 
-
 // Create bank_accounts table if it doesn't exist
 $createTableSql = "
 CREATE TABLE IF NOT EXISTS bank_accounts (
@@ -25,6 +24,7 @@ if (mysqli_num_rows($result) == 0) {
 // Handle add bank account submission
 if (isset($_POST['add_bank'])) {
     $bank_name = mysqli_real_escape_string($con, $_POST['bank_name'] ?? '');
+    $service_type = mysqli_real_escape_string($con, $_POST['service_type'] ?? '');
     $account_name = mysqli_real_escape_string($con, $_POST['account_name'] ?? '');
     $account_number = mysqli_real_escape_string($con, $_POST['account_number'] ?? '');
     $admin_username = mysqli_real_escape_string($con, $username);
@@ -38,8 +38,8 @@ if (isset($_POST['add_bank'])) {
         exit;
     }
 
-    $insertSql = "INSERT INTO bank_accounts (bank_name, account_name, account_number, username) 
-                  VALUES ('$bank_name', '$account_name', '$account_number', '$admin_username')";
+    $insertSql = "INSERT INTO bank_accounts (bank_name,service_type, account_name, account_number, username) 
+                  VALUES ('$bank_name','$service_type', '$account_name', '$account_number', '$admin_username')";
     if (mysqli_query($con, $insertSql)) {
         echo "<script>alert('Bank account added successfully!'); window.location='admin_bank_accounts.php';</script>";
         exit;
@@ -141,14 +141,14 @@ while ($row = mysqli_fetch_array($result)) {
                                 <td><?php echo $account['created_at']; ?></td>
                                 <?php if ($isAdmin) { ?>
                                     <td class="text-center">
-                                        <a href="#" data-bs-toggle="modal" data-bs-target="#editBankModal<?php echo $account['id']; ?>" 
-                                           class="btn btn-outline-primary btn-sm">
-                                           <i class="fas fa-edit"></i>
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#editBankModal<?php echo $account['id']; ?>"
+                                            class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="admin_bank_accounts.php?delete_id=<?php echo $account['id']; ?>" 
-                                           onclick="return confirm('Are you sure you want to delete this bank account?');" 
-                                           class="btn btn-outline-danger btn-sm">
-                                           <i class="fas fa-trash"></i>
+                                        <a href="admin_bank_accounts.php?delete_id=<?php echo $account['id']; ?>"
+                                            onclick="return confirm('Are you sure you want to delete this bank account?');"
+                                            class="btn btn-outline-danger btn-sm">
+                                            <i class="fas fa-trash"></i>
                                         </a>
                                     </td>
                                 <?php } ?>
@@ -167,6 +167,16 @@ while ($row = mysqli_fetch_array($result)) {
                                                 <div class="mb-3">
                                                     <label>Bank Name</label>
                                                     <input type="text" name="bank_name" class="form-control" value="<?php echo htmlspecialchars($account['bank_name']); ?>" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label>Service Type</label>
+                                                    <select name="service_type" id="" class="form-control">
+                                                        <option value="">---- Select Service Type ----</option>
+                                                        <option value="orishirishi">Orishirishi</option>
+                                                        <option value="repair_center">Repair Center</option>
+                                                        <option value="delta_kitchen">Delta Kitchen</option>
+                                                        <option value="e-giftcard">E-Giftcard</option>
+                                                    </select>
                                                 </div>
                                                 <div class="mb-3">
                                                     <label>Account Name</label>
@@ -195,8 +205,8 @@ while ($row = mysqli_fetch_array($result)) {
 
 <!-- Floating Add Button -->
 <button class="btn btn-primary rounded-circle"
-        style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; font-size: 24px;"
-        data-bs-toggle="modal" data-bs-target="#addBankModal">
+    style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; font-size: 24px;"
+    data-bs-toggle="modal" data-bs-target="#addBankModal">
     <i class="fas fa-plus"></i>
 </button>
 
@@ -219,6 +229,9 @@ while ($row = mysqli_fetch_array($result)) {
                         <select class="form-control" name="service_type" required>
                             <option value="">---- Select Service Type ----</option>
                             <option value="orishirishi">Orishirishi</option>
+                            <option value="repair_center">Repair Center</option>
+                            <option value="delta_kitchen">Delta Kitchen</option>
+                            <option value="e-giftcard">E-Giftcard</option>
                         </select>
                     </div>
                     <div class="mb-3">

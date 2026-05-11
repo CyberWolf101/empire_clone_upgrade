@@ -12,7 +12,8 @@ $order_ref = '';
 $shipping_type = isset($_SESSION['shipping_type']) ? $_SESSION['shipping_type'] : 'delivery';
 $delivery_address = isset($_SESSION['delivery_address']) ? $_SESSION['delivery_address'] : '';
 
-function generateOrderRef($length = 7) {
+function generateOrderRef($length = 7)
+{
     $characters = '0123456789abcdefghijklmnopqrstuvwxyz';
     $randomString = '';
     for ($i = 0; $i < $length; $i++) {
@@ -33,34 +34,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
     $phone_number = mysqli_real_escape_string($con, $_POST['phone_number']);
     $email = mysqli_real_escape_string($con, $_POST['email']);
     $items = $_POST['items'] ?? [];
-    $total_amount = isset($_POST['total_amount']) ? (float)$_POST['total_amount'] : 0.00;
+    $total_amount = isset($_POST['total_amount']) ? (float) $_POST['total_amount'] : 0.00;
     $date = mysqli_real_escape_string($con, $_POST['date']);
     $time = mysqli_real_escape_string($con, $_POST['time']);
     $shipping_type = mysqli_real_escape_string($con, $_POST['delivery_option'] ?? 'delivery');
     $delivery_address = isset($_POST['delivery_address']) ? mysqli_real_escape_string($con, $_POST['delivery_address']) : '';
+    $referral_code = !empty($_POST['referral_code']) ? mysqli_real_escape_string($con, $_POST['referral_code']) : "";
 
     // Store delivery details in session
     $_SESSION['shipping_type'] = $shipping_type;
     $_SESSION['delivery_address'] = $delivery_address;
+    $sql11 = "SELECT * FROM admin WHERE staff_code = '$referral_code' AND code_status = 'active'";
+    $real_price = 0;
+    $stmt = mysqli_query($con, $sql11);
+    $sql12 = "SELECT * FROM staff WHERE staff_code = '$referral_code' AND code_status = 'active'";
+    $stmt2 = mysqli_query($con, $sql12);
+    if (mysqli_num_rows($stmt) > 0) {
 
-    $sql = "INSERT INTO event_orders (order_ref, customer_name, phone_number, email, total_amount, status, pay_status, section, type, created_at, edited_price, delivery_date, delivery_time, shipping_type, delivery_address) 
-            VALUES ('$order_ref', '$customer_name', '$phone_number', '$email', $total_amount, 'pending', 'pending', 'refreshments', 'event', NOW(), 0, '$date', '$time', '$shipping_type', '$delivery_address')";
+        $real_price = $total_amount - ($total_amount * 0.05);
+
+    } elseif (mysqli_num_rows($stmt2) > 0) {
+
+        $real_price = $total_amount - ($total_amount * 0.05);
+
+        $row = mysqli_fetch_assoc($stmt2);
+
+        $newWallet = $row['wallet'] + ($total_amount * 0.05);
+
+        $sqlll = "UPDATE staff 
+              SET wallet = '$newWallet' 
+              WHERE staff_code = '$referral_code'";
+
+        mysqli_query($con, $sqlll);
+
+    } else {
+
+        $real_price = $total_amount;
+
+    }
+
+    $sql = "INSERT INTO event_orders (order_ref, customer_name, phone_number, email, total_amount, status, pay_status, section, type, created_at, edited_price, delivery_date, delivery_time, shipping_type, delivery_address, referral_code) 
+            VALUES ('$order_ref', '$customer_name', '$phone_number', '$email', $total_amount, 'pending', 'pending', 'refreshments', 'event', NOW(), $real_price, '$date', '$time', '$shipping_type', '$delivery_address','$referral_code')";
 
     if (mysqli_query($con, $sql)) {
-        $order_id = mysqli_insert_id($con);
+
 
         // Insert menu items into event_order_items
         if (!empty($items['menu'])) {
             foreach ($items['menu'] as $itemid => $data) {
-                $quantity = (int)$data['quantity'];
+                $quantity = (int) $data['quantity'];
                 if ($quantity > 0) {
                     $res = mysqli_query($con, "SELECT item, price FROM food_menu WHERE s='$itemid'");
                     if ($row = mysqli_fetch_assoc($res)) {
                         $item_name = mysqli_real_escape_string($con, $row['item']);
-                        $item_price = (float)$row['price'];
+                        $item_price = (float) $row['price'];
                         $total_price = $quantity * $item_price;
+
+                        $order_id = mysqli_insert_id($con);
                         $query = "INSERT INTO event_order_items (orderid, itemid, item, unitprice, quantity, totalprice, edited_price) 
-                                  VALUES ('$order_id', '$itemid', '$item_name', '$item_price', '$quantity', '$total_price', 0)";
+                                  VALUES ('$order_id', '$itemid', '$item_name', '$item_price', '$quantity', '$real_price', 0)";
                         if (!mysqli_query($con, $query)) {
                             error_log("Insert menu item failed: " . mysqli_error($con));
                         }
@@ -72,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
         // Insert custom items into event_order_items
         if (!empty($items['custom'])) {
             foreach ($items['custom'] as $data) {
-                $quantity = (int)$data['quantity'];
+                $quantity = (int) $data['quantity'];
                 if ($quantity > 0) {
                     $item_name = mysqli_real_escape_string($con, $data['name']);
                     $query = "INSERT INTO event_order_items (orderid, itemid, item, unitprice, quantity, totalprice, edited_price) 
@@ -101,9 +133,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
 <section id="pricing" class="pricing section-bg" style="margin-top:50px; background-color:none; border:none;">
     <div class="container" style="width:100%; margin:auto;">
         <div class="section-title" style="color:#000;">
-            <h3 style="text-decoration:none; color:#000;">EVENT ORDERS<br><span style="font-size:14px;">Request bulk orders from our menu or customize your items</span></h3>
+            <h3 style="text-decoration:none; color:#000;">EVENT ORDERS<br><span style="font-size:14px;">Request bulk
+                    orders from our menu or customize your items</span></h3>
         </div>
-        <?php include "event_order_warning.php"?>
+        <?php include "event_order_warning.php" ?>
         <div class="row">
             <div class="col-lg-4 col-md-4">
                 <p style="color:#FEBF01;">Food, Snacks, Drinks and much more...</p>
@@ -123,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                             <label for="email">Email</label>
                             <input type="email" class="form-control" id="email" name="email" required>
                         </div>
-                         <div class="form-group mb-4">
+                        <div class="form-group mb-4">
                             <label for="date">Expected Date of delivery</label>
                             <center>
                                 <input type="date" style="width: 100%;" class="form-control" id="date" name="date"
@@ -137,96 +170,109 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                                 <input type="time" style="width: 10%0;" class="form-control" id="time" name="time"
                                     required>
                             </center>
-                        <!-- Delivery Options -->
-                        <div class="delivery-options mt-4">
-                            <h6 style="color: black;">Delivery Options</h6>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="delivery_option" id="pickup" value="pickup" <?php echo $shipping_type === 'pickup' ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="pickup" style="color: black;">
-                                    Pickup at Store
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="delivery_option" id="delivery" value="delivery" <?php echo $shipping_type === 'delivery' ? 'checked' : ''; ?>>
-                                <label class="form-check-label" for="delivery" style="color: black;">
-                                    Delivery within Lagos
-                                </label>
-                            </div>
-                            <!-- Pickup Details -->
-                            <div id="pickup-details" style="display: <?php echo $shipping_type === 'pickup' ? 'block' : 'none'; ?>;" class="border border-1 p-2 mt-4">
-                                <div class="mb-1">
-                                    <b>PICKUP ADDRESS:</b>
+                            <!-- Delivery Options -->
+                            <div class="delivery-options mt-4">
+                                <h6 style="color: black;">Delivery Options</h6>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="delivery_option" id="pickup"
+                                        value="pickup" <?php echo $shipping_type === 'pickup' ? 'checked' : ''; ?>>
+                                    <label class="form-check-label" for="pickup" style="color: black;">
+                                        Pickup at Store
+                                    </label>
                                 </div>
-                                <p class="text-black"><b>Address:</b> 19 Olowu St, Opebi 101233, Ikeja, Lagos</p>
-                                <p class="text-black"><b>Phone:</b> 09025572552</p>
-                                <p class="text-black"><b>Pickup Code:</b> <?php echo htmlspecialchars($order_ref); ?></p>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="delivery_option" id="delivery"
+                                        value="delivery" <?php echo $shipping_type === 'delivery' ? 'checked' : ''; ?>>
+                                    <label class="form-check-label" for="delivery" style="color: black;">
+                                        Delivery within Lagos
+                                    </label>
+                                </div>
+                                <!-- Pickup Details -->
+                                <div id="pickup-details"
+                                    style="display: <?php echo $shipping_type === 'pickup' ? 'block' : 'none'; ?>;"
+                                    class="border border-1 p-2 mt-4">
+                                    <div class="mb-1">
+                                        <b>PICKUP ADDRESS:</b>
+                                    </div>
+                                    <p class="text-black"><b>Address:</b> 19 Olowu St, Opebi 101233, Ikeja, Lagos</p>
+                                    <p class="text-black"><b>Phone:</b> 09025572552</p>
+                                    <p class="text-black"><b>Pickup Code:</b>
+                                        <?php echo htmlspecialchars($order_ref); ?></p>
+                                </div>
+                                <!-- Delivery Address Input -->
+                                <div id="delivery-details"
+                                    style="display: <?php echo $shipping_type === 'delivery' ? 'block' : 'none'; ?>;"
+                                    class="border border-1 p-2 mt-4">
+                                    <div class="mb-1">
+                                        <b>DELIVERY ADDRESS:</b>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="delivery_address" style="color: black;">Enter your delivery
+                                            address:</label>
+                                        <input type="text" class="form-control" id="delivery_address"
+                                            name="delivery_address"
+                                            value="<?php echo isset($delivery_address) ? htmlspecialchars($delivery_address) : ''; ?>"
+                                            placeholder="Enter your address in Lagos" <?php echo $shipping_type === 'delivery' ? 'required' : ''; ?>>
+                                    </div>
+                                </div>
                             </div>
-                            <!-- Delivery Address Input -->
-                            <div id="delivery-details" style="display: <?php echo $shipping_type === 'delivery' ? 'block' : 'none'; ?>;" class="border border-1 p-2 mt-4">
-                                <div class="mb-1">
-                                    <b>DELIVERY ADDRESS:</b>
-                                </div>
-                                <div class="form-group">
-                                    <label for="delivery_address" style="color: black;">Enter your delivery address:</label>
-                                    <input type="text" class="form-control" id="delivery_address" name="delivery_address" value="<?php echo isset($delivery_address) ? htmlspecialchars($delivery_address) : ''; ?>" placeholder="Enter your address in Lagos" <?php echo $shipping_type === 'delivery' ? 'required' : ''; ?>>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Tabs -->
-                        <ul class="nav nav-tabs mb-4">
-                            <li class="nav-item">
-                                <a class="nav-link active" data-bs-toggle="tab" href="#menuItemsTab">Menu Items</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" data-bs-toggle="tab" href="#customItemsTab">Custom Items</a>
-                            </li>
-                        </ul>
-                        <div class="tab-content">
-                            <!-- Menu Items Tab -->
-                            <div class="tab-pane fade show active" id="menuItemsTab">
-                                <!-- Search Bar -->
-                                <div class="search-container">
-                                    <input type="text" id="searchInput" class="search-input" placeholder="Search food items...">
-                                    <button type="button" class="btn-buya" onclick="triggerSearch()">Search</button>
-                                    <div id="searchSuggestions" class="search-suggestions"></div>
-                                </div>
-                                <p>
-                                    <button type="button" onclick="showAllItems()" class="btn-buya">ALL ITEMS</button>
-                                    <?php
-                                    $sql = "SELECT name FROM food_categories ORDER BY s";
-                                    $sql2 = mysqli_query($con, $sql);
-                                    while ($row = mysqli_fetch_array($sql2)) {
-                                        $category = htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8');
-                                        echo "<button type='button' onclick='showCategory(\"$category\")' class='btn-buya'>$category</button>";
-                                    }
-                                    ?>
-                                </p>
-                                <div class="table-responsive">
-                                    <table class="table align-items-center table-flush" id="menuItems">
-                                        <thead class="thead-light">
-                                            <tr>
-                                                <th>Name</th>
-                                                <th>Price</th>
-                                                <th>Quantity</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php
-                                            $sql = "SELECT s, item, price, type, quantity FROM food_menu ORDER BY item";
-                                            $result = mysqli_query($con, $sql);
-                                            if (!$result) {
-                                                echo "<tr><td colspan='3'>Error fetching menu: " . htmlspecialchars(mysqli_error($con)) . "</td></tr>";
-                                            } else if (mysqli_num_rows($result) == 0) {
-                                                echo "<tr><td colspan='3'>No menu items available.</td></tr>";
-                                            } else {
-                                                while ($row = mysqli_fetch_array($result)) {
-                                                    $id = (int)$row['s'];
-                                                    $name = htmlspecialchars($row['item'], ENT_QUOTES, 'UTF-8');
-                                                    $price = htmlspecialchars($row['price'], ENT_QUOTES, 'UTF-8');
-                                                    $type = htmlspecialchars($row['type'], ENT_QUOTES, 'UTF-8');
-                                                    $quantity = (int)$row['quantity'];
-                                                    $cartQty = isset($eventCart[$id]) ? (int)$eventCart[$id]['quantity'] : 0;
-                                                    echo "
+                            <!-- Tabs -->
+                            <ul class="nav nav-tabs mb-4">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-bs-toggle="tab" href="#menuItemsTab">Menu Items</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#customItemsTab">Custom Items</a>
+                                </li>
+                            </ul>
+                            <div class="tab-content">
+                                <!-- Menu Items Tab -->
+                                <div class="tab-pane fade show active" id="menuItemsTab">
+                                    <!-- Search Bar -->
+                                    <div class="search-container">
+                                        <input type="text" id="searchInput" class="search-input"
+                                            placeholder="Search food items...">
+                                        <button type="button" class="btn-buya" onclick="triggerSearch()">Search</button>
+                                        <div id="searchSuggestions" class="search-suggestions"></div>
+                                    </div>
+                                    <p>
+                                        <button type="button" onclick="showAllItems()" class="btn-buya">ALL
+                                            ITEMS</button>
+                                        <?php
+                                        $sql = "SELECT name FROM food_categories ORDER BY s";
+                                        $sql2 = mysqli_query($con, $sql);
+                                        while ($row = mysqli_fetch_array($sql2)) {
+                                            $category = htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8');
+                                            echo "<button type='button' onclick='showCategory(\"$category\")' class='btn-buya'>$category</button>";
+                                        }
+                                        ?>
+                                    </p>
+                                    <div class="table-responsive">
+                                        <table class="table align-items-center table-flush" id="menuItems">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Price</th>
+                                                    <th>Quantity</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                $sql = "SELECT s, item, price, type, quantity FROM food_menu ORDER BY item";
+                                                $result = mysqli_query($con, $sql);
+                                                if (!$result) {
+                                                    echo "<tr><td colspan='3'>Error fetching menu: " . htmlspecialchars(mysqli_error($con)) . "</td></tr>";
+                                                } else if (mysqli_num_rows($result) == 0) {
+                                                    echo "<tr><td colspan='3'>No menu items available.</td></tr>";
+                                                } else {
+                                                    while ($row = mysqli_fetch_array($result)) {
+                                                        $id = (int) $row['s'];
+                                                        $name = htmlspecialchars($row['item'], ENT_QUOTES, 'UTF-8');
+                                                        $price = htmlspecialchars($row['price'], ENT_QUOTES, 'UTF-8');
+                                                        $type = htmlspecialchars($row['type'], ENT_QUOTES, 'UTF-8');
+                                                        $quantity = (int) $row['quantity'];
+                                                        $cartQty = isset($eventCart[$id]) ? (int) $eventCart[$id]['quantity'] : 0;
+                                                        echo "
                                                         <tr class='ter $type'>
                                                             <td>$name</td>
                                                             <td>&#8358; $price</td>
@@ -237,39 +283,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
                                                                 <input type='hidden' name='items[menu][$id][price]' value='$price'>
                                                             </td>
                                                         </tr>";
+                                                    }
                                                 }
-                                            }
-                                            ?>
-                                        </tbody>
-                                    </table>
+                                                ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
-                            </div>
-                            <!-- Custom Items Tab -->
-                            <div class="tab-pane fade" id="customItemsTab">
-                                <div id="customItems">
-                                    <div class="custom-item mb-3">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <input type="text" class="form-control" name="items[custom][0][name]" placeholder="Item Name">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <input type="number" class="form-control quantity" name="items[custom][0][quantity]" placeholder="Quantity" min="0" value="0" onchange="calculateEstimatedFee()">
-                                            </div>
-                                            <div class="col-md-2">
-                                                <button type="button" class="btn btn-danger btn-sm" onclick="removeCustomItem(this)">Remove</button>
+                                <!-- Custom Items Tab -->
+                                <div class="tab-pane fade" id="customItemsTab">
+                                    <div id="customItems">
+                                        <div class="custom-item mb-3">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <input type="text" class="form-control"
+                                                        name="items[custom][0][name]" placeholder="Item Name">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <input type="number" class="form-control quantity"
+                                                        name="items[custom][0][quantity]" placeholder="Quantity" min="0"
+                                                        value="0" onchange="calculateEstimatedFee()">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <button type="button" class="btn btn-danger btn-sm"
+                                                        onclick="removeCustomItem(this)">Remove</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+                                    <button type="button" class="btn-buya mb-3" onclick="addCustomItem()">Add Custom
+                                        Item</button>
                                 </div>
-                                <button type="button" class="btn-buya mb-3" onclick="addCustomItem()">Add Custom Item</button>
                             </div>
-                        </div>
-                        <!-- Estimated Fee -->
-                        <div class="form-group mt-4">
-                            <label for="estimated_fee">Estimated Fee</label>
-                            <input type="text" class="form-control" id="estimated_fee" name="total_amount" readonly>
-                        </div>
-                        <button type="submit" name="placeOrder" class="btn-buya">Submit Request</button>
+                            <!-- Estimated Fee -->
+                            <div class="form-group mt-4">
+                                <label for="estimated_fee">Estimated Fee</label>
+                                <input type="hidden" class="form-control" id="estimated_fee" name="total_amount">
+                                <div id="estimated-field"></div>
+                            </div>
+                            <div class="form-group mt-4" id="">
+                                <label for="referral-code">Referral Code(Optional - 5% discount)</label>
+                                <input type="text" class="form-control" id="referral_code" style="display: none;"
+                                    name="referral_code">
+                            </div>
+                            <button type="submit" name="placeOrder" class="btn-buya">Submit Request</button>
                     </form>
                 </div>
             </div>
@@ -278,7 +335,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
 </section>
 
 <!-- Floating Cart Button -->
-<button id="cartButton" class="btn" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; background-color: #ffc700;">
+<button id="cartButton" class="btn"
+    style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; background-color: #ffc700;">
     🛒
 </button>
 
@@ -335,6 +393,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
         justify-content: center;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
+
     #cartItemsTable input[type="number"] {
         width: 80px;
     }
@@ -393,6 +452,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['placeOrder'])) {
         estimatedFeeInput.value = total.toFixed(2);
         modalEstimatedFeeInput.value = total.toFixed(2);
         modalTotalAmountInput.value = total.toFixed(2);
+        document.querySelector("#estimated-field").innerHTML = total.toFixed(2);
+        console.log(estimatedFeeInput)
+        setTimeout(() => {
+            if (parseInt(estimatedFeeInput.value) >= 50000) {
+                document.getElementById("referral_code").style.display = "block";
+            } else {
+                document.getElementById("referral_code").style.display = "none";
+            }
+        }, 100);
         updateCartModal();
     }
 

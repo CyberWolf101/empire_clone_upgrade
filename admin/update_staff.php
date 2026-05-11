@@ -6,6 +6,7 @@ if (isset($_POST['register'])) {
     $name = mysqli_real_escape_string($con, $_POST['name']);
     $email = mysqli_real_escape_string($con, $_POST['email']);
     $password = mysqli_real_escape_string($con, $_POST['password']);
+    $code_status = mysqli_real_escape_string($con, $_POST['code_status']);
     $category = mysqli_real_escape_string($con, $_POST['role']);
 
     $selectedSections = $_POST['sections'] ?? [];
@@ -21,6 +22,7 @@ if (isset($_POST['register'])) {
         name='$name',
         email='$email',
         password='$password',
+        code_status='$code_status',
         status='$category',
         sections='$commaSeparatedSections',
         emergency_name='$emergency_name',

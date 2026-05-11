@@ -1,26 +1,19 @@
 <?php
+$bank_accounts = [];
 if (isset($_COOKIE["currentService"])) {
-?>
-    <?php
     $service_type = $_COOKIE["currentService"];
-    $sql = "SELECT * FROM bank_accounts WHERE service_type='$service_type' ORDER BY bank_name";
+    $sql = "SELECT * FROM bank_accounts WHERE service_type='$service_type'";
     $result = mysqli_query($con, $sql);
     while ($row = mysqli_fetch_array($result)) {
-        $bank_accounts = [];
         $bank_accounts[] = $row;
     }
-    ?>
-<?php
 } else {
-    $bank_accounts = [];
     $sql = "SELECT * FROM bank_accounts ORDER BY bank_name";
     $result = mysqli_query($con, $sql);
     while ($row = mysqli_fetch_array($result)) {
         $bank_accounts[] = $row;
     }
 }
-?>
-<?php
 if (!isset($showAmountInput)) {
     $showAmountInput = false; // default
 }

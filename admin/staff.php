@@ -43,6 +43,8 @@ if(isset($_GET['walletid'])){
                         <th>Email</th>
                         <th>Phone</th>
                         <th>Password</th>
+                        <th>Staff Code</th>
+                        <th>Code Status</th>
                         <th>Service</th>
                         <th>Last Login</th>
                         <th></th>
@@ -56,6 +58,8 @@ if(isset($_GET['walletid'])){
                         <th>Email</th>
                         <th>Phone</th>
                         <th>Password</th>
+                        <th>Staff Code</th>
+                        <th>Code Status</th>
                         <th>Service</th>
                         <th>Last Login</th>
                         <th></th>
@@ -91,6 +95,8 @@ echo "
                          <td>".$row['email']."</td>
                          <td>".$row['phone']."</td>
                          <td>".$row['password']."</td>
+                         <td>".$row['staff_code']."</td>
+                         <td>".$row['code_status']."</td>
                          <td>".$categoryname."</td>
                          <td>".$row['logdate']."</td>
                         <td><form action='editsaloonstaff.php' method='get'>

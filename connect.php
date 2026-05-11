@@ -1,8 +1,5 @@
 <?php
-// $db_host = "localhost";
-// $db_username = "root";  
-// $db_pass = "";         
-// $db_name = "oshofree_chbluxuryempirenew"; 
+
 
 if ($_SERVER['SERVER_NAME'] === 'localhost') {
     // Local development
@@ -13,9 +10,9 @@ if ($_SERVER['SERVER_NAME'] === 'localhost') {
 } else {
     // Online production
     $db_host = "localhost";
-    $db_username = "oshofree_luxury";
-    $db_pass = "chbluxuryempire";
-    $db_name = "oshofree_chbluxuryempirenew";
+    $db_username = "chbluxu1_empire";
+    $db_pass = "4Ew5939xu8QzwbICPC";
+    $db_name = "chbluxu1_chbluxuryempirenew";
 }
 
 

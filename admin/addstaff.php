@@ -21,8 +21,6 @@
         <input type="text" class="form-control" name="email" placeholder="*Email" required /><br />
         <label for="" class="small">Password:</label>
         <input type="text" class="form-control" name="password" placeholder="*Password" required /><br />
-
-
         <p>
           <label for="" class="small">Role:</label>
           <select class="form-control" name="role" id="roleSelect" required>

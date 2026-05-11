@@ -25,6 +25,7 @@ if(isset($_GET['category'])){
 					  $name = $row["name"];   					
 					  $email = $row['email'];
 					  $status = $row['status'];
+					  $code_status = $row['code_status'];
 					  $categories = explode(',', $row['sections']); 
 					  $password = $row['password'];
                       $emergency_name = $row['emergency_name'] ?? '';
@@ -59,6 +60,11 @@ foreach ($categories as $value) {}
 <input type="text" class="form-control" name="name" value="<?php echo $name; ?>" placeholder="*Name" required /><br />
 <input type="text" class="form-control" name="email" value="<?php echo $email; ?>"  placeholder="*Email" required /><br />
 <input type="text" class="form-control" name="password"  value="<?php echo $password; ?>" placeholder="*Password" required /><br />
+<select name="code_status" id="" class="form-control">
+    <option value="">---- Select Code Status ----</option>
+    <option value="<?php echo $code_status == "Active" ? $code_status : "Inactive" ?>"><?php echo $code_status == "Active" ? $code_status : "Inactive" ?></option>
+    <option value="<?php echo $code_status == "Active" ? "Inactive" : "Active" ?>"><?php echo $code_status == "Active" ? "Inactive" : "Active" ?></option>
+</select>
 <p><select class="select2-multiple form-control" name="sections[]" multiple="multiple" id="select2Multiple" style="width:100%;">
 <?php // Loop through the options and generate the <option> elements
 $options = ['- Select Department -', 'saloon', 'orishirishi', 'kitchen', 'repair', 'academy', 'members', 'giftcard', 'vouchers', 'staff', 'rental', 'reviews'];

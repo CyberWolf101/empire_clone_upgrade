@@ -27,6 +27,8 @@ if(isset($_GET['category'])){
 					  $phone = $row['phone'];
 					  $gender = $row['gender'];
 					  $password = $row['password'];
+					  $staff_code = $row['staff_code'];
+					  $code_status = $row['code_status'];
 					  $section = $row['section'];
                       $emergency_name = $row['emergency_name'];
 $emergency_phone = $row['emergency_phone'];
@@ -57,6 +59,12 @@ $emergency_address = $row['emergency_address'];
 <input type="text" class="form-control" name="email" value="<?php echo $email; ?>"  placeholder="*Email" required /><br />
 <input type="text" class="form-control" name="phone"  value="<?php echo $phone; ?>" placeholder="*Phone Number" required /><br />
 <input type="text" class="form-control" name="password"  value="<?php echo $password; ?>" placeholder="*Password" required /><br />
+<input type="text" class="form-control" name="staff_code"  value="<?php echo $staff_code; ?>" placeholder="*Staff Code" required /><br />
+<select name="code_status" id="" class="form-control">
+    <option value="">---- Select Code Status ----</option>
+    <option value="<?php echo $code_status == "Active" ? $code_status : "Inactive" ?>"><?php echo $code_status == "Active" ? $code_status : "Inactive" ?></option>
+    <option value="<?php echo $code_status == "Active" ? "Inactive" : "Active" ?>"><?php echo $code_status == "Active" ? "Inactive" : "Active" ?></option>
+</select>
 <hr>
 <h5>Emergency Contact Details</h5>
 
