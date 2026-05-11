@@ -98,7 +98,7 @@ $sql = "SELECT * from saloon_orders where id='$saloon' ";
 $sql2 = mysqli_query($con, $sql);
 while ($row = mysqli_fetch_array($sql2)) {
   $type = $row["bookingtype"];
-  $kit = $row["saloonkit"];
+  $kit = $row["saloonkit"] ?? '';
   $username = $row["name"];
   $c_phone = $row["phone"];
   $c_email = $row["email"];
