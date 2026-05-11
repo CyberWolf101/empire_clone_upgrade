@@ -5,7 +5,6 @@ $item_delete = mysqli_real_escape_string($con, $_GET['rowitem'] ?? '');
 if (!empty($item_delete)) {
     $del = mysqli_query($con, "DELETE FROM refreshments WHERE s='$item_delete'") or die('Could not connect: ' . mysqli_error($con));
 }
-$_SESSION['username'] = "Makinde Ayooluwa";
 if (empty($_SESSION['username'])) {
     header("location: userdetails.php");
     exit;
