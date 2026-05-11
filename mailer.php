@@ -23,10 +23,13 @@ function sendEmail($to, $subject, $message, $from = 'no-reply@example.com')
         } else {
             // Production: real SMTP (adjust these settings to your host)
             $mail->isSMTP();
-            $mail->Host = 'mail.chbluxuryempire.com';
+            $mail->Host = 'smtp.gmail.com';
+            // $mail->Host = 'mail.chbluxuryempire.com';
             $mail->SMTPAuth = true;
-            $mail->Username = 'chbempireadmin@chbluxuryempire.com';
-            $mail->Password = '4Ew5939xu8QzwbICPC';
+            $mail->Username = 'corporatehair.sales@gmail.com';
+            // $mail->Username = 'chbempireadmin@chbluxuryempire.com';
+            $mail->Password = 'yjasvosugikipzyj';
+            // $mail->Password = '4Ew5939xu8QzwbICPC';
             $mail->SMTPSecure = 'ssl';
             $mail->Port = 465;
         }
