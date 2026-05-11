@@ -130,7 +130,10 @@ $extrac = mysqli_query($con, "SELECT * from appointments where id='$saloon'");
 $count_services = mysqli_num_rows($extrac);
 
 //Grand Total
-$total_all = $total_services + $total_items + $kit;
+$kit = (float)($row['saloonkit'] ?? 0);
+
+$total_all = (float)$total_services + (float)$total_items + $kit;
+// $total_all = $total_services + $total_items + $kit;
 $insert = mysqli_query($con, "UPDATE saloon_orders SET total_amount= '$total_all' where id='$saloon'") or die('Could not connect: ' . mysqli_error($con));
 ?>
 
