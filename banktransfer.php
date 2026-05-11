@@ -2,13 +2,13 @@
 include "header.php";
 include 'process.form.php';
 
-$subtotal = floatval($_SESSION['cart_total'] ?? 0);
-$shipping_fee = floatval($_SESSION['shipping_fee'] ?? 0);
-$shipping_type = $_SESSION['shipping_type'] ?? 'pickup';
-$selected_place = $_SESSION['selected_place'] ?? '';
-$c_email = mysqli_real_escape_string($con, $_SESSION['email'] ?? '');
-$c_phone = mysqli_real_escape_string($con, $_SESSION['phone'] ?? '');
-$username = mysqli_real_escape_string($con, $_SESSION['username'] ?? '');
+$subtotal = floatval($_COOKIE['cart_total'] ?? 0);
+$shipping_fee = floatval($_COOKIE['shipping_fee'] ?? 0);
+$shipping_type = $_COOKIE['shipping_type'] ?? 'pickup';
+$selected_place = $_COOKIE['selected_place'] ?? '';
+$c_email = mysqli_real_escape_string($con, $_COOKIE['customer_email'] ?? '');
+$c_phone = mysqli_real_escape_string($con, $_COOKIE['customer_phone'] ?? '');
+$username = mysqli_real_escape_string($con, $_COOKIE['username'] ?? '');
 
 echo $c_phone;
 echo $c_email;
@@ -99,7 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
 
         if (!empty($bank)) {
             $paymentFor = mysqli_real_escape_string($con, $paymentFor);
-            $sql = "INSERT INTO bank_transfers (fileUrl, payment_for, item_id, amount, bank) 
+            $sql = "INSERT INTO bank_transfers(fileUrl, payment_for, item_id, amount, bank) 
                     VALUES ('$fileUrl', '$paymentFor', '$itemId', $amount, '$bank')";
             if (!mysqli_query($con, $sql)) {
                 $errors[] = "Database insertion failed: " . mysqli_error($con);
@@ -117,9 +117,10 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
                 unset($_COOKIE['foodID']);
             }
 
-            unset($_SESSION['username']);
-            unset($_SESSION['email']);
-            unset($_SESSION['phone']);
+            // unset($_SESSION['username']);
+            // unset($_SESSION['email']);
+            // unset($_SESSION['phone']);
+            
             echo "<div class='alert alert-success'>Payment details submitted successfully! Redirecting to homepage...</div>";
             echo "<script>setTimeout(function(){ window.location.href = 'index.php'; }, 3000);</script>";
             exit;

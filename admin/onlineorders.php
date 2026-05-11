@@ -138,9 +138,7 @@ if (isset($_GET['order']) && !empty($_GET['order'])) {
           // Build SQL query
           $sql = "SELECT id, name, total_amount, status, pay_status, shipping_fee" . ($has_date ? ", date" : "") . " FROM saloon_orders WHERE section='refreshments' 
       AND type='online' 
-      AND (pay_status='pending' OR pay_status='complete' OR pay_status='paid')";
-
-          $sql .= $has_date ? " ORDER BY date DESC" : " ORDER BY id DESC";
+      AND (pay_status='pending' OR pay_status='complete' OR pay_status='paid') ORDER BY id ASC";
           $count_query = "SELECT COUNT(*) AS total_rows FROM saloon_orders WHERE section='refreshments' 
       AND type='online' 
       AND (pay_status='pending' OR pay_status='complete' OR pay_status='paid')";

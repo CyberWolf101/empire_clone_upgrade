@@ -22,6 +22,15 @@ ADD COLUMN IF NOT EXISTS code_status VARCHAR(255)
 DEFAULT "Inactive";
 ALTER TABLE bank_accounts
 ADD COLUMN IF NOT EXISTS service_type VARCHAR(255) NOT NULL DEFAULT "";
-
+ALTER TABLE bank_accounts
+REMOVE PRIMARY KEY(`id`);
 ALTER TABLE event_orders
 ADD COLUMN IF NOT EXISTS referral_code VARCHAR(255) NOT NULL DEFAULT "";
+ALTER TABLE `bank_accounts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `bank_transfers`
+--
+ALTER TABLE `bank_transfers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;

@@ -1,9 +1,9 @@
 <?php
 include "header.php";
-
+$saloon = $_COOKIE['foodID'];
 // Redirect if user details are already set and order is pending
-if (isset($_SESSION['username']) && $_SESSION['username'] != "") {
-    if (isset($saloon) && !empty($saloon)) {
+if (isset($_SESSION['username'])) {
+    if (isset($saloon)) {
         $sql = "SELECT status, pay_status FROM saloon_orders WHERE id='$saloon'";
         $result = mysqli_query($con, $sql);
         if ($row = mysqli_fetch_array($result)) {
@@ -42,9 +42,12 @@ if (isset($_POST['submitdetails'])) {
         die('Could not update order: ' . mysqli_error($con));
     }
 
-    $_SESSION['username'] = $username;
-    $_SESSION['customer_email'] = $mail;
-    $_SESSION['customer_phone'] = $mob;
+    // $_SESSION['username'] = $username;
+    // $_SESSION['customer_email'] = $mail;
+    // $_SESSION['customer_phone'] = $mob;
+    setcookie("username",$username,time() + 300, "/");
+    setcookie("customer_email",$mail,time() + 300, "/");
+    setcookie("customer_phone",$mob,time() + 300, "/");
 
 ?>
     <script>

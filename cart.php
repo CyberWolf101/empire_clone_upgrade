@@ -5,12 +5,13 @@ $item_delete = mysqli_real_escape_string($con, $_GET['rowitem'] ?? '');
 if (!empty($item_delete)) {
     $del = mysqli_query($con, "DELETE FROM refreshments WHERE s='$item_delete'") or die('Could not connect: ' . mysqli_error($con));
 }
-if (empty($_SESSION['username'])) {
+if (empty($_COOKIE['username'])) {
     header("location: userdetails.php");
     exit;
 } else {
-    $username = $_SESSION['username'];
+    $username = $_COOKIE['username'];
 }
+echo $_COOKIE["username"];
 
 $saloon = mysqli_real_escape_string($con, $saloon);
 $del = mysqli_query($con, "DELETE FROM giftcard_history WHERE orderid='$saloon' AND status='processing'") or die('Could not connect: ' . mysqli_error($con));
@@ -44,11 +45,14 @@ if ($res_shipping && $row_shipping = mysqli_fetch_assoc($res_shipping)) {
 $total_all = $subtotal + $shipping_fee;
 
 // Save in session
-$_SESSION['cart_total'] = $subtotal;
-$_SESSION['shipping_fee'] = $shipping_fee;
-$_SESSION['shipping_type'] = $shipping_type;
-$_SESSION['selected_place'] = $selected_place;
-
+// $_SESSION['cart_total'] = $subtotal;
+// $_SESSION['shipping_fee'] = $shipping_fee;
+// $_SESSION['shipping_type'] = $shipping_type;
+// $_SESSION['selected_place'] = $selected_place;
+setcookie('cart_total',$subtotal,time() + 600, "/");
+setcookie('shipping_fee',$shipping_fee,time() + 600, "/");
+setcookie('shipping_type',$shipping_type,time() + 600, "/");
+setcookie('selected_place',$selected_place,time() + 600, "/");
 // Now fetch items
 $sql = "SELECT * FROM refreshments WHERE orderid='$saloon'";
 $sql2 = mysqli_query($con, $sql);
