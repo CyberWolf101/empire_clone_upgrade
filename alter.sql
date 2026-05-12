@@ -1,36 +1,54 @@
-ALTER TABLE staff 
-ADD COLUMN IF NOT EXISTS staff_code VARCHAR(255) 
-DEFAULT (CONCAT(
-    'STAFF-',
-    UPPER(SUBSTRING(MD5(UUID()),1,8))
-));
-ALTER TABLE staff 
-ADD COLUMN IF NOT EXISTS code_status VARCHAR(255) 
-DEFAULT "Inactive";
-ALTER TABLE event_orders 
-ADD COLUMN IF NOT EXISTS referral_code VARCHAR(255) 
-DEFAULT '';
+ALTER TABLE
+  staff
+ADD
+  COLUMN IF NOT EXISTS staff_code VARCHAR(255) DEFAULT (
+    CONCAT(
+      'STAFF-',
+      UPPER(SUBSTRING(MD5(UUID()), 1, 8))
+    )
+  );
 
-ALTER TABLE admin 
-ADD COLUMN IF NOT EXISTS staff_code VARCHAR(255) 
-DEFAULT (CONCAT(
-    'ADMIN-',
-    UPPER(SUBSTRING(MD5(UUID()),1,8))
-));
-ALTER TABLE admin 
-ADD COLUMN IF NOT EXISTS code_status VARCHAR(255) 
-DEFAULT "Inactive";
-ALTER TABLE bank_accounts
-ADD COLUMN IF NOT EXISTS service_type VARCHAR(255) NOT NULL DEFAULT "";
-ALTER TABLE bank_accounts
-REMOVE PRIMARY KEY(`id`);
-ALTER TABLE event_orders
-ADD COLUMN IF NOT EXISTS referral_code VARCHAR(255) NOT NULL DEFAULT "";
-ALTER TABLE `bank_accounts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+ALTER TABLE
+  staff
+ADD
+  COLUMN IF NOT EXISTS code_status VARCHAR(255) DEFAULT "Inactive";
 
---
--- AUTO_INCREMENT for table `bank_transfers`
---
-ALTER TABLE `bank_transfers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+ALTER TABLE
+  event_orders
+ADD
+  COLUMN IF NOT EXISTS referral_code VARCHAR(255) DEFAULT '';
+
+ALTER TABLE
+  admin
+ADD
+  COLUMN IF NOT EXISTS staff_code VARCHAR(255) DEFAULT (
+    CONCAT(
+      'ADMIN-',
+      UPPER(SUBSTRING(MD5(UUID()), 1, 8))
+    )
+  );
+
+ALTER TABLE
+  admin
+ADD
+  COLUMN IF NOT EXISTS code_status VARCHAR(255) DEFAULT "Inactive";
+
+ALTER TABLE
+  bank_accounts
+ADD
+  COLUMN IF NOT EXISTS service_type VARCHAR(255) NOT NULL DEFAULT "";
+
+ALTER TABLE
+  event_orders
+ADD
+  COLUMN IF NOT EXISTS referral_code VARCHAR(255) NOT NULL DEFAULT "";
+
+ALTER TABLE
+  food_categories
+DROP
+  COLUMN IF EXISTS discount;
+
+ALTER TABLE
+  refreshments
+ADD
+  COLUMN item_category VARCHAR(255) NOT NULL DEFAULT "Drinks";

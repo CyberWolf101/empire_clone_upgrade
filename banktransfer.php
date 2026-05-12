@@ -10,8 +10,6 @@ $c_email = mysqli_real_escape_string($con, $_COOKIE['customer_email'] ?? '');
 $c_phone = mysqli_real_escape_string($con, $_COOKIE['customer_phone'] ?? '');
 $username = mysqli_real_escape_string($con, $_COOKIE['username'] ?? '');
 
-echo $c_phone;
-echo $c_email;
 // Decode selected_place JSON string for display
 $selected_place_data = $selected_place ? json_decode($selected_place, true) : [];
 $selected_place_description = isset($selected_place_data['description']) ? htmlspecialchars($selected_place_data['description']) : 'Not specified';
@@ -99,8 +97,8 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
 
         if (!empty($bank)) {
             $paymentFor = mysqli_real_escape_string($con, $paymentFor);
-            $sql = "INSERT INTO bank_transfers(fileUrl, payment_for, item_id, amount, bank) 
-                    VALUES ('$fileUrl', '$paymentFor', '$itemId', $amount, '$bank')";
+            $sql = "INSERT INTO bank_transfers(id, fileUrl, payment_for, item_id, amount, bank) 
+                    VALUES ('$itemId','$fileUrl', '$paymentFor', '$itemId', $amount, '$bank')";
             if (!mysqli_query($con, $sql)) {
                 $errors[] = "Database insertion failed: " . mysqli_error($con);
             }
@@ -130,42 +128,42 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
 ?>
 
 <style>
-    .section-title h2 {
-        font-size: 32px;
-        font-weight: bold;
-        text-transform: capitalize;
-        margin-bottom: 20px;
-        padding-bottom: 20px;
-        position: relative;
-        letter-spacing: 0px;
-        color: #FFFFFF;
-    }
+.section-title h2 {
+    font-size: 32px;
+    font-weight: bold;
+    text-transform: capitalize;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    position: relative;
+    letter-spacing: 0px;
+    color: #FFFFFF;
+}
 
-    .section-title h2::after {
-        background: none;
-    }
+.section-title h2::after {
+    background: none;
+}
 
-    .form-control {
-        background: transparent;
-        border: 1px solid #FFC700;
-        color: white;
-    }
+.form-control {
+    background: transparent;
+    border: 1px solid #FFC700;
+    color: white;
+}
 
-    .btn-submit {
-        background: #FFC700;
-        color: #000;
-        font-weight: 600;
-        font-size: 0.8rem;
-    }
+.btn-submit {
+    background: #FFC700;
+    color: #000;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
 
-    .btn-submit:hover {
-        background: #000;
-        color: #FFC700;
-    }
+.btn-submit:hover {
+    background: #000;
+    color: #FFC700;
+}
 
-    .txt {
-        color: #FFC700;
-    }
+.txt {
+    color: #FFC700;
+}
 </style>
 
 <div class="section-title p-3" style="color:#FFFFFF;">
@@ -175,9 +173,9 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
         Due amount: <b class="txt"> ₦ <?php echo number_format($amount, 2); ?></b>
     </div>
     <?php if ($shipping_type === 'delivery'): ?>
-        <div class="text-white">
-            Delivery Location: <b class="txt"><?php echo $selected_place_description; ?></b>
-        </div>
+    <div class="text-white">
+        Delivery Location: <b class="txt"><?php echo $selected_place_description; ?></b>
+    </div>
     <?php endif; ?>
 </div>
 

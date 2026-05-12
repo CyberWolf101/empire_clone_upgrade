@@ -20,8 +20,37 @@ function isMenuLinkEnabled($con, $name)
 if (isset($_GET['error'])) {
     echo "<script>alert('" . addslashes($_GET['error']) . "');</script>";
 }
-
-
+/**
+ * NEW TABLE CREATION FOR CUSTOMER MANAGEMENT
+ * *********** CUSTOMERS TABLE: customers
+ * DB Fields: id, name,  email,
+ *  phone, unique_id, added_on,
+ * totalprice(total_spent),
+ *  order_count, first_order_date
+ * *********** DISCOUNTS PERCENTAGE, PRODUCT CATEGORY, DISCOUNT STATUS AND USER UNIQUE ID TABLE: customers_discounts
+ * DB Fields: id, customer_unique_id,
+ *  discount_percentage, product_category,
+ *  discount_status
+ */
+$createCustomerTableSQL = "
+CREATE TABLE IF NOT EXISTS customers(
+id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+name VACHAR(255) NOT NULL,
+email VARCHAR(255) NOT NULL,
+phone VARCHAR(255) NOT NULL,
+unique_id VARCHAR(255) NOT NULL DEFAULT (
+    CONCAT(
+      'CUSTOMER-',
+      UPPER(SUBSTRING(MD5(UUID()), 1, 8))
+    )
+  ),
+  added_on DATETIME NOT NULL DEFAULT CURRENT_TIME,
+  total_spent VARCHAR(255) NOT NULL DEFAULT '0',
+  order_count VARCHAR(255) NOT NULL DEFAULT '0',
+  first_order_date VARCHAR(255) NOT NULL
+)
+";
+mysqli_query($con, $createCustomerTableSQL);
 ?>
 <main class="pt-3">
     <div id="main">
