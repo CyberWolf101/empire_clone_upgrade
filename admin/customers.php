@@ -144,6 +144,7 @@ while ($result = mysqli_fetch_assoc($selectResult)) {
                             data-name="<?= htmlspecialchars($customer['name'], ENT_QUOTES, 'UTF-8') ?>" href="" class="dropdown-item">
                             Send Email
                           </a>
+                          <a href="editcustomer.php" class="dropdown-item">Edit customer</a>
                         </div>
                       </div>
                     </td>

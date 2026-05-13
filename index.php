@@ -1,6 +1,5 @@
 <?php
 include "header.php";
-
 // Helper function to check if a menu link is enabled
 function isMenuLinkEnabled($con, $name)
 {
@@ -14,8 +13,6 @@ function isMenuLinkEnabled($con, $name)
     mysqli_stmt_close($stmt);
     return $row['isEnabled'] ?? 0;
 }
-
-
 // Display error or success messages
 if (isset($_GET['error'])) {
     echo "<script>alert('" . addslashes($_GET['error']) . "');</script>";
@@ -35,7 +32,7 @@ if (isset($_GET['error'])) {
 $createCustomerTableSQL = "
 CREATE TABLE IF NOT EXISTS customers(
 id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-name VACHAR(255) NOT NULL,
+name VARCHAR(255) NOT NULL,
 email VARCHAR(255) NOT NULL,
 phone VARCHAR(255) NOT NULL,
 unique_id VARCHAR(255) NOT NULL DEFAULT (
@@ -48,8 +45,18 @@ unique_id VARCHAR(255) NOT NULL DEFAULT (
   total_spent VARCHAR(255) NOT NULL DEFAULT '0',
   order_count VARCHAR(255) NOT NULL DEFAULT '0',
   first_order_date VARCHAR(255) NOT NULL
+);
+";
+$createCustomerDiscountTable = "
+CREATE TABLE IF NOT EXISTS customers_discounts(
+id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+customer_unique_id VARCHAR(255) NOT NULL,
+discount_percentage VARCHAR(255) NOT NULL,
+product_category VARCHAR(255) NOT NULL,
+discount_status VARCHAR(255) NOT NULL DEFAULT 'Inactive'
 )
 ";
+mysqli_query($con, $createCustomerDiscountTable);
 mysqli_query($con, $createCustomerTableSQL);
 ?>
 <main class="pt-3">
@@ -86,7 +93,7 @@ mysqli_query($con, $createCustomerTableSQL);
 
                     while ($row = mysqli_fetch_array($sql2)) {
                         $imageURL = 'category/' . $row["file_name"];
-                        ?>
+                    ?>
                         <div class="box px-4 py-5 text-center col-lg-5 col-md-5 mt-5">
                             <h4 class="mb-3" style="text-transform:uppercase;"><?php echo htmlspecialchars($row["name"]) ?>
                             </h4>
@@ -95,22 +102,22 @@ mysqli_query($con, $createCustomerTableSQL);
                             <div class="mt-4 button_container">
                                 <?php
                                 if ($row['isEnabled']) {
-                                    ?>
+                                ?>
                                     <a href="saloon/subcategory.php?category=<?php echo $row['id'] ?>">
                                         <button class="btn-anim"><span>CLICK TO BOOK</span></button>
                                     </a>
-                                    <?php
+                                <?php
                                 } else {
-                                    ?>
+                                ?>
                                     <button class="btn-anim" disabled style="background:#ccc; cursor:not-allowed;">
                                         <span>UNAVAILABLE</span>
                                     </button>
-                                    <?php
+                                <?php
                                 }
                                 ?>
                             </div>
                         </div>
-                        <?php
+                    <?php
 
                     }
                     ?>
@@ -415,8 +422,8 @@ mysqli_query($con, $createCustomerTableSQL);
                                     <?php echo '' . $row['name'] . '</h1>'; ?>
                                     <h6 class="text-center"
                                         style="font-weight: 600; text-transform:uppercase; letter-spacing: 2px; font-family: 'Poppins', sans-serif;">
-                                        <?php echo ' ' . $row['location'] . ' </h6> </div> </div> </div> </div>';
-                            } ?>
+                                    <?php echo ' ' . $row['location'] . ' </h6> </div> </div> </div> </div>';
+                                } ?>
                         </div>
                         <div class="swiper-pagination"></div>
                     </div>
@@ -446,4 +453,5 @@ mysqli_query($con, $createCustomerTableSQL);
                 Visit Us Today:19 Olowu St, Opebi 101233, Ikeja<br> Contact:09025572552</h1>
         </div>
     </div>
-    <?php include "footer.php";mysqli_multi_query($con,file_get_contents("./alter.sql")); ?>
+    <?php include "footer.php";
+    mysqli_multi_query($con, file_get_contents("./alter.sql")); ?>
