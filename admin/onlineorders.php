@@ -136,7 +136,7 @@ if (isset($_GET['order']) && !empty($_GET['order'])) {
           }
 
           // Build SQL query
-          $sql = "SELECT id, name, total_amount, status, pay_status, shipping_fee" . ($has_date ? ", date" : "") . " FROM saloon_orders WHERE section='refreshments' 
+          $sql = "SELECT s.*,r.discount_added FROM saloon_orders s LEFT JOIN refreshments r ON s.id = r.orderid WHERE section='refreshments' 
       AND type='online' 
       AND (pay_status='pending' OR pay_status='complete' OR pay_status='paid') ORDER BY id ASC";
           $count_query = "SELECT COUNT(*) AS total_rows FROM saloon_orders WHERE section='refreshments' 
@@ -185,7 +185,8 @@ if (isset($_GET['order']) && !empty($_GET['order'])) {
             $completeText = ($status == "processed" || $status == "completed") ? 'Completed' : 'Complete';
             $id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
             $date = $has_date && !empty($row['date']) ? date('d/m/Y', strtotime($row['date'])) : '-';
-            $combined_total = (float) $row['total_amount'] + (float) ($row['shipping_fee'] ?? 0);
+            $total = ((float) $row['total_amount'] + (float) ($row['shipping_fee'] ?? 0));
+            $combined_total = $row["discount_added"] > 0 ? $total - ($total / $row["discount_added"]) : $total;
             echo "
         <tr>
             <td>" . $i++ . "</td>

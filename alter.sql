@@ -44,11 +44,14 @@ ADD
   COLUMN IF NOT EXISTS referral_code VARCHAR(255) NOT NULL DEFAULT "";
 
 ALTER TABLE
-  food_categories
-DROP
-  COLUMN IF EXISTS discount;
+  food_categories DROP COLUMN IF EXISTS discount;
 
 ALTER TABLE
   refreshments
 ADD
   COLUMN item_category VARCHAR(255) NOT NULL DEFAULT "Drinks";
+
+ALTER TABLE
+  refreshments
+ADD
+  COLUMN discount_added VARCHAR(255) NOT NULL DEFAULT "0";

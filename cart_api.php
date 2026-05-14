@@ -17,7 +17,7 @@ if ($action === 'add' || isset($_POST['addtocart'])) {
         echo json_encode($response);
         exit;
     }
-    $res = mysqli_query($con, "SELECT item, price, type FROM food_menu WHERE s='$itemid'");
+    $res = mysqli_query($con, "SELECT * FROM food_menu WHERE s='$itemid'");
     if ($row = mysqli_fetch_assoc($res)) {
         $itemName = $row['item'];
         $itemPrice = (float)$row['price'];

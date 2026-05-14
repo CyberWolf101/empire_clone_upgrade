@@ -1,120 +1,240 @@
 <?php
-include "header.php";
+    include "header.php";
 
-$item_delete = mysqli_real_escape_string($con, $_GET['rowitem'] ?? '');
-if (!empty($item_delete)) {
-    $del = mysqli_query($con, "DELETE FROM refreshments WHERE s='$item_delete'") or die('Could not connect: ' . mysqli_error($con));
-}
-if (empty($_COOKIE['username'])) {
+    $saloon      = mysqli_real_escape_string($con, $_COOKIE['foodID'] ?? '');
+    $item_delete = mysqli_real_escape_string($con, $_GET['rowitem'] ?? '');
+    if (! empty($item_delete) && ! empty($saloon)) {
+    $del = mysqli_query($con, "DELETE FROM refreshments WHERE s='$item_delete' AND orderid='$saloon'") or die('Could not connect: ' . mysqli_error($con));
+    }
+    if (empty($_COOKIE['username'])) {
     header("location: userdetails.php");
     exit;
-} else {
+    } else {
     $username = $_COOKIE['username'];
-}
+    $email    = $_COOKIE["customer_email"];
+    }
 
-$saloon = mysqli_real_escape_string($con, $saloon);
-$del = mysqli_query($con, "DELETE FROM giftcard_history WHERE orderid='$saloon' AND status='processing'") or die('Could not connect: ' . mysqli_error($con));
+    if (! empty($saloon)) {
+    $del = mysqli_query($con, "DELETE FROM giftcard_history WHERE orderid='$saloon' AND status='processing'") or die('Could not connect: ' . mysqli_error($con));
+    }
 
-// Get subtotal (cart items only)
-$subtotal = 0;
-$sql_total = "SELECT SUM(totalprice) as total, item_category FROM refreshments WHERE orderid='$saloon'";
-$res_total = mysqli_query($con, $sql_total);
-if ($row_total = mysqli_fetch_assoc($res_total)) {
-    $subtotal = (int) $row_total['total'];
-}
-// Get shipping fee, type, and selected place from session or saloon_orders
-$shipping_fee = isset($_SESSION['shipping_fee']) ? (int) $_SESSION['shipping_fee'] : 0;
-$shipping_type = isset($_SESSION['shipping_type']) ? $_SESSION['shipping_type'] : 'pickup';
-$selected_place = isset($_SESSION['selected_place']) ? $_SESSION['selected_place'] : '';
+    // Get subtotal (cart items only)
+    $subtotal  = 0;
+    $sql_total = "SELECT SUM(totalprice) as total FROM refreshments WHERE orderid='$saloon'";
+    $res_total = mysqli_query($con, $sql_total) or die('Could not calculate subtotal: ' . mysqli_error($con));
+    if ($row_total = mysqli_fetch_assoc($res_total)) {
+    $subtotal = (float) $row_total['total'];
+    }
+    /**
+ * DISCOUNT INTEGRATION
+ */
 
-$sql_shipping = "SELECT shipping_fee, shipping_type FROM saloon_orders WHERE id='$saloon'";
-$res_shipping = mysqli_query($con, $sql_shipping);
-if ($res_shipping && $row_shipping = mysqli_fetch_assoc($res_shipping)) {
-    $shipping_fee = (int) $row_shipping['shipping_fee'];
-    $shipping_type = $row_shipping['shipping_type'];
-    // Update session with database values if they exist
-    $_SESSION['shipping_fee'] = $shipping_fee;
-    $_SESSION['shipping_type'] = $shipping_type;
-} else {
-    error_log("Failed to fetch shipping details from saloon_orders: " . mysqli_error($con));
-}
+    $total_all      = 0;
+    $total_discount = 0;
 
-// Calculate total_all (subtotal + shipping_fee)
-$total_all = ($subtotal) + $shipping_fee;
-// Save in session
-// $_SESSION['cart_total'] = $subtotal;
-// $_SESSION['shipping_fee'] = $shipping_fee;
-// $_SESSION['shipping_type'] = $shipping_type;
-// $_SESSION['selected_place'] = $selected_place;
-setcookie('cart_total',$total_all,time() + 600, "/");
-setcookie('shipping_fee',$shipping_fee,time() + 600, "/");
-setcookie('shipping_type',$shipping_type,time() + 600, "/");
-setcookie('selected_place',$selected_place,time() + 600, "/");
-// Now fetch items
-$sql = "SELECT * FROM refreshments WHERE orderid='$saloon'";
-$sql2 = mysqli_query($con, $sql);
+    // FETCH SHIPPING FIRST
+    $shipping_fee   = isset($_SESSION['shipping_fee']) ? (float) $_SESSION['shipping_fee'] : 0;
+    $shipping_type  = isset($_SESSION['shipping_type']) ? $_SESSION['shipping_type'] : 'pickup';
+    $selected_place = isset($_SESSION['selected_place']) ? $_SESSION['selected_place'] : '';
+
+    /**
+ * FETCH CUSTOMER DISCOUNTS
+ */
+
+    $discounts = [];
+
+    /**
+ * GET CUSTOMER UNIQUE ID
+ */
+    $customerUniqueId = '';
+
+    $getCustomerSQL = "
+SELECT unique_id
+FROM customers
+WHERE email = '$email'
+LIMIT 1
+";
+
+    $getCustomerResult = mysqli_query($con, $getCustomerSQL);
+
+    if ($customerRow = mysqli_fetch_assoc($getCustomerResult)) {
+    $customerUniqueId = trim($customerRow['unique_id']);
+    }
+
+    /**
+ * GET CUSTOMER DISCOUNT LIST
+ */
+    if (! empty($customerUniqueId)) {
+
+    $discountSQL = "
+    SELECT product_category, discount_percentage
+    FROM customers_discounts
+    WHERE customer_unique_id = '$customerUniqueId' AND discount_status='Active'
+    ";
+
+    $discountResult = mysqli_query($con, $discountSQL);
+    function cleanCategory($value)
+    {
+        return strtolower(trim(preg_replace('/\s+/', '', $value)));
+    }
+
+    while ($discountRow = mysqli_fetch_assoc($discountResult)) {
+        $category             = cleanCategory($discountRow['product_category']);
+        $discounts[$category] = (float) $discountRow['discount_percentage'];
+    }
+    }
+
+    /**
+ * RESET OLD DISCOUNTS
+ */
+    mysqli_query($con, "
+UPDATE refreshments
+SET discount_added = '0'
+WHERE orderid = '$saloon'
+");
+
+    /**
+ * FETCH CART ITEMS
+ */
+    $cartSQL = "
+SELECT *
+FROM refreshments
+WHERE orderid = '$saloon'
+";
+
+    $cartResult = mysqli_query($con, $cartSQL);
+
+    while ($item = mysqli_fetch_assoc($cartResult)) {
+
+    $itemID = $item['s'];
+
+    $itemTotal = (float) $item['totalprice'];
+
+    $itemCategory = strtolower(trim($item['item_category']));
+
+    $itemDiscount = 0;
+
+    $finalItemPrice = $itemTotal;
+    /**
+     * CHECK IF CATEGORY EXISTS IN DISCOUNT ARRAY
+     */
+    if (isset($discounts[$itemCategory])) {
+
+        $discountPercent = $discounts[$itemCategory];
+
+        // CALCULATE DISCOUNT
+        $itemDiscount = ($itemTotal * $discountPercent) / 100;
+
+        // APPLY DISCOUNT
+        $finalItemPrice = $itemTotal - $itemDiscount;
+        echo "Cart Category: " . $itemCategory . "<br>";
+
+        print_r($discounts);
+
+        echo "<hr>";
+    }
+
+    /**
+     * ADD TO TOTALS
+     */
+    $total_discount += $itemDiscount;
+
+    $total_all += $finalItemPrice;
+
+    /**
+     * SAVE DISCOUNT TO DATABASE
+     */
+    $updateDiscountSQL = "
+    UPDATE refreshments
+    SET discount_added = '$itemDiscount'
+    WHERE s = '$itemID'
+    ";
+
+    mysqli_query($con, $updateDiscountSQL);
+    }
+
+    // ADD SHIPPING
+    $total_all += $shipping_fee;
+
+    // FORMAT VALUES
+    $subtotal       = number_format($subtotal, 2, '.', '');
+    $total_discount = number_format($total_discount, 2, '.', '');
+    $total_all      = number_format($total_all, 2, '.', '');
+    // Save in session
+    // $_SESSION['cart_total'] = $subtotal;
+    // $_SESSION['shipping_fee'] = $shipping_fee;
+    // $_SESSION['shipping_type'] = $shipping_type;
+    // $_SESSION['selected_place'] = $selected_place;
+    setcookie('cart_total', $total_all, time() + 600, "/");
+    setcookie('shipping_fee', $shipping_fee, time() + 600, "/");
+    setcookie('shipping_type', $shipping_type, time() + 600, "/");
+    setcookie('selected_place', $selected_place, time() + 600, "/");
+    // Now fetch items
+    $sql  = "SELECT * FROM refreshments WHERE orderid='$saloon'";
+    $sql2 = mysqli_query($con, $sql);
+
 ?>
 
 <!-- Alert Display -->
 <?php
-if (!empty($_SESSION['success_message'])) {
+    if (! empty($_SESSION['success_message'])) {
     echo "<div class='alert alert-success'>" . htmlspecialchars($_SESSION['success_message']) . "</div>";
     unset($_SESSION['success_message']);
-}
-if (!empty($_SESSION['error_message'])) {
+    }
+    if (! empty($_SESSION['error_message'])) {
     echo "<div class='alert alert-danger'>" . htmlspecialchars($_SESSION['error_message']) . "</div>";
     unset($_SESSION['error_message']);
-}
+    }
 ?>
 
 <script type="text/javascript">
-window.onload = () => {
-    $('#myModal').modal('show');
-}
+    window.onload = () => {
+        $('#myModal').modal('show');
+    }
 </script>
 
 <style>
-.section-title h2 {
-    font-size: 32px;
-    font-weight: bold;
-    text-transform: capitalize;
-    margin-bottom: 20px;
-    padding-bottom: 20px;
-    position: relative;
-    letter-spacing: 0px;
-}
+    .section-title h2 {
+        font-size: 32px;
+        font-weight: bold;
+        text-transform: capitalize;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        position: relative;
+        letter-spacing: 0px;
+    }
 
-.section-title h2::after {
-    background: none;
-}
+    .section-title h2::after {
+        background: none;
+    }
 
-.alert {
-    border: 1px solid #ffc700;
-    background-color: #fff;
-    color: #000;
-    margin: 20px auto;
-    width: 50%;
-    max-width: 600px;
-}
+    .alert {
+        border: 1px solid #ffc700;
+        background-color: #fff;
+        color: #000;
+        margin: 20px auto;
+        width: 50%;
+        max-width: 600px;
+    }
 
-.alert-success {
-    background-color: #d4edda;
-    border-color: #c3e6cb;
-    color: #155724;
-}
+    .alert-success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
 
-.alert-danger {
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
-    color: #721c24;
-}
+    .alert-danger {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
 
-#pickup-details,
-#delivery-info {
-    color: white;
-    font-size: 0.8rem;
-    margin-top: 10px;
-}
+    #pickup-details,
+    #delivery-info {
+        color: white;
+        font-size: 0.8rem;
+        margin-top: 10px;
+    }
 </style>
 
 <!-- ======= Pricing Section ======= -->
@@ -140,8 +260,8 @@ window.onload = () => {
                             </thead>
                             <tbody>
                                 <?php
-                                while ($row = mysqli_fetch_array($sql2)) {
-                                    echo '
+                                    while ($row = mysqli_fetch_array($sql2)) {
+                                        echo '
                                         <tr style="white-space: nowrap; color:#FFFFFF;">
                                             <td width="80" style="vertical-align: middle; border-right-style: hidden;">
                                                 <form action="" method="get">
@@ -157,7 +277,7 @@ window.onload = () => {
                                             <td width="50" style="vertical-align: middle; border-left-style: hidden;">' . $row['quantity'] . '</td>
                                             <td style="vertical-align: middle; border-left-style: hidden;">&#8358;' . $row['totalprice'] . '</td>
                                         </tr>';
-                                }
+                                    }
                                 ?>
                             </tbody>
                         </table>
@@ -224,19 +344,30 @@ window.onload = () => {
                                 <tr style="border-top-style: hidden;">
                                     <th scope="row"></th>
                                     <td>Subtotal</td>
-                                    <td>&#8358;<span id="subtotal"><?php echo $subtotal; ?></span>.00</td>
+                                    <td>&#8358;<span id="subtotal"><?php echo $subtotal; ?></span></td>
                                     <td></td>
                                 </tr>
+                                <?php
+                                if ($total_discount > 0) {
+                                    ?><tr style="border-top-style: hidden;">
+                                        <th scope="row"></th>
+                                        <td>Discount</td>
+                                        <td>- &#8358;<span id="discount"><?php echo number_format($total_discount, 2); ?></span></td>
+                                        <td></td>
+                                    </tr>
+                                <?php
+                                    }
+                                ?>
                                 <tr>
                                     <th scope="row"></th>
                                     <td>Shipping Fee</td>
-                                    <td>&#8358;<span id="shipping-fee"><?php echo $shipping_fee; ?></span>.00</td>
+                                    <td>&#8358;<span id="shipping-fee"><?php echo $shipping_fee; ?></span></td>
                                     <td></td>
                                 </tr>
                                 <tr>
                                     <th scope="row"></th>
                                     <td>Total</td>
-                                    <td>&#8358;<span id="total-amount"><?php echo $total_all; ?></span>.00</td>
+                                    <td>&#8358;<span id="total-amount"><?php echo $total_all; ?></span></td>
                                     <td></td>
                                 </tr>
                                 <tr class="topay" style="display:none; color: #FFC700;">
@@ -281,13 +412,13 @@ window.onload = () => {
                                     <tr style="border-bottom-style: hidden;">
                                         <th scope="row"></th>
                                         <?php
-                                        if ($subtotal <= 0) {
-                                            echo '<td colspan="2" class="align-middle"><a href="foodpage.php" class="form-control" style="font-weight: 600; font-size: 0.8rem; color: #FFC700;">
+                                            if ($subtotal <= 0) {
+                                                echo '<td colspan="2" class="align-middle"><a href="foodpage.php" class="form-control" style="font-weight: 600; font-size: 0.8rem; color: #FFC700;">
                                                     Add Items To Cart</a></td>';
-                                        } else {
-                                            echo '<td colspan="2" class="align-middle"><button type="submit" id="checkout-btn" class="form-control" style="font-weight: 600; font-size: 0.8rem; color: #FFC700;">
+                                            } else {
+                                                echo '<td colspan="2" class="align-middle"><button type="submit" id="checkout-btn" class="form-control" style="font-weight: 600; font-size: 0.8rem; color: #FFC700;">
                                                     Proceed To Checkout</button></td>';
-                                        }
+                                            }
                                         ?>
                                     </tr>
                                 </form>
@@ -301,217 +432,221 @@ window.onload = () => {
 </section>
 
 <script>
-$(document).ready(function() {
-    // Initialize delivery info and UI based on shipping type
-    const shippingType = '<?php echo $shipping_type; ?>';
-    const subtotal = parseInt($('#subtotal').text()) || 0;
-    const shippingFee = parseInt($('#shipping-fee').text()) || 0;
-    const selectedPlace = $('#selected-place').val(); // Check if a place is already selected
-
-    if (shippingType === 'pickup') {
-        $('#pickup-details').show();
-        $('#delivery-autocomplete').hide();
-        $('#delivery-info').html(''); // Clear delivery info
-        $('#shipping-type').val('pickup');
-        $('#shipping-fee').text('0');
-        $('#shipping-cost').val('0');
-        $('#checkout-btn').prop('disabled', subtotal <= 0);
-        updateTotalAmount();
-    } else if (shippingType === 'delivery') {
-        $('#pickup-details').hide();
-        $('#delivery-autocomplete').show();
-        // Only show message if no place is selected
-        if (!selectedPlace) {
-            $('#delivery-info').html('<p style="color: white;">Enter a location to calculate shipping fee</p>');
-        } else {
-            $('#delivery-info').html(''); // Will be updated by Google Maps script if place is selected
-        }
-        $('#shipping-type').val('delivery');
-        $('#checkout-btn').prop('disabled', shippingFee === 0 || subtotal <= 0);
-        updateTotalAmount();
-    }
-
-    $('#addcoupon').click(function() {
-        var giftcardValue = $('#giftcard').val();
-        var orderValue = $('#orderid').val();
-        $("#addcoupon").attr("disabled", "disabled");
-
-        $.ajax({
-            url: 'deductgiftcard.php',
-            type: 'POST',
-            data: {
-                giftcard: giftcardValue,
-                orderno: orderValue
-            },
-            success: function(response) {
-                if (response === 'success') {
-                    alert('Payment has been initiated and is being processed.');
-                    window.location.href =
-                        'https://chbluxuryempire.com/success?status=completed&tx_ref=<?php echo $saloon; ?>';
-                } else if (response === 'half-success') {
-                    alert(
-                        'Giftcard applied successfully. Please pay up the rest of your invoice with your bank card'
-                    );
-                    updateValues();
-                } else {
-                    alert(response);
-                    $("#addcoupon").removeAttr("disabled");
-                }
-            }
-        });
-    });
-
-    // Toggle delivery options and update shipping type
-    $('input[name="delivery_option"]').change(function() {
-        const option = $(this).val();
-        $('#shipping-type').val(option);
-        if (option === 'pickup') {
+    $(document).ready(function() {
+        // Initialize delivery info and UI based on shipping type
+        const shippingType = '<?php echo $shipping_type; ?>';
+            const subtotal = parseFloat($('#subtotal').text()) || 0;
+            const shippingFee = parseFloat($('#shipping-fee').text()) || 0;
             $('#pickup-details').show();
             $('#delivery-autocomplete').hide();
-            $('#delivery-info').html('');
+            $('#delivery-info').html(''); // Clear delivery info
+            $('#shipping-type').val('pickup');
             $('#shipping-fee').text('0');
             $('#shipping-cost').val('0');
             $('#checkout-btn').prop('disabled', subtotal <= 0);
             updateTotalAmount();
-            // Save to session
+        } else if (shippingType === 'delivery') {
+            $('#pickup-details').hide();
+            $('#delivery-autocomplete').show();
+            // Only show message if no place is selected
+            if (!selectedPlace) {
+                $('#delivery-info').html('<p style="color: white;">Enter a location to calculate shipping fee</p>');
+            } else {
+                $('#delivery-info').html(''); // Will be updated by Google Maps script if place is selected
+            }
+            $('#shipping-type').val('delivery');
+            $('#checkout-btn').prop('disabled', shippingFee === 0 || subtotal <= 0);
+            updateTotalAmount();
+        }
+
+        $('#addcoupon').click(function() {
+            var giftcardValue = $('#giftcard').val();
+            var orderValue = $('#orderid').val();
+            $("#addcoupon").attr("disabled", "disabled");
+
+            $.ajax({
+                url: 'deductgiftcard.php',
+                type: 'POST',
+                data: {
+                    giftcard: giftcardValue,
+                    orderno: orderValue
+                },
+                success: function(response) {
+                    if (response === 'success') {
+                        alert('Payment has been initiated and is being processed.');
+                        window.location.href =
+                            'https://chbluxuryempire.com/success?status=completed&tx_ref=<?php echo $saloon; ?>';
+                    } else if (response === 'half-success') {
+                        alert(
+                            'Giftcard applied successfully. Please pay up the rest of your invoice with your bank card'
+                        );
+                        updateValues();
+                    } else {
+                        alert(response);
+                        $("#addcoupon").removeAttr("disabled");
+                    }
+                }
+            });
+        });
+
+        // Toggle delivery options and update shipping type
+        $('input[name="delivery_option"]').change(function() {
+            const option = $(this).val();
+            $('#shipping-type').val(option);
+            if (option === 'pickup') {
+                $('#pickup-details').show();
+                $('#delivery-autocomplete').hide();
+                $('#delivery-info').html('');
+                $('#shipping-fee').text('0');
+                $('#shipping-cost').val('0');
+                $('#checkout-btn').prop('disabled', subtotal <= 0);
+                updateTotalAmount();
+                // Save to session
+                $.ajax({
+                    url: 'update_session.php',
+                    type: 'POST',
+                    data: {
+                        shipping_type: 'pickup',
+                        shipping_fee: 0,
+                        selected_place: ''
+                    },
+                    success: function(response) {
+                        console.log('Session updated: pickup');
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Failed to update session for pickup:', error);
+                    }
+                });
+            } else if (option === 'delivery') {
+                $('#pickup-details').hide();
+                $('#delivery-autocomplete').show();
+                $('#delivery-info').html(
+                    '<p style="color: white;">Enter a location to calculate shipping fee</p>');
+                $('#shipping-fee').text('0');
+                $('#shipping-cost').val('0');
+                $('#checkout-btn').prop('disabled', true);
+                updateTotalAmount();
+                // Save to session
+                $.ajax({
+                    url: 'update_session.php',
+                    type: 'POST',
+                    data: {
+                        shipping_type: 'delivery',
+                        shipping_fee: 0,
+                        selected_place: ''
+                    },
+                    success: function(response) {
+                        console.log('Session updated: delivery');
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Failed to update session for delivery:', error);
+                    }
+                });
+            }
+        });
+
+        // Ensure session is updated before form submission
+        $('#paymentForm').on('submit', function(e) {
+            const shippingType = $('#shipping-type').val();
+            const shippingFee = parseFloat($('#shipping-fee').text().replace(/,/g, '')) || 0;
+            const selectedPlace = $('#selected-place').val();
             $.ajax({
                 url: 'update_session.php',
                 type: 'POST',
+                async: false, // Synchronous to ensure session is updated before redirect
                 data: {
-                    shipping_type: 'pickup',
-                    shipping_fee: 0,
-                    selected_place: ''
+                    shipping_type: shippingType,
+                    shipping_fee: shippingFee,
+                    selected_place: selectedPlace
                 },
                 success: function(response) {
-                    console.log('Session updated: pickup');
+                    console.log('Session updated before form submission');
                 },
                 error: function(xhr, status, error) {
-                    console.error('Failed to update session for pickup:', error);
+                    console.error('Failed to update session before form submission:', error);
                 }
             });
-        } else if (option === 'delivery') {
-            $('#pickup-details').hide();
-            $('#delivery-autocomplete').show();
-            $('#delivery-info').html(
-                '<p style="color: white;">Enter a location to calculate shipping fee</p>');
-            $('#shipping-fee').text('0');
-            $('#shipping-cost').val('0');
-            $('#checkout-btn').prop('disabled', true);
+        });
+
+        // Function to update total amount
+        function updateTotalAmount() {
+
+            const subtotal = parseFloat($('#subtotal').text().replace(/,/g, '')) || 0;
+
+            const shippingFee = parseFloat($('#shipping-fee').text().replace(/,/g, '')) || 0;
+
+            const discount = parseFloat($('#discount').text().replace(/,/g, '')) || 0;
+
+            const total = (subtotal - discount) + shippingFee;
+
+            $('#total-amount').text(total.toFixed(2));
+
+            $('#realamount').val(total.toFixed(2));
+        }
+
+        // Expose function for google_maps_autocomplete to update shipping fee
+        window.updateShippingFee = function(cost) {
+            $('#shipping-fee').text(cost);
+            $('#shipping-cost').val(cost);
+            $('#delivery-info').html('');
             updateTotalAmount();
-            // Save to session
+            $('#checkout-btn').prop('disabled', subtotal <= 0);
+            // Save shipping fee and selected place to session
+            const selectedPlace = $('#selected-place').val();
             $.ajax({
                 url: 'update_session.php',
                 type: 'POST',
                 data: {
                     shipping_type: 'delivery',
-                    shipping_fee: 0,
-                    selected_place: ''
+                    shipping_fee: cost,
+                    selected_place: selectedPlace
                 },
                 success: function(response) {
-                    console.log('Session updated: delivery');
+                    console.log('Session updated with shipping fee and place');
                 },
                 error: function(xhr, status, error) {
-                    console.error('Failed to update session for delivery:', error);
+                    console.error('Failed to update session with shipping fee:', error);
                 }
             });
-        }
+        };
     });
 
-    // Ensure session is updated before form submission
-    $('#paymentForm').on('submit', function(e) {
-        const shippingType = $('#shipping-type').val();
-        const shippingFee = parseInt($('#shipping-fee').text()) || 0;
-        const selectedPlace = $('#selected-place').val();
+    function updateValues() {
+        var orderValue = $('#orderid').val();
         $.ajax({
-            url: 'update_session.php',
-            type: 'POST',
-            async: false, // Synchronous to ensure session is updated before redirect
-            data: {
-                shipping_type: shippingType,
-                shipping_fee: shippingFee,
-                selected_place: selectedPlace
-            },
-            success: function(response) {
-                console.log('Session updated before form submission');
-            },
-            error: function(xhr, status, error) {
-                console.error('Failed to update session before form submission:', error);
-            }
-        });
-    });
-
-    // Function to update total amount
-    function updateTotalAmount() {
-        const subtotal = parseInt($('#subtotal').text()) || 0;
-        const shippingFee = parseInt($('#shipping-fee').text()) || 0;
-        const total = subtotal + shippingFee;
-        $('#total-amount').text(total);
-        $('#realamount').val(total);
-    }
-
-    // Expose function for google_maps_autocomplete to update shipping fee
-    window.updateShippingFee = function(cost) {
-        $('#shipping-fee').text(cost);
-        $('#shipping-cost').val(cost);
-        $('#delivery-info').html('');
-        updateTotalAmount();
-        $('#checkout-btn').prop('disabled', subtotal <= 0);
-        // Save shipping fee and selected place to session
-        const selectedPlace = $('#selected-place').val();
-        $.ajax({
-            url: 'update_session.php',
+            url: 'fetchamount.php',
             type: 'POST',
             data: {
-                shipping_type: 'delivery',
-                shipping_fee: cost,
-                selected_place: selectedPlace
+                orderno: orderValue
             },
-            success: function(response) {
-                console.log('Session updated with shipping fee and place');
+            success: function(data) {
+                $('.topay').show();
+                $('#realamount').val(data);
+                $('#amounttopay').text(data);
+
+                var $element = $(".topay");
+                if ($element.length) {
+                    var offsetTop = $element.offset().top;
+                    $("html, body").animate({
+                        scrollTop: offsetTop
+                    }, 1000);
+                }
             },
-            error: function(xhr, status, error) {
-                console.error('Failed to update session with shipping fee:', error);
+            error: function() {
+                alert('Failed to fetch data from the database.');
             }
         });
-    };
-});
-
-function updateValues() {
-    var orderValue = $('#orderid').val();
-    $.ajax({
-        url: 'fetchamount.php',
-        type: 'POST',
-        data: {
-            orderno: orderValue
-        },
-        success: function(data) {
-            $('.topay').show();
-            $('#realamount').val(data);
-            $('#amounttopay').text(data);
-
-            var $element = $(".topay");
-            if ($element.length) {
-                var offsetTop = $element.offset().top;
-                $("html, body").animate({
-                    scrollTop: offsetTop
-                }, 1000);
-            }
-        },
-        error: function() {
-            alert('Failed to fetch data from the database.');
-        }
-    });
-}
-
-function updateFormAction() {
-    var paymentMethod = document.getElementById('paymentMethod').value;
-    var form = document.getElementById('paymentForm');
-    if (paymentMethod === 'flutterwave') {
-        form.action = 'https://checkout.flutterwave.com/v3/hosted/pay';
-    } else if (paymentMethod === 'banktransfer') {
-        form.action = 'banktransfer.php';
     }
-}
+
+    function updateFormAction() {
+        var paymentMethod = document.getElementById('paymentMethod').value;
+        var form = document.getElementById('paymentForm');
+        if (paymentMethod === 'flutterwave') {
+            form.action = 'https://checkout.flutterwave.com/v3/hosted/pay';
+        } else if (paymentMethod === 'banktransfer') {
+            form.action = 'banktransfer.php';
+        }
+    }
 </script>
 
 <?php include "footer.php"; ?>

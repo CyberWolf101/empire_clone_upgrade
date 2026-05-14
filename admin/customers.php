@@ -42,10 +42,7 @@ $sql = "SELECT
             COUNT(DISTINCT s.id) as order_count, 
             MIN(s.date) as first_order_date
         FROM saloon_orders s 
-        LEFT JOIN refreshments r ON s.id = r.orderid
-        WHERE s.name != '' 
-        GROUP BY s.name, s.email, s.phone 
-        ORDER BY {$order_by['column']} {$order_by['direction']}";
+        LEFT JOIN refreshments r ON s.id = r.orderid";
 $sql_result = mysqli_query($con, $sql) or die('Database error: ' . mysqli_error($con));
 $customers = [];
 $customersToQuery = [];
@@ -69,7 +66,10 @@ if (count($customersToQuery) > 0) {
     }
   }
 }
-$selectCustomersSql = "SELECT * FROM customers";
+$selectCustomersSql = "SELECT * FROM customers
+        WHERE name != '' 
+        GROUP BY name, email, phone 
+        ORDER BY {$order_by['column']} {$order_by['direction']}";
 $selectResult = mysqli_query($con, $selectCustomersSql);
 while ($result = mysqli_fetch_assoc($selectResult)) {
   $customers[] = $result;
@@ -144,7 +144,7 @@ while ($result = mysqli_fetch_assoc($selectResult)) {
                             data-name="<?= htmlspecialchars($customer['name'], ENT_QUOTES, 'UTF-8') ?>" href="" class="dropdown-item">
                             Send Email
                           </a>
-                          <a href="editcustomer.php" class="dropdown-item">Edit customer</a>
+                          <a href="editcustomer.php?customer_unique_id=<?= htmlspecialchars($customer["unique_id"]) ?>" class="dropdown-item">Edit customer</a>
                         </div>
                       </div>
                     </td>

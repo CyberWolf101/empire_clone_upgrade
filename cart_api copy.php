@@ -14,11 +14,11 @@ $response = ['status' => 'error'];
 // if ($action === 'add' && $orderid && $itemid) {
 if ((!$action && isset($_POST['addtocart'])) || $action === 'add') {
     // get item details
-    $res = mysqli_query($con, "SELECT item, price FROM food_menu WHERE s='$itemid'");
+    $res = mysqli_query($con, "SELECT * FROM food_menu WHERE s='$itemid'");
     if ($row = mysqli_fetch_assoc($res)) {
         $itemName = $row['item'];
         $itemPrice = (float) $row['price'];
-
+$itemCategory = $row["type"];
         // check if already in cart
         $check = mysqli_query($con, "SELECT s, quantity FROM refreshments WHERE orderid='$orderid' AND itemid='$itemid' AND status='processing'");
         if ($exist = mysqli_fetch_assoc($check)) {
@@ -29,8 +29,8 @@ if ((!$action && isset($_POST['addtocart'])) || $action === 'add') {
                                 WHERE s='{$exist['s']}'");
         } else {
             $totalValue = $qty * $itemPrice;
-            mysqli_query($con, "INSERT INTO refreshments(orderid,itemid,item,unitprice,quantity,totalprice,status) 
-                        VALUES ('$orderid','$itemid','$itemName','$itemPrice','$qty','$totalValue','processing')");
+            mysqli_query($con, "INSERT INTO refreshments(orderid,itemid,item,unitprice,quantity,totalprice,status, item_category) 
+                        VALUES ('$orderid','$itemid','$itemName','$itemPrice','$qty','$totalValue','processing','$itemCategory')");
         }
         $response['status'] = 'ok';
     }

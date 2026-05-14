@@ -25,7 +25,7 @@ if (isset($_GET['categoryid'])) {
 if (isset($_GET['order'])) {
     $saloon = mysqli_real_escape_string($con, $_GET['order']);
 
-    $sql = "SELECT total_amount, name, phone, date, type, method, status, section, shipping_fee, shipping_type, place_details FROM saloon_orders WHERE id='$saloon'";
+    $sql = "SELECT s.*, r.discount_added FROM saloon_orders s LEFT JOIN refreshments r ON s.id = r.orderid WHERE id='$saloon'";
     $sql2 = mysqli_query($con, $sql);
     if ($row = mysqli_fetch_array($sql2)) {
         $type = $row["type"];
@@ -41,7 +41,8 @@ if (isset($_GET['order'])) {
         $section = $row["section"];
 
         // Calculate grand total including shipping fee
-        $total_all = $subtotal + $shipping_fee;
+        $total = ($subtotal + $shipping_fee);
+        $total_all = $subtotal - ($subtotal / $row["discount_added"]);
 
         // Decode place_details for display
         $place_details_data = $place_details ? json_decode($place_details, true) : [];
@@ -147,6 +148,7 @@ if (isset($_GET['order'])) {
                                 <th>Item</th>
                                 <th>Price</th>
                                 <th>Quantity</th>
+                                <th>Discount Added</th>
                                 <th>Total</th>
                             </tr>
                         </thead>
@@ -166,7 +168,8 @@ if (isset($_GET['order'])) {
                                         </div>' : '') . "</td>
                                         <td>&#8358;" . number_format($row['unitprice'], 2) . "</td>
                                         <td>" . htmlspecialchars($row['quantity']) . "</td>
-                                        <td>&#8358;" . number_format($row['totalprice'], 2) . "</td>
+                                        <td>" . htmlspecialchars($row['discount_added']) . "%</td>
+                                        <td>&#8358;" . number_format($row['totalprice'] - ($row['totalprice'] / $row['discount_added']), 2) . "</td>
                                     </tr>";
                             }
                             ?>

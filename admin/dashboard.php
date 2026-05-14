@@ -43,6 +43,11 @@ product_category VARCHAR(255) NOT NULL,
 discount_status VARCHAR(255) NOT NULL DEFAULT 'Inactive'
 )
 ";
+$refreshmentAlter = "ALTER TABLE
+  refreshments
+ADD
+  COLUMN IF NOT EXISTS discount_added VARCHAR(255) NOT NULL DEFAULT '0'";
+mysqli_query($con, $refreshmentAlter);
 mysqli_query($con, $createCustomerDiscountTable);
 mysqli_query($con, $createCustomerTableSQL);
 ?>

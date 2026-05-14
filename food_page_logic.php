@@ -57,10 +57,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log("Add to cart error: Invalid itemid");
             exit("Invalid item ID");
         }
-        $res = mysqli_query($con, "SELECT item, price FROM food_menu WHERE s='$itemid'");
+        $res = mysqli_query($con, "SELECT * FROM food_menu WHERE s='$itemid'");
         if ($row = mysqli_fetch_assoc($res)) {
             $itemName = $row['item'];
             $itemPrice = (float) $row['price'];
+            $itemCategory = $row["type"];
             $check = mysqli_query($con, "SELECT quantity FROM refreshments WHERE orderid='$safeOrderId' AND itemid='$itemid' AND status='processing'");
             if ($exist = mysqli_fetch_assoc($check)) {
                 $newQty = $exist['quantity'] + $qty;
@@ -72,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['cartItems'][$safeOrderId][$itemid]['quantity'] = $newQty;
             } else {
                 $totalValue = $qty * $itemPrice;
-                $query = "INSERT INTO refreshments(orderid,itemid,item,unitprice,quantity,totalprice,status) VALUES ('$safeOrderId','$itemid','$itemName','$itemPrice','$qty','$totalValue','processing')";
+                $query = "INSERT INTO refreshments(orderid,itemid,item,unitprice,quantity,totalprice,status, item_category) VALUES ('$safeOrderId','$itemid','$itemName','$itemPrice','$qty','$totalValue','processing', '$itemCategory')";
                 if (!mysqli_query($con, $query)) {
                     error_log("Insert cart failed: " . mysqli_error($con) . " | Query: $query");
                 }
