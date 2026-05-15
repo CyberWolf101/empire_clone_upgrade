@@ -16,7 +16,7 @@ function sendEmail($to, $subject, $message, $from = 'no-reply@example.com')
         if ($isLocal) {
             // Local: MailHog (default runs on port 1025)
             $mail->isSMTP();
-            $mail->Host = 'localhost';
+            $mail->Host = 'smtp.gmail.com';
             $mail->Port = 1025;
             $mail->SMTPAuth = false;
             $mail->SMTPSecure = false;
@@ -24,12 +24,9 @@ function sendEmail($to, $subject, $message, $from = 'no-reply@example.com')
             // Production: real SMTP (adjust these settings to your host)
             $mail->isSMTP();
             $mail->Host = 'smtp.gmail.com';
-            // $mail->Host = 'mail.chbluxuryempire.com';
             $mail->SMTPAuth = true;
             $mail->Username = 'corporatehair.sales@gmail.com';
-            // $mail->Username = 'chbempireadmin@chbluxuryempire.com';
             $mail->Password = 'yjasvosugikipzyj';
-            // $mail->Password = '4Ew5939xu8QzwbICPC';
             $mail->SMTPSecure = 'ssl';
             $mail->Port = 465;
         }

@@ -1,6 +1,16 @@
 <?php
 include "header.php";
 ?>
+<?php
+if (! empty($_SESSION['success'])) {
+    echo "<div class='alert alert-success'>" . htmlspecialchars($_SESSION['success']) . "</div>";
+    unset($_SESSION['success']);
+}
+if (! empty($_SESSION['error'])) {
+    echo "<div class='alert alert-danger'>" . htmlspecialchars($_SESSION['error']) . "</div>";
+    unset($_SESSION['error']);
+}
+?>
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Credit Sales</h1>
     <ol class="breadcrumb">
@@ -33,7 +43,7 @@ include "header.php";
                 <tbody>
                     <?php
                     $creditSales = [];
-                    $creditSalesSQL = "SELECT * FROM credit_sales";
+                    $creditSalesSQL = "SELECT c.*,cu.* FROM credit_sales c INNER JOIN customers cu ON c.customer = cu.unique_id";
                     $creditSalesResult = mysqli_query($con, $creditSalesSQL);
                     while ($row = mysqli_fetch_assoc($creditSalesResult)) {
                         $creditSales[] = $row;
@@ -81,7 +91,7 @@ include "header.php";
                                             Actions <i class="dropdown-toggle"></i>
                                         </button>
                                         <div class="dropdown-menu">
-                                            <a class="dropdown-item"></a>
+                                            <a href="approve_credit_sale.php?orderid=<?= $creditSale["orderid"] ?>&customer_email=<?= $creditSale["email"] ?>" class="dropdown-item">Approve order</a>
                                         </div>
                                     </div>
                                 </td>

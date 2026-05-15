@@ -231,7 +231,10 @@ if (isset($_GET["customer_unique_id"]) && getCustomer($con, $_GET["customer_uniq
                             }
                             ?>
                         </form>
-                        <div class="credit-sales-eligibility">
+                        <!-- 
+                        CREDIT SALES ELIGIBILITY
+                        -->
+                        <!-- <div class="credit-sales-eligibility">
                             <p class="form-text">Credit sales eligibility</p>
                             <form action="" id="credit-sales-eligibility-form" method="post">
 
@@ -256,7 +259,7 @@ if (isset($_GET["customer_unique_id"]) && getCustomer($con, $_GET["customer_uniq
                                     }, 200);
                                 });
                             </script>
-                        </div>
+                        </div> -->
                     </div>
                     <!-- ADD DISCOUNT MODAL -->
                     <div class="modal fade" id="add-discount-modal" tabindex="-1" aria-labelledby="addDiscountModal" aria-hidden="true">
