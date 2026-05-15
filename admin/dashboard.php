@@ -47,6 +47,31 @@ $refreshmentAlter = "ALTER TABLE
   refreshments
 ADD
   COLUMN IF NOT EXISTS discount_added VARCHAR(255) NOT NULL DEFAULT '0'";
+  $creditSalesTableSQL = "
+  CREATE TABLE IF NOT EXISTS credit_sales(
+  id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  orderid VARCHAR(255) NOT NULL,
+  itemid VARCHAR(255) NOT NULL,
+  item VARCHAR(255) NOT NULL,
+  unitprice VARCHAR(255),
+  amount_paid VARCHAR(255) NOT NULL DEFAULT '0',
+  quantity VARCHAR(255) NOT NULL,
+  totalprice VARCHAR(255) NOT NULL,
+  status VARCHAR(255) NOT NULL DEFAULT 'pending',
+  item_category VARCHAR(255) NOT NULL,
+  added_on DATETIME NOT NULL DEFAULT CURRENT_TIME
+  )
+  ";
+  $customerDiscountsAlterSQL = "ALTER TABLE customers 
+  ADD COLUMN IF NOT EXISTS credit_sales_eligibility VARCHAR(255) NOT NULL DEFAULT 'false';";
+  $creditSalesAlterSQL = "ALTER TABLE credit_sales 
+  ADD COLUMN IF NOT EXISTS customer VARCHAR(255) NOT NULL";
+  $correction = "ALTER TABLE customers_discounts
+  DROP COLUMN IF EXISTS credit_sales_eligibility";
+mysqli_query($con, $correction);
+mysqli_query($con, $creditSalesAlterSQL);
+mysqli_query($con, $customerDiscountsAlterSQL);
+mysqli_query($con, $creditSalesTableSQL);
 mysqli_query($con, $refreshmentAlter);
 mysqli_query($con, $createCustomerDiscountTable);
 mysqli_query($con, $createCustomerTableSQL);

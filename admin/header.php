@@ -214,6 +214,7 @@ if (!$stmt) {
               <a class="collapse-item" href="addfood.php">Add New Orishirishi</a>
               <a class="collapse-item" href="storeorders.php">Walk-in Orders</a>
               <a class="collapse-item" href="onlineorders.php">Online Orders</a>
+              <a class="collapse-item" href="credit_sales.php">Credit Sales</a>
               <a class="collapse-item" href="deficientitems.php">Deficient Items</a>
               <a class="collapse-item" href="viewpreorders.php">Pre-Orders</a>
               <a class="collapse-item" href="startorder.php">Start Transaction</a>
