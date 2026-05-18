@@ -68,6 +68,17 @@ ADD
   ADD COLUMN IF NOT EXISTS customer VARCHAR(255) NOT NULL";
   $correction = "ALTER TABLE customers_discounts
   DROP COLUMN IF EXISTS credit_sales_eligibility";
+  $foodMenuAlter = "ALTER TABLE food_menu
+  ADD COLUMN IF NOT EXISTS visibility VARCHAR(255) NOT NULL DEFAULT 'visible'
+  ";
+  $foodMenuAlter2 = "ALTER TABLE food_menu
+  ADD COLUMN IF NOT EXISTS special_item VARCHAR(255) NOT NULL DEFAULT 'false'
+  ";
+  $createSpecialItemsTableSQL = "CREATE TABLE IF NOT EXISTS special_items(
+  id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY
+  )";
+mysqli_query($con, $foodMenuAlter2);
+mysqli_query($con, $foodMenuAlter);
 mysqli_query($con, $correction);
 mysqli_query($con, $creditSalesAlterSQL);
 mysqli_query($con, $customerDiscountsAlterSQL);

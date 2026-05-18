@@ -14,14 +14,7 @@ $sql2 = mysqli_query($con, $sql);
 
 $items = [];
 while ($row = mysqli_fetch_array($sql2)) {
-  $items[] = [
-    'item' => ($row['item']),
-    'price' => ($row['price']),
-    'type' => ($row['type']),
-    'quantity' => ($row['quantity']),
-    's' => ($row['s']),
-    'sub_category' => ($row['sub_category'] ?? '')
-  ];
+  $items[] = $row;
 }
 // Convert items to JSON for JavaScript
 $items_json = json_encode($items);
@@ -66,6 +59,8 @@ $items_json = json_encode($items);
               <th>Price</th>
               <th>Type</th>
               <th>In-Stock</th>
+              <th>Visibility</th>
+              <th></th>
               <th></th>
               <th></th>
             </tr>
@@ -79,6 +74,8 @@ $items_json = json_encode($items);
               <th>Price</th>
               <th>Type</th>
               <th>In-Stock</th>
+              <th>Visibility</th>
+              <th></th>
               <th></th>
               <th></th>
             </tr>
@@ -94,7 +91,17 @@ $items_json = json_encode($items);
     </div>
   </div>
 </div>
-
+<style>
+  .badge{
+    padding: 3px;
+    border-radius: 2px;
+    font-weight: bold;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+</style>
 <script>
   const items = <?php echo $items_json; ?>;
   let currentPage = 1;
@@ -124,6 +131,8 @@ $items_json = json_encode($items);
         <td>${item.price}</td>
         <td>${item.type}</td>
         <td>${item.quantity}</td>
+        <td>${item.visibility}</td>
+        <td>${item.special_item == "true" ? "<span class='badge bg-danger'>special item</span>" : ""}</td>
         <td>
           <form action='editfood.php' method='get'>
             <input type='hidden' name='category' value='${item.s}'>  
