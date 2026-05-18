@@ -91,7 +91,14 @@ if (! empty($_SESSION['error'])) {
                                             Actions <i class="dropdown-toggle"></i>
                                         </button>
                                         <div class="dropdown-menu">
-                                            <a href="approve_credit_sale.php?orderid=<?= $creditSale["orderid"] ?>&customer_email=<?= $creditSale["email"] ?>" class="dropdown-item">Approve order</a>
+                                            <?php
+                                            if ($creditSale["status"] !== 'approved') {
+                                            ?>
+                                                <a onclick="return confirm('Are you sure you want to confirm this order? This can not be undone.')" href="credit_sales_action.php?action=approve_order&orderid=<?= $creditSale["orderid"] ?>&customer_email=<?= $creditSale["email"] ?>" class="dropdown-item">Approve order</a>
+                                            <?php
+                                            }
+                                            ?>
+                                            <a href="credit_sales_action.php?action=delete_order&orderid=<?= $creditSale["orderid"] ?>&customer_email=<?= $creditSale["email"] ?>" class="dropdown-item">Delete order</a>
                                         </div>
                                     </div>
                                 </td>

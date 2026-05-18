@@ -42,7 +42,8 @@ if (isset($_GET['order'])) {
 
         // Calculate grand total including shipping fee
         $total = ($subtotal + $shipping_fee);
-        $total_all = $subtotal - ($subtotal / $row["discount_added"]);
+        $total_all = 0;
+        $total_all = $row['discount_added'] > 0 ? $subtotal - ($subtotal / $row["discount_added"]) : $total;
 
         // Decode place_details for display
         $place_details_data = $place_details ? json_decode($place_details, true) : [];
@@ -64,7 +65,7 @@ if (isset($_GET['order'])) {
         exit();
     }
 } else {
-        echo "An error occured";
+    echo "An error occured";
     // header("location:dashboard.php");
     exit();
 }
@@ -92,7 +93,7 @@ if (isset($_GET['order'])) {
             <?php endif; ?>
             Shipping fee: &#8358;<?php echo $shipping_fee; ?> <br>
         </p>
-       
+
 
         <p>
             Date: <?php echo htmlspecialchars($date); ?><br>
@@ -169,7 +170,16 @@ if (isset($_GET['order'])) {
                                         <td>&#8358;" . number_format($row['unitprice'], 2) . "</td>
                                         <td>" . htmlspecialchars($row['quantity']) . "</td>
                                         <td>" . htmlspecialchars($row['discount_added']) . "%</td>
-                                        <td>&#8358;" . number_format($row['totalprice'] - ($row['totalprice'] / $row['discount_added']), 2) . "</td>
+                                        <td>
+    &#8358; ".  number_format(
+        $row['totalprice'] - (
+            $row['discount_added'] > 0
+                ? ($row['totalprice'] / $row['discount_added'])
+                : 0
+        ),
+        2
+    ) . "
+</td>
                                     </tr>";
                             }
                             ?>
@@ -183,11 +193,11 @@ if (isset($_GET['order'])) {
                 <h4 class="font-weight-bold">GRAND TOTAL: &#8358;<?php echo number_format($total_all, 2); ?></h4>
                 <?php if ($status == "processed") { ?>
                     <p>
-                        <form action='' method='get'
-                            onsubmit='return confirm("Are you sure you want to mark this order as completed?");'>
-                            <input type='text' name='categoryid' value='<?php echo htmlspecialchars($saloon); ?>' required hidden>
-                            <input type='submit' name='delete' value='Mark As Completed' class='btn btn-sm btn-primary'>
-                        </form>
+                    <form action='' method='get'
+                        onsubmit='return confirm("Are you sure you want to mark this order as completed?");'>
+                        <input type='text' name='categoryid' value='<?php echo htmlspecialchars($saloon); ?>' required hidden>
+                        <input type='submit' name='delete' value='Mark As Completed' class='btn btn-sm btn-primary'>
+                    </form>
                     </p>
                 <?php } ?>
             </center>

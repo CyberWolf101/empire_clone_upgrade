@@ -1,9 +1,9 @@
 <?php
-
 include "../connect.php";
 include "../mailer.php";
-if (isset($_GET["orderid"])) {
-    $orderid = mysqli_real_escape_string($con, $_GET["orderid"]);
+$action = $_GET["action"] ? $_GET["action"] : "";
+$orderid = $_GET["orderid"] ? $_GET["orderid"] : "";
+if ($action == "approve_order") {
     $email = isset($_GET["customer_email"]) ? mysqli_real_escape_string($con, $_GET["customer_email"]) : '';
 
     $saleSql = "SELECT * FROM credit_sales WHERE orderid = '$orderid' LIMIT 1";
@@ -36,5 +36,11 @@ if (isset($_GET["orderid"])) {
             $_SESSION["error"] = "Order approved, but we could not send the email notification.";
         }
     }
-    header("Location: credit_sales.php");
 }
+if($action == 'delete_order'){
+    $deleteSQL = "DELETE FROM credit_sales WHERE orderid = '$orderid'";
+    mysqli_query($con, $deleteSQL);
+    $deleteSQL2 = "DELETE FROM refreshments WHERE orderid = '$orderid'";
+    mysqli_query($con, $deleteSQL2);
+}
+header("Location: credit_sales.php");

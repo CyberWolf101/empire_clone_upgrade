@@ -470,7 +470,7 @@ if (! empty($_SESSION['error'])) {
                                 $resultForCredit = mysqli_fetch_assoc($creditResult);
                                 if ($resultForCredit['credit_sales_eligibility'] == "true") {
                                 ?>
-                                    <button type="submit" id="credit-btn" name="take-as-credit" class="form-control" style="font-weight: 600; font-size: 0.8rem; color: #FFC700;">
+                                    <button type="submit" id="credit-btn" name="take-as-credit" class="btn btn-lg btn-primary justify-self-center" style="font-weight: 600; font-size: 0.8rem; color: #FFC700;">
                                         Take as credit</button>
                                 <?php
                                 }
