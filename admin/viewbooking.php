@@ -170,16 +170,7 @@ if (isset($_GET['order'])) {
                                         <td>&#8358;" . number_format($row['unitprice'], 2) . "</td>
                                         <td>" . htmlspecialchars($row['quantity']) . "</td>
                                         <td>" . htmlspecialchars($row['discount_added']) . "%</td>
-                                        <td>
-    &#8358; ".  number_format(
-        $row['totalprice'] - (
-            $row['discount_added'] > 0
-                ? ($row['totalprice'] / $row['discount_added'])
-                : 0
-        ),
-        2
-    ) . "
-</td>
+                                        <td>&#8358; " .  number_format($row['totalprice'] - ($row['discount_added'] > 0 ? ($row['totalprice'] / $row['discount_added']) : 0), 2) . "</td>
                                     </tr>";
                             }
                             ?>

@@ -42,5 +42,7 @@ if($action == 'delete_order'){
     mysqli_query($con, $deleteSQL);
     $deleteSQL2 = "DELETE FROM refreshments WHERE orderid = '$orderid'";
     mysqli_query($con, $deleteSQL2);
+    $deleteSQL3 = "DELETE FROM saloon_orders WHERE orderid = '$orderid'";
+    mysqli_query($con, $deleteSQL3);
 }
 header("Location: credit_sales.php");
