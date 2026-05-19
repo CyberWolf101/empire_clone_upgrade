@@ -130,7 +130,7 @@ $items_json = json_encode($items);
         <td>${item.item}</td>
         <td>${item.price}</td>
         <td>${item.type}</td>
-        <td>${item.quantity}</td>
+        <td>${item.special_item == "true" ? "-" : item.quantity}</td>
         <td>${item.visibility}</td>
         <td>${item.special_item == "true" ? "<span class='badge bg-danger'>special item</span>" : ""}</td>
         <td>
