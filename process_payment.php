@@ -1,5 +1,6 @@
 <?php
-function processPayment($saloon, $reed, $total_all, $c_email, $username, $sitemail, $siteimg, $sitename, $date, $method, $con) {
+function processPayment($saloon, $reed, $total_all, $c_email, $username, $sitemail, $siteimg, $sitename, $date, $method, $con)
+{
     $html = "";
     $error = "";
 
@@ -111,22 +112,101 @@ function processPayment($saloon, $reed, $total_all, $c_email, $username, $sitema
                 $datetime = date('Y-m-d H:i:s');
                 $sql = "SELECT itemid, quantity FROM refreshments WHERE orderid='$saloon'";
                 $sql2 = mysqli_query($con, $sql);
-                while ($row = mysqli_fetch_array($sql2)) {
+
+                while ($row = mysqli_fetch_assoc($sql2)) {
+
                     $food = $row['itemid'];
-                    $value = $row['quantity'];
-                    $sql = "SELECT quantity FROM food_menu WHERE s='$food'";
-                    $sql3 = mysqli_query($con, $sql);
-                    if ($row = mysqli_fetch_array($sql3)) {
-                        $originalvalue = $row['quantity'];
-                        $rem_value = $originalvalue - $value;
-                        $query = "UPDATE food_menu SET quantity='$rem_value' WHERE s='$food'";
-                        if (!mysqli_query($con, $query)) {
-                            error_log("Process Payment: Update food_menu failed: " . mysqli_error($con) . " | Query: $query");
+                    $orderedQty = $row['quantity'];
+
+                    // Check if item is special
+                    $check = mysqli_query(
+                        $con,
+                        "SELECT special_item FROM food_menu WHERE s='$food'"
+                    );
+
+                    $foodData = mysqli_fetch_assoc($check);
+
+                    // SPECIAL ITEM
+                    if ($foodData['special_item'] == 'true') {
+
+                        $ingredientSql = "
+            SELECT ingredient_id, quantity
+            FROM special_items
+            WHERE item_id='$food'
+        ";
+
+                        $ingredientQuery = mysqli_query($con, $ingredientSql);
+
+                        while ($ingredient = mysqli_fetch_assoc($ingredientQuery)) {
+
+                            $ingredientId = $ingredient['ingredient_id'];
+
+                            // quantity required for ONE special item
+                            $ingredientQty = $ingredient['quantity'];
+
+                            // total quantity to remove
+                            $removeQty = $ingredientQty * $orderedQty;
+
+                            // get current stock
+                            $stockSql = mysqli_query(
+                                $con,
+                                "SELECT quantity FROM food_menu WHERE s='$ingredientId'"
+                            );
+
+                            $stock = mysqli_fetch_assoc($stockSql);
+
+                            $newQty = $stock['quantity'] - $removeQty;
+
+                            // update ingredient stock
+                            mysqli_query(
+                                $con,
+                                "UPDATE food_menu 
+                 SET quantity='$newQty' 
+                 WHERE s='$ingredientId'"
+                            );
+
+                            // stock log
+                            mysqli_query(
+                                $con,
+                                "INSERT INTO stock_log(id, action, value, date)
+                 VALUES (
+                    '$ingredientId',
+                    'minus',
+                    '$removeQty',
+                    '$datetime'
+                 )"
+                            );
                         }
-                        $query = "INSERT INTO stock_log(id, action, value, date) VALUES ('$food', 'minus', '$value', '$datetime')";
-                        if (!mysqli_query($con, $query)) {
-                            error_log("Process Payment: Insert stock_log failed: " . mysqli_error($con) . " | Query: $query");
-                        }
+                    } else {
+
+                        // NORMAL ITEM STOCK REDUCTION
+
+                        $stockSql = mysqli_query(
+                            $con,
+                            "SELECT quantity FROM food_menu WHERE s='$food'"
+                        );
+
+                        $stock = mysqli_fetch_assoc($stockSql);
+
+                        $newQty = $stock['quantity'] - $orderedQty;
+
+                        mysqli_query(
+                            $con,
+                            "UPDATE food_menu
+             SET quantity='$newQty'
+             WHERE s='$food'"
+                        );
+
+                        mysqli_query(
+                            $con,
+                            "INSERT INTO stock_log(id, action, value, date)
+             VALUES (
+                '$food',
+                'minus',
+                '$orderedQty',
+                '$datetime'
+             )"
+                        );
                     }
                 }
             }
@@ -242,4 +322,3 @@ function processPayment($saloon, $reed, $total_all, $c_email, $username, $sitema
 
     return ["html" => $html, "error" => $error];
 }
-?>

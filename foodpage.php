@@ -85,7 +85,7 @@ include "food_page_logic.php";
                             $search = isset($_GET['search']) ? mysqli_real_escape_string($con, trim($_GET['search'])) : '';
 
                             // Build the SQL query with category and search filter
-                            $sql = "SELECT s, item, price, file_name, quantity, type FROM food_menu WHERE 1=1";
+                            $sql = "SELECT * FROM food_menu WHERE 1=1";
                             $countSql = "SELECT COUNT(*) as total FROM food_menu WHERE 1=1";
                             if (!empty($search)) {
                                 $sql .= " AND item LIKE '%$search%'";
@@ -108,9 +108,23 @@ include "food_page_logic.php";
                                 $imageURL = 'https://chbluxuryempire.com/orishirishi/' . $row["file_name"];
                                 $itemId = (int) $row['s'];
                                 $quantity = (int) $row['quantity'];
+                                if ($row["special_item"] == 'true') {
+
+                                    $specialQuantity = "SELECT SUM(f.quantity) AS total_quantity
+        FROM special_items s
+        LEFT JOIN food_menu f 
+            ON s.ingredient_id = f.s
+        WHERE s.item_id = '$itemId'
+    ";
+
+                                    $response = mysqli_query($con, $specialQuantity);
+                                    $data = mysqli_fetch_assoc($response);
+
+                                    $quantity = $data["total_quantity"] ?? 0;
+                                }
                                 $inCart = isset($cartItems[$itemId]);
                                 $cartQty = $inCart ? $cartItems[$itemId]['quantity'] : 0;
-                                ?>
+                            ?>
                                 <form action="" method="post">
                                     <tr class="ter mx-3 <?php echo strtolower($row['type']); ?>">
                                         <td class="check">
@@ -219,10 +233,17 @@ include "food_page_logic.php";
         const qty = document.getElementById('foodModalQty')?.value || 1;
         const orderid = "<?php echo $saloon; ?>";
         fetch("cart_api.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ action: "add", orderid: orderid, itemid: itemId, qty: qty })
-        })
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({
+                    action: "add",
+                    orderid: orderid,
+                    itemid: itemId,
+                    qty: qty
+                })
+            })
             .then(res => res.json())
             .then(data => {
                 if (data.status === "ok") {
@@ -257,7 +278,7 @@ include "food_page_logic.php";
     }
 
     // Search and Suggestions Functionality
-    document.getElementById('searchInput').addEventListener('input', function (e) {
+    document.getElementById('searchInput').addEventListener('input', function(e) {
         clearTimeout(debounceTimeout);
         const query = e.target.value.trim();
         const suggestionsDiv = document.getElementById('searchSuggestions');
@@ -274,10 +295,14 @@ include "food_page_logic.php";
 
     function fetchSuggestions(query, suggestionsDiv) {
         fetch('search_api.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ search: query })
-        })
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    search: query
+                })
+            })
             .then(res => {
                 if (!res.ok) {
                     throw new Error('Network response was not ok: ' + res.status);

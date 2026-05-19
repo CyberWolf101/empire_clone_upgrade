@@ -2,20 +2,6 @@
 
 $unread_sql = "SELECT COUNT(*) AS unread_count FROM inventory_log WHERE read_status = 0";
 $unread_inv_log = mysqli_fetch_assoc(mysqli_query($con, $unread_sql))['unread_count'];
-/**
- * NEW TABLE CREATION FOR CUSTOMER MANAGEMENT
- * *********** CUSTOMERS TABLE: customers
- * DB Fields: id, name,  email,
- *  phone, unique_id, added_on,
- * totalprice(total_spent),
- *  order_count, first_order_date
- * ***********DISCOUNTS PERCENTAGE, PRODUCT CATEGORY, DISCOUNT STATUS AND USER UNIQUE ID TABLE: customers_discounts
- * DB Fields: id,
- *  customer_unique_id,
- *  discount_percentage,
- *  product_category,
- *  discount_status
- */
 $createCustomerTableSQL = "
 CREATE TABLE IF NOT EXISTS customers(
 id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -75,8 +61,23 @@ ADD
   ADD COLUMN IF NOT EXISTS special_item VARCHAR(255) NOT NULL DEFAULT 'false'
   ";
   $createSpecialItemsTableSQL = "CREATE TABLE IF NOT EXISTS special_items(
-  id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY
+  id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  item VARCHAR(255) NOT NULL,
+  category VARCHAR(255) NOT NULL,
+  ingredient_id VARCHAR(255) NOT NULL,
+  ingredient_name VARCHAR(255) NOT NULL,
+  added_on DATETIME NOT NULL DEFAULT CURRENT_TIME
   )";
+  $alterSpecialItemsSQL = "ALTER TABLE special_items
+  ADD COLUMN IF NOT EXISTS item_id VARCHAR(255) NOT NULL";
+  $alterSpecialItemsSQL2 = "ALTER TABLE special_items
+  ADD COLUMN IF NOT EXISTS status VARCHAR(255) NOT NULL DEFAULT 'active'";
+  $alterSpecialItemsSQL3 = "ALTER TABLE special_items
+  ADD COLUMN IF NOT EXISTS ingredient_quantity VARCHAR(255) NOT NULL DEFAULT '1'";
+mysqli_query($con, $alterSpecialItemsSQL3);
+mysqli_query($con, $alterSpecialItemsSQL2);
+mysqli_query($con, $alterSpecialItemsSQL);
+mysqli_query($con, $createSpecialItemsTableSQL);
 mysqli_query($con, $foodMenuAlter2);
 mysqli_query($con, $foodMenuAlter);
 mysqli_query($con, $correction);

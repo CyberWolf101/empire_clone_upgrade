@@ -14,3 +14,5 @@
 [] - Others
 
 ## SPECIAL ITEMS WITH INGREDIENTS INTEGRATION
+
+[] - special_items(only for item ingredients) table (id, item,item_id, category, ingredient_id, ingredient_name, ingredient_quantity, added_on)

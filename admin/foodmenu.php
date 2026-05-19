@@ -134,10 +134,9 @@ $items_json = json_encode($items);
         <td>${item.visibility}</td>
         <td>${item.special_item == "true" ? "<span class='badge bg-danger'>special item</span>" : ""}</td>
         <td>
-          <form action='editfood.php' method='get'>
-            <input type='hidden' name='category' value='${item.s}'>  
-            <input type='submit' name='edit' value='Edit Item' class='btn btn-sm btn-primary'>
-          </form>
+          <a href='editfood.php?category=${item.s}' class='btn btn-sm btn-primary'>
+            Edit Item
+          </a>
         </td>	
         <td>
           <form action='' method='get' onsubmit='return confirm("Are you sure you want to delete this service (${item.item})?");'>

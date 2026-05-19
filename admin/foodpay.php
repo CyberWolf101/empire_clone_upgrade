@@ -134,46 +134,194 @@ if (isset($_POST['pay'])) {
 
         $con->begin_transaction();
 
-        try {
-            $stmt = $con->prepare("SELECT itemid, quantity FROM refreshments WHERE orderid = ?");
-            $stmt->bind_param("s", $saloon);
-            $stmt->execute();
-            $items = $stmt->get_result();
+try {
 
-            while ($row = $items->fetch_assoc()) {
-                $food = $row['itemid'];
-                $qty = (int) $row['quantity'];
+    $stmt = $con->prepare("
+        SELECT itemid, quantity 
+        FROM refreshments 
+        WHERE orderid = ?
+    ");
 
-                $stmt2 = $con->prepare("SELECT quantity FROM food_menu WHERE s = ? FOR UPDATE");
-                $stmt2->bind_param("s", $food);
-                $stmt2->execute();
-                $result = $stmt2->get_result();
+    $stmt->bind_param("s", $saloon);
+    $stmt->execute();
 
-                if ($result->num_rows > 0) {
-                    $stock = (int) $result->fetch_assoc()['quantity'];
-                    $newQty = max(0, $stock - $qty);
+    $items = $stmt->get_result();
 
-                    $upd = $con->prepare("UPDATE food_menu SET quantity = ? WHERE s = ?");
-                    $upd->bind_param("is", $newQty, $food);
-                    $upd->execute();
+    while ($row = $items->fetch_assoc()) {
 
-                    $ref = $con->prepare("UPDATE refreshments SET total_left=?, date=? WHERE orderid=? AND itemid=?");
-                    $ref->bind_param("issi", $newQty, $datetime, $saloon, $food);
-                    $ref->execute();
+        $food = $row['itemid'];
+        $qty = (int)$row['quantity'];
 
-                    $log = $con->prepare("INSERT INTO stock_log (id, action, value, date) VALUES (?, 'minus', ?, ?)");
-                    $log->bind_param("sis", $food, $qty, $datetime);
-                    $log->execute();
+        // CHECK IF ITEM IS SPECIAL
+        $specialStmt = $con->prepare("
+            SELECT special_item 
+            FROM food_menu 
+            WHERE s = ?
+        ");
+
+        $specialStmt->bind_param("s", $food);
+        $specialStmt->execute();
+
+        $specialResult = $specialStmt->get_result();
+        $foodData = $specialResult->fetch_assoc();
+
+        // SPECIAL ITEM
+        if (
+            isset($foodData['special_item']) &&
+            $foodData['special_item'] == 'true'
+        ) {
+
+            $ingredientStmt = $con->prepare("
+                SELECT ingredient_id, quantity
+                FROM special_items
+                WHERE item_id = ?
+            ");
+
+            $ingredientStmt->bind_param("s", $food);
+            $ingredientStmt->execute();
+
+            $ingredients = $ingredientStmt->get_result();
+
+            while ($ingredient = $ingredients->fetch_assoc()) {
+
+                $ingredientId = $ingredient['ingredient_id'];
+
+                // quantity required for ONE item
+                $ingredientQty = (int)$ingredient['quantity'];
+
+                // total quantity to remove
+                $removeQty = $ingredientQty * $qty;
+
+                // lock ingredient stock
+                $stockStmt = $con->prepare("
+                    SELECT quantity
+                    FROM food_menu
+                    WHERE s = ?
+                    FOR UPDATE
+                ");
+
+                $stockStmt->bind_param("s", $ingredientId);
+                $stockStmt->execute();
+
+                $stockResult = $stockStmt->get_result();
+
+                if ($stockResult->num_rows > 0) {
+
+                    $stock = (int)$stockResult
+                        ->fetch_assoc()['quantity'];
+
+                    $newQty = max(0, $stock - $removeQty);
+
+                    // UPDATE INGREDIENT STOCK
+                    $updateStmt = $con->prepare("
+                        UPDATE food_menu
+                        SET quantity = ?
+                        WHERE s = ?
+                    ");
+
+                    $updateStmt->bind_param(
+                        "is",
+                        $newQty,
+                        $ingredientId
+                    );
+
+                    $updateStmt->execute();
+
+                    // STOCK LOG
+                    $logStmt = $con->prepare("
+                        INSERT INTO stock_log
+                        (id, action, value, date)
+                        VALUES (?, 'minus', ?, ?)
+                    ");
+
+                    $logStmt->bind_param(
+                        "sis",
+                        $ingredientId,
+                        $removeQty,
+                        $datetime
+                    );
+
+                    $logStmt->execute();
                 }
             }
 
-            $con->commit();
-            $stmt->close();
+        } else {
 
-        } catch (Exception $e) {
-            $con->rollback();
-            error_log("Stock update failed: " . $e->getMessage());
+            // NORMAL ITEM STOCK UPDATE
+
+            $stmt2 = $con->prepare("
+                SELECT quantity
+                FROM food_menu
+                WHERE s = ?
+                FOR UPDATE
+            ");
+
+            $stmt2->bind_param("s", $food);
+            $stmt2->execute();
+
+            $result = $stmt2->get_result();
+
+            if ($result->num_rows > 0) {
+
+                $stock = (int)$result
+                    ->fetch_assoc()['quantity'];
+
+                $newQty = max(0, $stock - $qty);
+
+                $upd = $con->prepare("
+                    UPDATE food_menu
+                    SET quantity = ?
+                    WHERE s = ?
+                ");
+
+                $upd->bind_param("is", $newQty, $food);
+                $upd->execute();
+
+                $ref = $con->prepare("
+                    UPDATE refreshments
+                    SET total_left=?, date=?
+                    WHERE orderid=? AND itemid=?
+                ");
+
+                $ref->bind_param(
+                    "issi",
+                    $newQty,
+                    $datetime,
+                    $saloon,
+                    $food
+                );
+
+                $ref->execute();
+
+                $log = $con->prepare("
+                    INSERT INTO stock_log
+                    (id, action, value, date)
+                    VALUES (?, 'minus', ?, ?)
+                ");
+
+                $log->bind_param(
+                    "sis",
+                    $food,
+                    $qty,
+                    $datetime
+                );
+
+                $log->execute();
+            }
         }
+    }
+
+    $con->commit();
+
+} catch (Exception $e) {
+
+    $con->rollback();
+
+    error_log(
+        "Stock update failed: " .
+        $e->getMessage()
+    );
+}
 
 
         // Generate receipt HTML

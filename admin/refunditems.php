@@ -86,35 +86,191 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['refund_selected']) |
 
       // Handle restocking
       if (in_array($item, $items_to_restock) && $refund_qty > 0) {
-        // Get current food_menu quantity
-        $sql = "SELECT quantity FROM food_menu WHERE item = ?";
+
+        // CHECK IF ITEM IS SPECIAL
+        $sql = "SELECT s, special_item FROM food_menu WHERE item = ?";
         $stmt = mysqli_prepare($con, $sql);
+
         mysqli_stmt_bind_param($stmt, "s", $item);
         mysqli_stmt_execute($stmt);
+
         $result = mysqli_stmt_get_result($stmt);
-        $prev_quantity = mysqli_fetch_assoc($result)['quantity'] ?? 0;
+
+        $foodData = mysqli_fetch_assoc($result);
+
         mysqli_stmt_close($stmt);
 
-        // Update food_menu quantity
-        $new_food_quantity = $prev_quantity + $refund_qty;
-        $sql = "UPDATE food_menu SET quantity = ? WHERE item = ?";
-        $stmt = mysqli_prepare($con, $sql);
-        mysqli_stmt_bind_param($stmt, "is", $new_food_quantity, $item);
-        if (!mysqli_stmt_execute($stmt)) {
-          throw new Exception("Failed to update food_menu: " . mysqli_error($con));
-        }
-        mysqli_stmt_close($stmt);
+        $foodId = $foodData['s'] ?? '';
+        $isSpecial = $foodData['special_item'] ?? 'false';
 
-        // Insert into stock_transactions
-        $action = 'refund';
-        $datetime = date('Y-m-d H:i:s');
-        $sql = "INSERT INTO stock_transactions (item, quantity, action, date, total_left) VALUES (?, ?, ?, ?, ?)";
-        $stmt = mysqli_prepare($con, $sql);
-        mysqli_stmt_bind_param($stmt, "sissi", $item, $refund_qty, $action, $datetime, $new_food_quantity);
-        if (!mysqli_stmt_execute($stmt)) {
-          throw new Exception("Failed to log stock transaction: " . mysqli_error($con));
+        // SPECIAL ITEM
+        if ($isSpecial == 'true') {
+
+          $sql = "
+            SELECT ingredient_id, quantity
+            FROM special_items
+            WHERE item_id = ?
+        ";
+
+          $stmt = mysqli_prepare($con, $sql);
+
+          mysqli_stmt_bind_param($stmt, "s", $foodId);
+          mysqli_stmt_execute($stmt);
+
+          $ingredients = mysqli_stmt_get_result($stmt);
+
+          while ($ingredient = mysqli_fetch_assoc($ingredients)) {
+
+            $ingredientId = $ingredient['ingredient_id'];
+
+            // quantity used per item
+            $ingredientQty = (int)$ingredient['quantity'];
+
+            // total quantity to restore
+            $restoreQty = $ingredientQty * $refund_qty;
+
+            // CURRENT STOCK
+            $sql2 = "
+                SELECT quantity, item
+                FROM food_menu
+                WHERE s = ?
+            ";
+
+            $stmt2 = mysqli_prepare($con, $sql2);
+
+            mysqli_stmt_bind_param(
+              $stmt2,
+              "s",
+              $ingredientId
+            );
+
+            mysqli_stmt_execute($stmt2);
+
+            $result2 = mysqli_stmt_get_result($stmt2);
+
+            $ingredientData = mysqli_fetch_assoc($result2);
+
+            mysqli_stmt_close($stmt2);
+
+            $currentQty = (int)$ingredientData['quantity'];
+
+            $newQty = $currentQty + $restoreQty;
+
+            // UPDATE STOCK
+            $sql3 = "
+                UPDATE food_menu
+                SET quantity = ?
+                WHERE s = ?
+            ";
+
+            $stmt3 = mysqli_prepare($con, $sql3);
+
+            mysqli_stmt_bind_param(
+              $stmt3,
+              "is",
+              $newQty,
+              $ingredientId
+            );
+
+            mysqli_stmt_execute($stmt3);
+
+            mysqli_stmt_close($stmt3);
+
+            // LOG STOCK
+            $action = 'refund';
+            $datetime = date('Y-m-d H:i:s');
+
+            $sql4 = "
+                INSERT INTO stock_transactions
+                (item, quantity, action, date, total_left)
+                VALUES (?, ?, ?, ?, ?)
+            ";
+
+            $stmt4 = mysqli_prepare($con, $sql4);
+
+            mysqli_stmt_bind_param(
+              $stmt4,
+              "sissi",
+              $ingredientId,
+              $restoreQty,
+              $action,
+              $datetime,
+              $newQty
+            );
+
+            mysqli_stmt_execute($stmt4);
+
+            mysqli_stmt_close($stmt4);
+          }
+
+          mysqli_stmt_close($stmt);
+        } else {
+
+          // NORMAL ITEM RESTOCK
+
+          $sql = "SELECT quantity FROM food_menu WHERE item = ?";
+
+          $stmt = mysqli_prepare($con, $sql);
+
+          mysqli_stmt_bind_param($stmt, "s", $item);
+
+          mysqli_stmt_execute($stmt);
+
+          $result = mysqli_stmt_get_result($stmt);
+
+          $prev_quantity =
+            mysqli_fetch_assoc($result)['quantity'] ?? 0;
+
+          mysqli_stmt_close($stmt);
+
+          $new_food_quantity =
+            $prev_quantity + $refund_qty;
+
+          $sql = "
+            UPDATE food_menu
+            SET quantity = ?
+            WHERE item = ?
+        ";
+
+          $stmt = mysqli_prepare($con, $sql);
+
+          mysqli_stmt_bind_param(
+            $stmt,
+            "is",
+            $new_food_quantity,
+            $item
+          );
+
+          mysqli_stmt_execute($stmt);
+
+          mysqli_stmt_close($stmt);
+
+          // STOCK LOG
+          $action = 'refund';
+          $datetime = date('Y-m-d H:i:s');
+
+          $sql = "
+            INSERT INTO stock_transactions
+            (item, quantity, action, date, total_left)
+            VALUES (?, ?, ?, ?, ?)
+        ";
+
+          $stmt = mysqli_prepare($con, $sql);
+
+          mysqli_stmt_bind_param(
+            $stmt,
+            "sissi",
+            $item,
+            $refund_qty,
+            $action,
+            $datetime,
+            $new_food_quantity
+          );
+
+          mysqli_stmt_execute($stmt);
+
+          mysqli_stmt_close($stmt);
         }
-        mysqli_stmt_close($stmt);
       }
     }
     mysqli_stmt_close($update_stmt);
@@ -263,7 +419,7 @@ if (isset($_GET['error'])) {
 
 <script>
   // Select all items checkbox
-  document.getElementById('select-all-items').addEventListener('change', function () {
+  document.getElementById('select-all-items').addEventListener('change', function() {
     document.querySelectorAll('.item-checkbox').forEach(checkbox => {
       checkbox.checked = this.checked;
     });
@@ -273,7 +429,7 @@ if (isset($_GET['error'])) {
   });
 
   // Mark all for restock button
-  document.getElementById('mark-all-restock').addEventListener('click', function () {
+  document.getElementById('mark-all-restock').addEventListener('click', function() {
     document.querySelectorAll('.restock-checkbox').forEach(checkbox => {
       checkbox.checked = true;
     });

@@ -20,20 +20,141 @@ if (isset($_GET['order']) && !empty($_GET['order']) && isset($_GET['type'])) {
     if ($type === "cart_items") {
         $sql = "UPDATE saloon_orders SET pay_status = 'paid' WHERE id = '$order_id'";
         $datetime = date('Y-m-d H:i:s');
-        $result = mysqli_query($con, "SELECT itemid, quantity FROM refreshments WHERE orderid = '$order_id'");
+        $result = mysqli_query(
+            $con,
+            "SELECT itemid, quantity 
+     FROM refreshments 
+     WHERE orderid = '$order_id'"
+        );
+
         while ($row = mysqli_fetch_assoc($result)) {
+
             $food = $row['itemid'];
-            $value = $row['quantity'];
-            $sql_food = mysqli_query($con, "SELECT quantity FROM food_menu WHERE s = '$food'");
-            if (mysqli_num_rows($sql_food) > 0) {
-                $row_food = mysqli_fetch_assoc($sql_food);
-                $originalvalue = $row_food['quantity'];
-                $rem_value = $originalvalue - $value;
-                mysqli_query($con, "UPDATE food_menu SET quantity = '$rem_value' WHERE s = '$food'");
-                mysqli_query($con, "UPDATE refreshments SET total_left = '$rem_value', date = '$datetime' WHERE orderid = '$order_id' AND itemid = '$food'");
-                mysqli_query($con, "INSERT INTO stock_log (id, action, value, date) VALUES ('$food', 'minus', '$value', '$datetime')");
+            $value = (int)$row['quantity'];
+
+            // CHECK IF ITEM IS SPECIAL
+            $specialQuery = mysqli_query(
+                $con,
+                "SELECT special_item 
+         FROM food_menu 
+         WHERE s = '$food'"
+            );
+
+            $specialData = mysqli_fetch_assoc($specialQuery);
+
+            // SPECIAL ITEM
+            if (
+                isset($specialData['special_item']) &&
+                $specialData['special_item'] == 'true'
+            ) {
+
+                $ingredientQuery = mysqli_query(
+                    $con,
+                    "SELECT ingredient_id, ingredient_quantity
+             FROM special_items
+             WHERE item_id = '$food'"
+                );
+
+                while ($ingredient = mysqli_fetch_assoc($ingredientQuery)) {
+
+                    $ingredientId = $ingredient['ingredient_id'];
+
+                    // quantity needed for one special item
+                    $ingredientQty = (int)$ingredient['ingredient_quantity'];
+
+                    // total quantity to remove
+                    $removeQty = $ingredientQty * $value;
+
+                    $stockQuery = mysqli_query(
+                        $con,
+                        "SELECT quantity 
+                 FROM food_menu 
+                 WHERE s = '$ingredientId'"
+                    );
+
+                    if (mysqli_num_rows($stockQuery) > 0) {
+
+                        $stockData = mysqli_fetch_assoc($stockQuery);
+
+                        $currentQty = (int)$stockData['quantity'];
+
+                        $newQty = max(0, $currentQty - $removeQty);
+
+                        // UPDATE INGREDIENT STOCK
+                        mysqli_query(
+                            $con,
+                            "UPDATE food_menu
+                     SET quantity = '$newQty'
+                     WHERE s = '$ingredientId'"
+                        );
+
+                        // STOCK LOG
+                        mysqli_query(
+                            $con,
+                            "INSERT INTO stock_log
+                     (id, action, value, date)
+                     VALUES (
+                        '$ingredientId',
+                        'minus',
+                        '$removeQty',
+                        '$datetime'
+                     )"
+                        );
+                    }
+                }
             } else {
-                error_log("Item with s='$food' not found in food_menu for orderid='$order_id'");
+
+                // NORMAL ITEM STOCK REDUCTION
+
+                $sql_food = mysqli_query(
+                    $con,
+                    "SELECT quantity 
+             FROM food_menu 
+             WHERE s = '$food'"
+                );
+
+                if (mysqli_num_rows($sql_food) > 0) {
+
+                    $row_food = mysqli_fetch_assoc($sql_food);
+
+                    $originalvalue = (int)$row_food['quantity'];
+
+                    $rem_value = max(0, $originalvalue - $value);
+
+                    mysqli_query(
+                        $con,
+                        "UPDATE food_menu
+                 SET quantity = '$rem_value'
+                 WHERE s = '$food'"
+                    );
+
+                    mysqli_query(
+                        $con,
+                        "UPDATE refreshments
+                 SET total_left = '$rem_value',
+                     date = '$datetime'
+                 WHERE orderid = '$order_id'
+                 AND itemid = '$food'"
+                    );
+
+                    mysqli_query(
+                        $con,
+                        "INSERT INTO stock_log
+                 (id, action, value, date)
+                 VALUES (
+                    '$food',
+                    'minus',
+                    '$value',
+                    '$datetime'
+                 )"
+                    );
+                } else {
+
+                    error_log(
+                        "Item with s='$food' not found 
+                 in food_menu for orderid='$order_id'"
+                    );
+                }
             }
         }
     } elseif ($type === "event_order") {
@@ -211,7 +332,7 @@ if (isset($_GET['order']) && !empty($_GET['order']) && isset($_GET['type'])) {
     function openModal(imageUrl, amount, orderId, type, transferId, amountPaid) {
         document.getElementById("modalImage").src = imageUrl;
         document.getElementById("modalAmount").textContent = amount;
-        document.getElementById("modalConfirmBtn").onclick = function () {
+        document.getElementById("modalConfirmBtn").onclick = function() {
             confirmPayment(orderId, type, transferId, amountPaid);
         };
         $('#transferModal').modal('show');
