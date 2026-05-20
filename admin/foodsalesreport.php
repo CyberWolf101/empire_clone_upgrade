@@ -161,14 +161,14 @@ $sql_query = $itemid ? "
             AND r2.status = 'processed'
             ORDER BY r2.date DESC LIMIT 1) AS total_left
     FROM refreshments r
-    WHERE r.date >= ? AND r.date <= ? AND r.status = 'processed' AND r.itemid = ?
+    WHERE r.date >= ? AND r.date <= ? AND (r.status = 'processed' OR r.status = 'partly paid' OR r.pay_status = 'paid') AND r.itemid = ?
     $group_by
     ORDER BY $order_by
     LIMIT ? OFFSET ?
 " : "
     SELECT $select_date, SUM(r.quantity) AS total_quantity, SUM(r.totalprice) AS total_price
     FROM refreshments r
-    WHERE r.date >= ? AND r.date <= ? AND r.status = 'processed'
+    WHERE r.date >= ? AND r.date <= ? AND (r.status = 'processed' OR r.pay_status = 'partly paid' OR r.pay_status = 'paid')
     $group_by
     ORDER BY $order_by
     LIMIT ? OFFSET ?
