@@ -88,7 +88,8 @@ include "food_page_logic.php";
                             $sql = "SELECT * FROM food_menu WHERE 1=1";
                             $countSql = "SELECT COUNT(*) as total FROM food_menu WHERE 1=1";
                             if (!empty($search)) {
-                                $sql .= " AND item LIKE '%$search%'";
+                                $searchSafe = mysqli_real_escape_string($con, $search);
+                                $sql .= " AND item LIKE '%{$searchSafe}%'";
                                 $countSql .= " AND item LIKE '%$search%'";
                             }
                             if ($category !== 'all' && empty($search)) {
@@ -110,7 +111,7 @@ include "food_page_logic.php";
                                 $quantity = (int) $row['quantity'];
                                 if ($row["special_item"] == 'true') {
 
-                                    $specialQuantity = "SELECT SUM(f.quantity) AS total_quantity
+                                    $specialQuantity = "SELECT MIN(f.quantity) AS total_quantity
         FROM special_items s
         LEFT JOIN food_menu f 
             ON s.ingredient_id = f.s
@@ -201,14 +202,26 @@ include "food_page_logic.php";
         const contentDiv = document.getElementById('foodModalContent');
         if (maxQty > 0) {
             contentDiv.innerHTML = `
-                <form action="" method="post">
-                    <input type="hidden" id="foodModalId" name="food" value="${foodId}" />
-                    <div>
-                        <label>Quantity</label>
-                        <input type="number" class="form-control" id="foodModalQty" name="value" min="1" max="${maxQty}" value="1" />
-                    </div>
-                    <button type="submit" name="addtocart" class="btn-buya mt-2">Add To Cart</button>
-                </form>`;
+                <form onsubmit="event.preventDefault(); addToCart(${foodId});">
+    <input type="hidden" id="foodModalId" value="${foodId}" />
+
+    <div>
+        <label>Quantity</label>
+
+        <input 
+            type="number"
+            class="form-control"
+            id="foodModalQty"
+            min="1"
+            max="${maxQty}"
+            value="1"
+        />
+    </div>
+
+    <button type="submit" class="btn-buya mt-2">
+        Add To Cart
+    </button>
+</form>`;
         } else {
             contentDiv.innerHTML = `
                 <form method="post">
@@ -247,29 +260,13 @@ include "food_page_logic.php";
             .then(res => res.json())
             .then(data => {
                 if (data.status === "ok") {
-                    const badge = document.getElementById("cartBadge" + itemId);
-                    if (badge) {
-                        let current = parseInt(badge.innerText.replace("In Cart: ", "")) || 0;
-                        badge.innerText = "In Cart: " + (current + parseInt(qty));
-                    }
-                    let cartBtn = document.getElementById("cartFloatingBtn");
-                    let badgeSpan = cartBtn.querySelector(".badge");
-                    let currentCount = badgeSpan ? parseInt(badgeSpan.innerText) : 0;
-                    let newCount = currentCount + parseInt(qty);
-                    if (badgeSpan) {
-                        badgeSpan.innerText = newCount;
-                    } else {
-                        let newBadge = document.createElement("span");
-                        newBadge.className = "badge bg-danger";
-                        newBadge.style.position = "absolute";
-                        newBadge.style.top = "-10px";
-                        newBadge.style.right = "-10px";
-                        newBadge.style.fontSize = "10px";
-                        newBadge.style.borderRadius = "50%";
-                        newBadge.style.padding = "4px 8px";
-                        newBadge.innerText = newCount;
-                        cartBtn.appendChild(newBadge);
-                    }
+
+                    bootstrap.Modal.getInstance(
+                        document.getElementById('foodModal')
+                    ).hide();
+
+                    location.reload();
+
                 } else {
                     console.error("Cart API error:", data.message);
                 }
@@ -345,6 +342,17 @@ include "food_page_logic.php";
         document.getElementById('searchSuggestions').style.display = 'none';
         window.location.href = 'foodpage.php?category=all&page=1';
     }
+    document.addEventListener('click', function(e) {
+
+        const suggestions = document.getElementById('searchSuggestions');
+
+        if (
+            !document.getElementById('searchInput').contains(e.target) &&
+            !suggestions.contains(e.target)
+        ) {
+            suggestions.style.display = 'none';
+        }
+    });
 </script>
 <?php include "foodpageExtras.php"; ?>
 <?php include "footer.php"; ?>

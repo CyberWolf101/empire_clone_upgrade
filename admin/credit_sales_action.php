@@ -27,7 +27,7 @@ if ($action == "approve_order") {
         $message .= "Quantity: <strong>$quantity</strong><br>";
         $message .= "Total Price: <strong>$totalprice</strong><br>";
         $message .= "Amount Paid: <strong>$amountPaid</strong></p>";
-        $message .= "<p>Your payment link has been sent separately, and our team will follow up if any additional information is required.</p>";
+        $message .= "<p>Your payment link is <a href='../pay_for_credit_sale.php?order=$orderid'></a></p>";
         $message .= "<p>Thank you for choosing Empire Clone.</p>";
 
         if (sendEmail($email, $subject, $message)) {
@@ -42,7 +42,7 @@ if($action == 'delete_order'){
     mysqli_query($con, $deleteSQL);
     $deleteSQL2 = "DELETE FROM refreshments WHERE orderid = '$orderid'";
     mysqli_query($con, $deleteSQL2);
-    $deleteSQL3 = "DELETE FROM saloon_orders WHERE orderid = '$orderid'";
+    $deleteSQL3 = "DELETE FROM saloon_orders WHERE id = '$orderid'";
     mysqli_query($con, $deleteSQL3);
 }
 header("Location: credit_sales.php");

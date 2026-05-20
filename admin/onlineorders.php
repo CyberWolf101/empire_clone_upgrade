@@ -136,12 +136,30 @@ if (isset($_GET['order']) && !empty($_GET['order'])) {
           }
 
           // Build SQL query
-          $sql = "SELECT s.*,r.discount_added FROM saloon_orders s LEFT JOIN refreshments r ON s.id = r.orderid WHERE section='refreshments' 
-      AND type='online' 
-      AND (pay_status='pending' OR pay_status='complete' OR pay_status='paid') ORDER BY id ASC";
-          $count_query = "SELECT COUNT(*) AS total_rows FROM saloon_orders WHERE section='refreshments' 
-      AND type='online' 
-      AND (pay_status='pending' OR pay_status='complete' OR pay_status='paid')";
+          $sql = "
+SELECT 
+    s.*,
+    COALESCE(SUM(r.discount_added), 0) AS total_discount
+FROM saloon_orders s
+LEFT JOIN refreshments r 
+    ON s.id = r.orderid
+WHERE type='online' AND (
+    s.pay_status='pending'
+    OR s.pay_status='complete'
+    OR s.pay_status='paid'
+)
+GROUP BY s.id
+ORDER BY s.s DESC
+";
+          $count_query = "
+SELECT COUNT(DISTINCT id) AS total_rows
+FROM saloon_orders
+WHERE (
+    pay_status='pending'
+    OR pay_status='complete'
+    OR pay_status='paid'
+)
+";
 
           // Execute count query
           $count_stmt = mysqli_prepare($con, $count_query);
@@ -186,7 +204,7 @@ if (isset($_GET['order']) && !empty($_GET['order'])) {
             $id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
             $date = $has_date && !empty($row['date']) ? date('d/m/Y', strtotime($row['date'])) : '-';
             $total = ((float) $row['total_amount'] + (float) ($row['shipping_fee'] ?? 0));
-            $combined_total = $row["discount_added"] > 0 ? $total - ($total / $row["discount_added"]) : $total;
+            $combined_total = $row["total_discount"] > 0 ? $total - ($total / $row["discount_added"]) : $total;
             echo "
         <tr>
             <td>" . $i++ . "</td>

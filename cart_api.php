@@ -11,7 +11,7 @@ $qty = max(1, (int)($_POST['qty'] ?? 1));
 
 $response = ['status' => 'error', 'message' => 'Invalid request'];
 
-if ($action === 'add' || isset($_POST['addtocart'])) {
+if ($action === 'add') {
     if (empty($orderid) || $itemid === 0) {
         $response['message'] = 'Invalid order ID or item ID';
         echo json_encode($response);
@@ -23,8 +23,44 @@ if ($action === 'add' || isset($_POST['addtocart'])) {
         $itemPrice = (float)$row['price'];
         $itemCategory = $row['type'];
         $check = mysqli_query($con, "SELECT quantity FROM refreshments WHERE orderid='$orderid' AND itemid='$itemid' AND status='processing'");
+
         if ($exist = mysqli_fetch_assoc($check)) {
+
             $newQty = $exist['quantity'] + $qty;
+
+            $availableQty = (int)$row['quantity'];
+
+            if ($newQty > $availableQty) {
+
+                $response['message'] = 'Not enough stock available';
+
+                echo json_encode($response);
+
+                exit;
+            }
+
+            $totalValue = $newQty * $itemPrice;
+
+            $query = "
+    UPDATE refreshments 
+    SET 
+        quantity='$newQty',
+        unitprice='$itemPrice',
+        totalprice='$totalValue'
+    WHERE orderid='$orderid'
+    AND itemid='$itemid'
+    AND status='processing'
+    ";
+            $availableQty = (int)$row['quantity'];
+
+            if ($qty > $availableQty) {
+
+                $response['message'] = 'Not enough stock available';
+
+                echo json_encode($response);
+
+                exit;
+            }
             $totalValue = $newQty * $itemPrice;
             $query = "UPDATE refreshments SET quantity='$newQty', unitprice='$itemPrice', totalprice='$totalValue' WHERE orderid='$orderid' AND itemid='$itemid' AND status='processing'";
             if (!mysqli_query($con, $query)) {
@@ -37,7 +73,30 @@ if ($action === 'add' || isset($_POST['addtocart'])) {
             }
         } else {
             $totalValue = $qty * $itemPrice;
-            $query = "INSERT INTO refreshments(orderid,itemid,item,unitprice,quantity,totalprice,status,item_category) VALUES ('$orderid','$itemid','$itemName','$itemPrice','$qty','$totalValue','processing','$itemCategory')";
+            $query = "INSERT INTO refreshments(orderid,
+    itemid,
+    item,
+    unitprice,
+    quantity,
+    totalprice,
+    status,
+    item_category,
+    preorder,
+    discount_added,
+    file_name
+) VALUES (
+    '$orderid',
+    '$itemid',
+    '$itemName',
+    '$itemPrice',
+    '$qty',
+    '$totalValue',
+    'processing',
+    '$itemCategory',
+    '0',
+    '0',
+    '{$row['file_name']}'
+)";
             if (!mysqli_query($con, $query)) {
                 $response['message'] = 'Insert failed: ' . mysqli_error($con);
                 error_log("Cart API insert failed: " . mysqli_error($con) . " | Query: $query");
@@ -53,7 +112,7 @@ if ($action === 'add' || isset($_POST['addtocart'])) {
     }
 }
 
-if ($action === 'delete' && $orderid && $itemid) {
+if (($action === 'delete' || $action === 'remove') && $orderid && $itemid) {
     $query = "DELETE FROM refreshments WHERE orderid='$orderid' AND itemid='$itemid' AND status='processing'";
     if (!mysqli_query($con, $query)) {
         $response['message'] = 'Delete failed: ' . mysqli_error($con);
@@ -67,7 +126,17 @@ if ($action === 'delete' && $orderid && $itemid) {
 
 if ($action === 'fetch' && $orderid) {
     $cart = [];
-    $res = mysqli_query($con, "SELECT itemid, item, unitprice as price, quantity FROM refreshments WHERE orderid='$orderid' AND status='processing'");
+    $res = mysqli_query($con, "SELECT 
+    s,
+    itemid,
+    item,
+    unitprice as price,
+    quantity,
+    totalprice,
+    item_category FROM refreshments
+WHERE orderid='$orderid'
+AND status='processing'
+ORDER BY s DESC");
     while ($row = mysqli_fetch_assoc($res)) {
         $cart[] = $row;
     }
@@ -76,4 +145,3 @@ if ($action === 'fetch' && $orderid) {
 }
 
 echo json_encode($response);
-?>

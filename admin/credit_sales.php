@@ -92,7 +92,7 @@ if (! empty($_SESSION['error'])) {
                                         </button>
                                         <div class="dropdown-menu">
                                             <?php
-                                            if ($creditSale["status"] !== 'approved') {
+                                            if ($creditSale["status"] == 'pending') {
                                             ?>
                                                 <a onclick="return confirm('Are you sure you want to confirm this order? This can not be undone.')" href="credit_sales_action.php?action=approve_order&orderid=<?= $creditSale["orderid"] ?>&customer_email=<?= $creditSale["email"] ?>" class="dropdown-item">Approve order</a>
                                             <?php

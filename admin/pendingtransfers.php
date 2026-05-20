@@ -17,7 +17,7 @@ if (isset($_GET['order']) && !empty($_GET['order']) && isset($_GET['type'])) {
     //     $sql = "UPDATE saloon_orders SET pay_status = 'paid' WHERE id = '$order_id'";
     // }
 
-    if ($type === "cart_items") {
+    if ($type === "cart_items" || $type == "credit_sale") {
         $sql = "UPDATE saloon_orders SET pay_status = 'paid' WHERE id = '$order_id'";
         $datetime = date('Y-m-d H:i:s');
         $result = mysqli_query(
