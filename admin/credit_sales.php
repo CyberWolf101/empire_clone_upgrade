@@ -2,6 +2,98 @@
 include "header.php";
 ?>
 <?php
+if ($_SERVER['REQUEST_METHOD'] == "POST" && isset($_POST['make_payment'])) {
+
+    $orderid = mysqli_real_escape_string($con, $_POST['orderid']);
+    $paymentAmount = (float) $_POST['payment_amount'];
+
+    // GET ORDER DETAILS
+    $orderSql = "
+    SELECT 
+        SUM(totalprice) AS total_price,
+        MAX(amount_paid) AS amount_paid
+    FROM credit_sales
+    WHERE orderid = '$orderid'
+    ";
+
+    $orderResult = mysqli_query($con, $orderSql);
+    $orderData = mysqli_fetch_assoc($orderResult);
+
+    $totalPrice = (float) $orderData['total_price'];
+    $alreadyPaid = (float) $orderData['amount_paid'];
+
+    $newAmountPaid = $alreadyPaid + $paymentAmount;
+
+    // VALIDATE
+    if ($paymentAmount <= 0) {
+
+        $_SESSION['error'] = "Invalid payment amount.";
+    } elseif ($newAmountPaid > $totalPrice) {
+
+        $_SESSION['error'] = "Payment exceeds remaining balance.";
+    } else {
+
+        // DETERMINE STATUS
+        if ($newAmountPaid >= $totalPrice) {
+
+            $paymentStatus = "paid";
+        } else {
+
+            $paymentStatus = "partly paid";
+        }
+
+        // UPDATE CREDIT SALES
+$updateCredit = "
+UPDATE credit_sales
+SET 
+    amount_paid = '$newAmountPaid',
+    status = '$paymentStatus'
+WHERE orderid = '$orderid'
+";
+
+// UPDATE REFRESHMENTS
+$updateRefreshments = "
+UPDATE refreshments
+SET 
+    amount_paid = '$newAmountPaid',
+    pay_status = '$paymentStatus'
+WHERE orderid = '$orderid'
+";
+
+// UPDATE SALOON ORDERS
+$updateSaloon = "
+UPDATE saloon_orders
+SET 
+    status = '$paymentStatus',
+    amount_paid = '$newAmountPaid'
+WHERE id = '$orderid'
+";
+
+// EXECUTE
+$creditUpdated = mysqli_query($con, $updateCredit);
+
+$refreshmentUpdated = mysqli_query($con, $updateRefreshments);
+
+$saloonUpdated = mysqli_query($con, $updateSaloon);
+
+if (
+    $creditUpdated &&
+    $refreshmentUpdated &&
+    $saloonUpdated
+) {
+
+            $_SESSION['success'] = "Payment added successfully.";
+        } else {
+
+            $_SESSION['error'] = "Payment failed.";
+        }
+    }
+
+    echo "<script>window.location.href='credit_sales.php';</script>";
+    exit;
+}
+?>
+<?php
 if (! empty($_SESSION['success'])) {
     echo "<div class='alert alert-success'>" . htmlspecialchars($_SESSION['success']) . "</div>";
     unset($_SESSION['success']);
@@ -36,6 +128,7 @@ if (! empty($_SESSION['error'])) {
                         <th>Quantity</th>
                         <th>Total Price</th>
                         <th>Amount Paid</th>
+                        <th>Total Remaining</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
@@ -43,7 +136,29 @@ if (! empty($_SESSION['error'])) {
                 <tbody>
                     <?php
                     $creditSales = [];
-                    $creditSalesSQL = "SELECT c.*,cu.* FROM credit_sales c INNER JOIN customers cu ON c.customer = cu.unique_id ORDER BY c.id DESC";
+                    $creditSalesSQL = "
+SELECT 
+    c.orderid,
+    c.customer,
+    c.status,
+    c.item,
+    c.item_category,
+    c.quantity,
+    c.totalprice,
+    SUM(c.quantity) AS total_quantity,
+    SUM(c.totalprice) AS total_price,
+    MAX(c.amount_paid) AS amount_paid,
+    COUNT(*) AS total_items,
+    MAX(c.unitprice) AS unitprice,
+    MAX(c.added_on) AS order_date,
+    cu.name,
+    cu.email
+FROM credit_sales c
+INNER JOIN customers cu 
+    ON c.customer = cu.unique_id
+GROUP BY c.orderid
+ORDER BY order_date DESC
+";
                     $creditSalesResult = mysqli_query($con, $creditSalesSQL);
                     while ($row = mysqli_fetch_assoc($creditSalesResult)) {
                         $creditSales[] = $row;
@@ -57,6 +172,107 @@ if (! empty($_SESSION['error'])) {
                     } else {
                         foreach ($creditSales as $creditSale) {
                         ?>
+                            <div class="modal fade"
+                                id="makePayment<?= $creditSale['orderid'] ?>"
+                                tabindex="-1"
+                                aria-hidden="true">
+
+                                <div class="modal-dialog modal-dialog-centered mx-3">
+
+                                    <div class="modal-content">
+
+                                        <div class="modal-header" style="background:#000; color:#fff;">
+
+                                            <h5 class="modal-title">
+                                                Make payment
+                                            </h5>
+
+                                            <button type="button"
+                                                class="btn-close btn-close-white"
+                                                data-bs-dismiss="modal">
+                                            </button>
+
+                                        </div>
+
+                                        <div class="modal-body">
+
+                                            <form method="POST">
+
+                                                <input type="hidden"
+                                                    name="orderid"
+                                                    value="<?= $creditSale['orderid'] ?>">
+
+                                                <div class="mb-3">
+
+                                                    <label class="mb-2">
+                                                        Total Order Amount
+                                                    </label>
+
+                                                    <input type="text"
+                                                        class="form-control"
+                                                        value="₦<?= number_format($creditSale['total_price'], 2) ?>"
+                                                        readonly>
+
+                                                </div>
+
+                                                <div class="mb-3">
+
+                                                    <label class="mb-2">
+                                                        Amount Paid
+                                                    </label>
+
+                                                    <input type="text"
+                                                        class="form-control"
+                                                        value="₦<?= number_format($creditSale['amount_paid'], 2) ?>"
+                                                        readonly>
+
+                                                </div>
+
+                                                <div class="mb-3">
+
+                                                    <label class="mb-2">
+                                                        Remaining Balance
+                                                    </label>
+
+                                                    <input type="text"
+                                                        class="form-control"
+                                                        value="₦<?= number_format($creditSale['total_price'] - $creditSale['amount_paid'], 2) ?>"
+                                                        readonly>
+
+                                                </div>
+
+                                                <div class="mb-3">
+
+                                                    <label class="mb-2">
+                                                        Payment Amount
+                                                    </label>
+
+                                                    <input type="number"
+                                                        name="payment_amount"
+                                                        class="form-control"
+                                                        min="1"
+                                                        max="<?= $creditSale['total_price'] - $creditSale['amount_paid'] ?>"
+                                                        required>
+
+                                                </div>
+
+                                                <button type="submit"
+                                                    name="make_payment"
+                                                    class="btn btn-primary w-100">
+
+                                                    Submit Payment
+
+                                                </button>
+
+                                            </form>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
                             <tr>
                                 <!-- <td>
                                 <?= $creditSale["orderid"] ?>
@@ -65,7 +281,7 @@ if (! empty($_SESSION['error'])) {
                                     <?= $creditSale["name"] ?>
                                 </td>
                                 <td>
-                                    <?= $creditSale["item"] ?>
+                                    <?= $creditSale["total_items"] ?> item(s)
                                 </td>
                                 <td>
                                     <?= $creditSale["item_category"] ?>
@@ -74,13 +290,16 @@ if (! empty($_SESSION['error'])) {
                                     <?= $creditSale["unitprice"] ?>
                                 </td>
                                 <td>
-                                    <?= $creditSale["quantity"] ?>
+                                    <?= $creditSale["total_quantity"] ?>
                                 </td>
                                 <td>
-                                    <?= $creditSale["totalprice"] ?>
+                                    <?= $creditSale["total_price"] ?>
                                 </td>
                                 <td>
                                     <?= $creditSale["amount_paid"] ?>
+                                </td>
+                                <td>
+                                    <?= $creditSale["total_price"] - $creditSale["amount_paid"] ?>
                                 </td>
                                 <td>
                                     <?= $creditSale["status"] ?>
@@ -91,6 +310,10 @@ if (! empty($_SESSION['error'])) {
                                             Actions <i class="dropdown-toggle"></i>
                                         </button>
                                         <div class="dropdown-menu">
+                                            <a href="view_credit_order.php?orderid=<?= $creditSale['orderid'] ?>"
+                                                class="dropdown-item">
+                                                View Order
+                                            </a>
                                             <?php
                                             if ($creditSale["status"] == 'pending') {
                                             ?>
@@ -98,7 +321,15 @@ if (! empty($_SESSION['error'])) {
                                             <?php
                                             }
                                             ?>
-                                            <a href="credit_sales_action.php?action=delete_order&orderid=<?= $creditSale["orderid"] ?>&customer_email=<?= $creditSale["email"] ?>" class="dropdown-item">Delete order</a>
+                                            <?php
+                                            if ($creditSale["status"] != 'pending' && $creditSale["amount_paid"] < $creditSale["total_price"]) {
+                                            ?>
+
+                                                <a class="dropdown-item" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#makePayment<?= $creditSale['orderid'] ?>">Make payment</a>
+                                            <?php
+                                            }
+                                            ?>
+                                            <a href="credit_sales_action.php?action=delete_order&orderid=<?= $creditSale["orderid"] ?>&customer_email=<?= $creditSale["email"] ?>" class="dropdown-item"><i class="bi bi-trash text-danger"></i> Delete order</a>
                                         </div>
                                     </div>
                                 </td>
