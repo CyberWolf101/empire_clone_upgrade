@@ -157,7 +157,7 @@ SELECT
     sales.period,
     sales.total_quantity,
     sales.total_price,
-    COALESCE(payments.amount_paid, 0) AS amount_paid
+    COALESCE(payments.total_paid, 0) AS amount_paid
 
 FROM
 (
@@ -167,26 +167,45 @@ FROM
         SUM(r.totalprice) AS total_price
     FROM refreshments r
     WHERE r.date >= ?
-    AND r.date <= ?
-    AND r.status IN ('processed', 'partly paid')
+      AND r.date <= ?
+      AND r.status IN ('processed', 'partly paid')
     GROUP BY DATE_FORMAT(r.date, '%Y-%m-%d')
 ) sales
+
+LEFT JOIN
+(
+    SELECT 
+        DATE_FORMAT(so.date, '%Y-%m-%d') AS period,
+        SUM(so.cash_amount) AS total_paid
+    FROM saloon_orders so
+    WHERE so.pay_status = 'paid'
+      AND so.date >= ?
+      AND so.date <= ?
+    GROUP BY DATE_FORMAT(so.date, '%Y-%m-%d')
+) payments
+
+ON sales.period = payments.period
+
 ORDER BY sales.period DESC
 LIMIT ? OFFSET ?
 ";
 
 $count_query = "
-    SELECT COUNT(DISTINCT $count_distinct) AS total_rows
+    SELECT COUNT(DISTINCT DATE_FORMAT(date, '%Y-%m-%d')) AS total_rows
     FROM refreshments
-    WHERE date BETWEEN ? AND ? AND status = 'processed'" . ($itemid ? " AND itemid = ?" : "");
+    WHERE date BETWEEN ? AND ?
+";
 
+if ($itemid) {
+    $count_query .= " AND itemid = ?";
+}
 // Execute count query
 $count_stmt = mysqli_prepare($con, $count_query);
 
 if ($itemid) {
     mysqli_stmt_bind_param(
         $count_stmt,
-        "sss",
+        "ssi",
         $from_sql,
         $to_sql,
         $itemid
@@ -202,7 +221,7 @@ if ($itemid) {
 mysqli_stmt_execute($count_stmt);
 $count_result = mysqli_stmt_get_result($count_stmt) or die("Database error: " . mysqli_error($con));
 $total_rows = mysqli_fetch_assoc($count_result)['total_rows'];
-mysqli_stmt_close($count_stmt);
+// mysqli_stmt_close($count_stmt);
 
 $total_pages = ($period === 'daily' || $period === 'weekly') ? ceil($total_rows / $limit) : 1;
 if ($total_pages < 1) {
@@ -216,19 +235,8 @@ $offset = max(0, ($page - 1) * $limit);
 
 // Execute main query
 $stmt = mysqli_prepare($con, $sql_query);
-if ($itemid) {
-    mysqli_stmt_bind_param(
-    $stmt,
-    "ssssii",
-    $from_sql,
-    $to_sql,
-    $from_sql,
-    $to_sql,
-    $limit,
-    $offset
-);
-} else {
-     mysqli_stmt_bind_param(
+
+mysqli_stmt_bind_param(
     $stmt,
     "ssssii",
     $from_sql,
@@ -239,7 +247,9 @@ if ($itemid) {
     $offset
 );
 
-}
+mysqli_stmt_execute($stmt);
+
+$resultset = mysqli_stmt_get_result($stmt);
 mysqli_stmt_execute($stmt);
 $resultset = mysqli_stmt_get_result($stmt) or die("Database error: " . mysqli_error($con));
 
@@ -281,9 +291,7 @@ if (mysqli_num_rows($resultset) > 0) {
         }
         echo "<td>" . htmlspecialchars($row['total_quantity'], ENT_QUOTES, 'UTF-8') . "</td>
               <td>
-Sales: ₦" . number_format($row['total_price'], 2) . "<br>
-Paid: ₦" . number_format(($row['amount_paid'] ?? 0), 2) . "
-</td>";
+₦" . number_format($row['total_price'], 2) . "</td>";
         if ($itemid) {
             echo "<td>" . htmlspecialchars($row['total_left'] ?? '-', ENT_QUOTES, 'UTF-8') . "</td>";
             echo "<td><a href='viewitem.php?s=" . urlencode($row['s']) . "' class='btn btn-sm btn-primary'>View</a></td>";
