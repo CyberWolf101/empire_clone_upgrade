@@ -162,29 +162,32 @@ SELECT
 FROM
 (
     SELECT 
+        r.orderid,
         DATE_FORMAT(r.date, '%Y-%m-%d') AS period,
         SUM(r.quantity) AS total_quantity,
         SUM(r.totalprice) AS total_price
     FROM refreshments r
     WHERE r.date >= ?
       AND r.date <= ?
-      AND r.status IN ('processed', 'partly paid')
-    GROUP BY DATE_FORMAT(r.date, '%Y-%m-%d')
+      AND r.status IN ('processed', 'partly paid','paid')
+    GROUP BY r.orderid, DATE_FORMAT(r.date, '%Y-%m-%d')
 ) sales
 
 LEFT JOIN
 (
     SELECT 
+        so.id AS orderid,
         DATE_FORMAT(so.date, '%Y-%m-%d') AS period,
         SUM(so.cash_amount) AS total_paid
     FROM saloon_orders so
-    WHERE so.pay_status = 'paid'
+    WHERE so.pay_status = 'paid' OR so.pay_status = 'partly paid'
+    AND so.status = 'completed'
       AND so.date >= ?
       AND so.date <= ?
-    GROUP BY DATE_FORMAT(so.date, '%Y-%m-%d')
+    GROUP BY so.id, DATE_FORMAT(so.date, '%Y-%m-%d')
 ) payments
 
-ON sales.period = payments.period
+ON sales.orderid = payments.orderid
 
 ORDER BY sales.period DESC
 LIMIT ? OFFSET ?
