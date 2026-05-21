@@ -152,49 +152,27 @@ if ($period == 'weekly') {
     $count_distinct = "DATE_FORMAT(date, '%Y-%m-%d')";
 }
 
-$sql_query = $itemid ? "
-    SELECT $select_date, r.item, SUM(r.quantity) AS total_quantity, SUM(r.totalprice) AS total_price, r.s,
-           (SELECT total_left FROM refreshments r2
-            WHERE r2.itemid = r.itemid
-            AND DATE_FORMAT(r2.date, '%Y-%m-%d') <= r.date
-            AND r2.date BETWEEN ? AND ?
-            AND r2.status = 'processed'
-            ORDER BY r2.date DESC LIMIT 1) AS total_left,
-            (
-    SELECT SUM(cs.amount_paid)
-    FROM credit_sales cs
-    INNER JOIN saloon_orders so 
-        ON so.id = cs.orderid
-    WHERE cs.itemid = r.itemid
-    AND cs.added_on BETWEEN ? AND ?
-    AND (
-        so.pay_status = 'paid'
-        OR so.pay_status = 'partly paid'
-    )
-) AS amount_paid
+$sql_query = "
+SELECT 
+    sales.period,
+    sales.total_quantity,
+    sales.total_price,
+    COALESCE(payments.amount_paid, 0) AS amount_paid
+
+FROM
+(
+    SELECT 
+        DATE_FORMAT(r.date, '%Y-%m-%d') AS period,
+        SUM(r.quantity) AS total_quantity,
+        SUM(r.totalprice) AS total_price
     FROM refreshments r
-    WHERE r.date >= ? AND r.date <= ? AND (r.status = 'processed' OR r.status = 'partly paid' OR r.status = 'paid') AND r.itemid = ?
-    $group_by
-    ORDER BY $order_by
-    LIMIT ? OFFSET ?
-" : "
-    SELECT $select_date, SUM(r.quantity) AS total_quantity, SUM(r.totalprice) AS total_price,
-            (
-    SELECT SUM(cs.amount_paid)
-    FROM credit_sales cs
-    INNER JOIN saloon_orders so 
-        ON so.id = cs.orderid
-    WHERE cs.itemid = r.itemid
-    AND cs.added_on BETWEEN ? AND ?
-    AND (
-        so.pay_status = 'paid'
-        OR so.pay_status = 'partly paid'
-    )
-) AS amount_paid FROM refreshments r
-    WHERE r.date >= ? AND r.date <= ? AND (r.status = 'processed' OR r.status = 'partly paid' OR r.status = 'paid')
-    $group_by
-    ORDER BY $order_by
-    LIMIT ? OFFSET ?
+    WHERE r.date >= ?
+    AND r.date <= ?
+    AND r.status IN ('processed', 'partly paid')
+    GROUP BY DATE_FORMAT(r.date, '%Y-%m-%d')
+) sales
+ORDER BY sales.period DESC
+LIMIT ? OFFSET ?
 ";
 
 $count_query = "
@@ -204,10 +182,22 @@ $count_query = "
 
 // Execute count query
 $count_stmt = mysqli_prepare($con, $count_query);
+
 if ($itemid) {
-    mysqli_stmt_bind_param($count_stmt, "sss", $from_sql, $to_sql, $itemid);
+    mysqli_stmt_bind_param(
+        $count_stmt,
+        "sss",
+        $from_sql,
+        $to_sql,
+        $itemid
+    );
 } else {
-    mysqli_stmt_bind_param($count_stmt, "ss", $from_sql, $to_sql);
+    mysqli_stmt_bind_param(
+        $count_stmt,
+        "ss",
+        $from_sql,
+        $to_sql
+    );
 }
 mysqli_stmt_execute($count_stmt);
 $count_result = mysqli_stmt_get_result($count_stmt) or die("Database error: " . mysqli_error($con));
@@ -215,28 +205,30 @@ $total_rows = mysqli_fetch_assoc($count_result)['total_rows'];
 mysqli_stmt_close($count_stmt);
 
 $total_pages = ($period === 'daily' || $period === 'weekly') ? ceil($total_rows / $limit) : 1;
-if ($page > $total_pages)
+if ($total_pages < 1) {
+    $total_pages = 1;
+}
+
+if ($page > $total_pages) {
     $page = $total_pages;
-$offset = ($period === 'daily' || $period === 'weekly') ? ($page - 1) * $limit : 0;
+}
+$offset = max(0, ($page - 1) * $limit);
 
 // Execute main query
 $stmt = mysqli_prepare($con, $sql_query);
 if ($itemid) {
     mysqli_stmt_bind_param(
     $stmt,
-    "sssssssii",
+    "ssssii",
     $from_sql,
     $to_sql,
     $from_sql,
     $to_sql,
-    $from_sql,
-    $to_sql,
-    $itemid,
     $limit,
     $offset
 );
 } else {
-    mysqli_stmt_bind_param(
+     mysqli_stmt_bind_param(
     $stmt,
     "ssssii",
     $from_sql,
@@ -289,8 +281,8 @@ if (mysqli_num_rows($resultset) > 0) {
         }
         echo "<td>" . htmlspecialchars($row['total_quantity'], ENT_QUOTES, 'UTF-8') . "</td>
               <td>
-    Sales: ₦" . $row['total_price']. "<br>
-    Paid: ₦" . number_format(($row['amount_paid'] ?? 0), 2) . "
+Sales: ₦" . number_format($row['total_price'], 2) . "<br>
+Paid: ₦" . number_format(($row['amount_paid'] ?? 0), 2) . "
 </td>";
         if ($itemid) {
             echo "<td>" . htmlspecialchars($row['total_left'] ?? '-', ENT_QUOTES, 'UTF-8') . "</td>";

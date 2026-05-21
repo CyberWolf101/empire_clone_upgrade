@@ -54,18 +54,17 @@ WHERE orderid = '$orderid'
 // UPDATE REFRESHMENTS
 $updateRefreshments = "
 UPDATE refreshments
-SET 
-    amount_paid = '$newAmountPaid',
-    pay_status = '$paymentStatus'
+SET amount_paid = '$newAmountPaid'
 WHERE orderid = '$orderid'
 ";
-
+$status = $newAmountPaid >= $totalPrice ? "completed" : "";
 // UPDATE SALOON ORDERS
 $updateSaloon = "
 UPDATE saloon_orders
 SET 
-    status = '$paymentStatus',
-    amount_paid = '$newAmountPaid'
+    pay_status = '$paymentStatus',
+    method = 'Cash',
+    status = '$status'
 WHERE id = '$orderid'
 ";
 
@@ -151,6 +150,7 @@ SELECT
     COUNT(*) AS total_items,
     MAX(c.unitprice) AS unitprice,
     MAX(c.added_on) AS order_date,
+    GROUP_CONCAT(DISTINCT c.item_category SEPARATOR ', ') AS item_categories,
     cu.name,
     cu.email
 FROM credit_sales c
