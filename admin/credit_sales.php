@@ -43,7 +43,7 @@ if (! empty($_SESSION['error'])) {
                 <tbody>
                     <?php
                     $creditSales = [];
-                    $creditSalesSQL = "SELECT c.*,cu.* FROM credit_sales c INNER JOIN customers cu ON c.customer = cu.unique_id";
+                    $creditSalesSQL = "SELECT c.*,cu.* FROM credit_sales c INNER JOIN customers cu ON c.customer = cu.unique_id ORDER BY c.id DESC";
                     $creditSalesResult = mysqli_query($con, $creditSalesSQL);
                     while ($row = mysqli_fetch_assoc($creditSalesResult)) {
                         $creditSales[] = $row;
@@ -62,7 +62,7 @@ if (! empty($_SESSION['error'])) {
                                 <?= $creditSale["orderid"] ?>
                             </td> -->
                                 <td>
-                                    <?= $creditSale["customer"] ?>
+                                    <?= $creditSale["name"] ?>
                                 </td>
                                 <td>
                                     <?= $creditSale["item"] ?>

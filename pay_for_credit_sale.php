@@ -38,7 +38,7 @@ $result = mysqli_query($con, $sql);
 
 if (!$result || mysqli_num_rows($result) == 0) {
 
-    echo "<div class='alert alert-danger'>Credit sale order not found.</div>";
+    echo "<div class='alert alert-danger'>Credit sale order not found or not approved.</div>";
 
     include "footer.php";
 
@@ -52,6 +52,8 @@ $totalAmount = 0;
 
 $customerId = '';
 
+$totalPaid = 0;
+
 while ($row = mysqli_fetch_assoc($result)) {
 
     $items[] = $row;
@@ -59,6 +61,8 @@ while ($row = mysqli_fetch_assoc($result)) {
     $totalAmount += (float)$row['totalprice'];
 
     $customerId = $row['customer'];
+
+    $totalPaid += (float)$row["amount_paid"];
 }
 
 // FETCH CUSTOMER
@@ -77,19 +81,6 @@ $customerName  = $customer['name'] ?? 'Customer';
 $customerEmail = $customer['email'] ?? '';
 $customerPhone = $customer['phone'] ?? '';
 
-// TOTAL ALREADY PAID
-$paidSql = "
-SELECT SUM(amount_paid) AS total_paid
-FROM bank_transfers
-WHERE payment_for='credit_sale'
-AND item_id='$order_ref'
-";
-
-$paidResult = mysqli_query($con, $paidSql);
-
-$paidRow = mysqli_fetch_assoc($paidResult);
-
-$totalPaid = (float)($paidRow['total_paid'] ?? 0);
 
 $balance = $totalAmount - $totalPaid;
 
@@ -155,7 +146,7 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
 
             $insertSql = "
             INSERT INTO bank_transfers (
-            id,
+                id,
                 fileUrl,
                 payment_for,
                 item_id,
@@ -163,7 +154,7 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
                 amount_paid,
                 bank
             ) VALUES (
-             '$order_ref',
+                '$order_ref',
                 '$fileUrl',
                 '$paymentFor',
                 '$order_ref',
@@ -193,13 +184,28 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
                 }
 
                 // UPDATE CREDIT SALES
-
+                
+                $newAmount = $totalPaid + $enteredAmount;
                 $updateSql = "
                 UPDATE credit_sales
-                SET status = '$paymentStatus'
+                SET status = '$paymentStatus',
+                amount_paid = '$newAmount'
                 WHERE orderid = '$order_ref'
                 ";
 
+                $updateRefreshment = "
+                UPDATE refreshments 
+SET amount_paid = amount_paid + '$enteredAmount'
+WHERE orderid = '$order_ref'
+                ";
+                $paid_status = $totalAmount > $newAmount ? "partly paid" : "paid";
+                $updateSaloon = "
+                UPDATE saloon_orders SET pay_status = '$paid_status'
+                WHERE id = '$order_ref'
+                ";
+
+                mysqli_query($con, $updateSaloon);
+                mysqli_query($con, $updateRefreshment);
                 mysqli_query($con, $updateSql);
 
                 echo "

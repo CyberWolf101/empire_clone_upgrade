@@ -74,6 +74,9 @@ ADD
   ADD COLUMN IF NOT EXISTS status VARCHAR(255) NOT NULL DEFAULT 'active'";
   $alterSpecialItemsSQL3 = "ALTER TABLE special_items
   ADD COLUMN IF NOT EXISTS ingredient_quantity VARCHAR(255) NOT NULL DEFAULT '1'";
+  $alterRefreshmentSQL = "ALTER TABLE refreshments
+  ADD COLUMN IF NOT EXISTS amount_paid VARCHAR(255) NOT NULL";
+mysqli_query($con, $alterRefreshmentSQL);
 mysqli_query($con, $alterSpecialItemsSQL3);
 mysqli_query($con, $alterSpecialItemsSQL2);
 mysqli_query($con, $alterSpecialItemsSQL);

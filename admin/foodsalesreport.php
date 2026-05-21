@@ -159,16 +159,39 @@ $sql_query = $itemid ? "
             AND DATE_FORMAT(r2.date, '%Y-%m-%d') <= r.date
             AND r2.date BETWEEN ? AND ?
             AND r2.status = 'processed'
-            ORDER BY r2.date DESC LIMIT 1) AS total_left
+            ORDER BY r2.date DESC LIMIT 1) AS total_left,
+            (
+    SELECT SUM(cs.amount_paid)
+    FROM credit_sales cs
+    INNER JOIN saloon_orders so 
+        ON so.id = cs.orderid
+    WHERE cs.itemid = r.itemid
+    AND cs.added_on BETWEEN ? AND ?
+    AND (
+        so.pay_status = 'paid'
+        OR so.pay_status = 'partly paid'
+    )
+) AS amount_paid
     FROM refreshments r
-    WHERE r.date >= ? AND r.date <= ? AND (r.status = 'processed' OR r.status = 'partly paid' OR r.pay_status = 'paid') AND r.itemid = ?
+    WHERE r.date >= ? AND r.date <= ? AND (r.status = 'processed' OR r.status = 'partly paid' OR r.status = 'paid') AND r.itemid = ?
     $group_by
     ORDER BY $order_by
     LIMIT ? OFFSET ?
 " : "
-    SELECT $select_date, SUM(r.quantity) AS total_quantity, SUM(r.totalprice) AS total_price
-    FROM refreshments r
-    WHERE r.date >= ? AND r.date <= ? AND (r.status = 'processed' OR r.pay_status = 'partly paid' OR r.pay_status = 'paid')
+    SELECT $select_date, SUM(r.quantity) AS total_quantity, SUM(r.totalprice) AS total_price,
+            (
+    SELECT SUM(cs.amount_paid)
+    FROM credit_sales cs
+    INNER JOIN saloon_orders so 
+        ON so.id = cs.orderid
+    WHERE cs.itemid = r.itemid
+    AND cs.added_on BETWEEN ? AND ?
+    AND (
+        so.pay_status = 'paid'
+        OR so.pay_status = 'partly paid'
+    )
+) AS amount_paid FROM refreshments r
+    WHERE r.date >= ? AND r.date <= ? AND (r.status = 'processed' OR r.status = 'partly paid' OR r.status = 'paid')
     $group_by
     ORDER BY $order_by
     LIMIT ? OFFSET ?
@@ -199,9 +222,31 @@ $offset = ($period === 'daily' || $period === 'weekly') ? ($page - 1) * $limit :
 // Execute main query
 $stmt = mysqli_prepare($con, $sql_query);
 if ($itemid) {
-    mysqli_stmt_bind_param($stmt, "sssssii", $from_sql, $to_sql, $from_sql, $to_sql, $itemid, $limit, $offset);
+    mysqli_stmt_bind_param(
+    $stmt,
+    "sssssssii",
+    $from_sql,
+    $to_sql,
+    $from_sql,
+    $to_sql,
+    $from_sql,
+    $to_sql,
+    $itemid,
+    $limit,
+    $offset
+);
 } else {
-    mysqli_stmt_bind_param($stmt, "ssii", $from_sql, $to_sql, $limit, $offset);
+    mysqli_stmt_bind_param(
+    $stmt,
+    "ssssii",
+    $from_sql,
+    $to_sql,
+    $from_sql,
+    $to_sql,
+    $limit,
+    $offset
+);
+
 }
 mysqli_stmt_execute($stmt);
 $resultset = mysqli_stmt_get_result($stmt) or die("Database error: " . mysqli_error($con));
@@ -243,7 +288,10 @@ if (mysqli_num_rows($resultset) > 0) {
             echo "<td>" . htmlspecialchars($row['item'], ENT_QUOTES, 'UTF-8') . "</td>";
         }
         echo "<td>" . htmlspecialchars($row['total_quantity'], ENT_QUOTES, 'UTF-8') . "</td>
-              <td>&#8358;" . htmlspecialchars($row['total_price'], ENT_QUOTES, 'UTF-8') . "</td>";
+              <td>
+    Sales: ₦" . $row['total_price']. "<br>
+    Paid: ₦" . number_format(($row['amount_paid'] ?? 0), 2) . "
+</td>";
         if ($itemid) {
             echo "<td>" . htmlspecialchars($row['total_left'] ?? '-', ENT_QUOTES, 'UTF-8') . "</td>";
             echo "<td><a href='viewitem.php?s=" . urlencode($row['s']) . "' class='btn btn-sm btn-primary'>View</a></td>";

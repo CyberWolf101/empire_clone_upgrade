@@ -138,12 +138,12 @@ if (isset($_GET['order']) && !empty($_GET['order'])) {
           // Build SQL query
           $sql = "
 SELECT 
-    s.*,
+    s.*,r.amount_paid,
     COALESCE(SUM(r.discount_added), 0) AS total_discount
 FROM saloon_orders s
 LEFT JOIN refreshments r 
     ON s.id = r.orderid
-WHERE type='online' AND (
+WHERE s.type='online' AND (
     s.pay_status='pending'
     OR s.pay_status='complete'
     OR s.pay_status='paid'
@@ -199,7 +199,7 @@ WHERE (
             }
             $hasPaid = $row['pay_status'] == 'paid' ? 1 : 0;
             $completeHidden = !$hasPaid ? 'hidden' : '';
-            $completeDisabled = ($status == "processed" || $status == "completed" || $completeHidden) ? 'disabled' : '';
+            $completeDisabled = ($status == "processed" || $status == "completed" || $completeHidden || ($row["amount_paid"] < $row["total_amount"])) ? 'disabled' : '';
             $completeText = ($status == "processed" || $status == "completed") ? 'Completed' : 'Complete';
             $id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
             $date = $has_date && !empty($row['date']) ? date('d/m/Y', strtotime($row['date'])) : '-';
