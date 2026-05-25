@@ -33,7 +33,7 @@ $refreshmentAlter = "ALTER TABLE
   refreshments
 ADD
   COLUMN IF NOT EXISTS discount_added VARCHAR(255) NOT NULL DEFAULT '0'";
-  $creditSalesTableSQL = "
+$creditSalesTableSQL = "
   CREATE TABLE IF NOT EXISTS credit_sales(
   id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   orderid VARCHAR(255) NOT NULL,
@@ -48,19 +48,19 @@ ADD
   added_on DATETIME NOT NULL DEFAULT CURRENT_TIME
   )
   ";
-  $customerDiscountsAlterSQL = "ALTER TABLE customers 
+$customerDiscountsAlterSQL = "ALTER TABLE customers 
   ADD COLUMN IF NOT EXISTS credit_sales_eligibility VARCHAR(255) NOT NULL DEFAULT 'false';";
-  $creditSalesAlterSQL = "ALTER TABLE credit_sales 
+$creditSalesAlterSQL = "ALTER TABLE credit_sales 
   ADD COLUMN IF NOT EXISTS customer VARCHAR(255) NOT NULL";
-  $correction = "ALTER TABLE customers_discounts
+$correction = "ALTER TABLE customers_discounts
   DROP COLUMN IF EXISTS credit_sales_eligibility";
-  $foodMenuAlter = "ALTER TABLE food_menu
+$foodMenuAlter = "ALTER TABLE food_menu
   ADD COLUMN IF NOT EXISTS visibility VARCHAR(255) NOT NULL DEFAULT 'visible'
   ";
-  $foodMenuAlter2 = "ALTER TABLE food_menu
+$foodMenuAlter2 = "ALTER TABLE food_menu
   ADD COLUMN IF NOT EXISTS special_item VARCHAR(255) NOT NULL DEFAULT 'false'
   ";
-  $createSpecialItemsTableSQL = "CREATE TABLE IF NOT EXISTS special_items(
+$createSpecialItemsTableSQL = "CREATE TABLE IF NOT EXISTS special_items(
   id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   item VARCHAR(255) NOT NULL,
   category VARCHAR(255) NOT NULL,
@@ -68,14 +68,29 @@ ADD
   ingredient_name VARCHAR(255) NOT NULL,
   added_on DATETIME NOT NULL DEFAULT CURRENT_TIME
   )";
-  $alterSpecialItemsSQL = "ALTER TABLE special_items
+$alterSpecialItemsSQL = "ALTER TABLE special_items
   ADD COLUMN IF NOT EXISTS item_id VARCHAR(255) NOT NULL";
-  $alterSpecialItemsSQL2 = "ALTER TABLE special_items
+$alterSpecialItemsSQL2 = "ALTER TABLE special_items
   ADD COLUMN IF NOT EXISTS status VARCHAR(255) NOT NULL DEFAULT 'active'";
-  $alterSpecialItemsSQL3 = "ALTER TABLE special_items
+$alterSpecialItemsSQL3 = "ALTER TABLE special_items
   ADD COLUMN IF NOT EXISTS ingredient_quantity VARCHAR(255) NOT NULL DEFAULT '1'";
-  $alterRefreshmentSQL = "ALTER TABLE refreshments
+$alterRefreshmentSQL = "ALTER TABLE refreshments
   ADD COLUMN IF NOT EXISTS amount_paid VARCHAR(255) NOT NULL";
+$createCreditSalesTransfers = "CREATE TABLE IF NOT EXISTS credit_sales_transfers(
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    orderid VARCHAR(255) NOT NULL,
+    fileUrl VARCHAR(255) NOT NULL,
+transfer_date DATETIME NOT NULL DEFAULT CURRENT_TIME,
+amount_paid VARCHAR(255) NOT NULL DEFAULT '0',
+method VARCHAR(255) NOT NULL
+  )";
+  $alterCreditSalesTransfers = "ALTER TABLE credit_sales_transfers
+  ADD COLUMN IF NOT EXISTS status VARCHAR(255) NOT NULL DEFAULT 'pending'";
+  $alterCreditSalesTransfers2 = "ALTER TABLE credit_sales_transfers
+  ADD COLUMN IF NOT EXISTS bank VARCHAR(255) NOT NULL DEFAULT ''";
+mysqli_query($con, $alterCreditSalesTransfers2);
+mysqli_query($con, $alterCreditSalesTransfers);
+mysqli_query($con, $createCreditSalesTransfers);
 mysqli_query($con, $alterRefreshmentSQL);
 mysqli_query($con, $alterSpecialItemsSQL3);
 mysqli_query($con, $alterSpecialItemsSQL2);
@@ -101,150 +116,150 @@ mysqli_query($con, $createCustomerTableSQL);
 </div>
 
 <?php if ($status == "superadmin") { ?>
-<div class="row mb-3">
-    <!-- Earnings (Monthly) Card Example -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-uppercase mb-1">Total Earnings</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">&#8358; <?php echo $grandTotal; ?></div>
-                        <div class="mt-2 mb-0 text-muted text-xs">
-                            <span class="text-success mr-2"><a href="salesreport.php">View Sales Report</a></span>
+    <div class="row mb-3">
+        <!-- Earnings (Monthly) Card Example -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Total Earnings</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">&#8358; <?php echo $grandTotal; ?></div>
+                            <div class="mt-2 mb-0 text-muted text-xs">
+                                <span class="text-success mr-2"><a href="salesreport.php">View Sales Report</a></span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-calendar fa-2x text-warning"></i>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-warning"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <!-- New User Card Example -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-uppercase mb-1">Royal Members</div>
-                        <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800"><?php echo $count_mem; ?></div>
-                        <div class="mt-2 mb-0 text-muted text-xs">
-                            <span class="text-success mr-2"><a href="members.php">View All Members</a></span>
+        <!-- New User Card Example -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Royal Members</div>
+                            <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800"><?php echo $count_mem; ?></div>
+                            <div class="mt-2 mb-0 text-muted text-xs">
+                                <span class="text-success mr-2"><a href="members.php">View All Members</a></span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-users fa-2x text-warning"></i>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-warning"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <!-- Pending Requests Card Example -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-uppercase mb-1">Pending Repair Requests</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $count_repairs; ?></div>
-                        <div class="mt-2 mb-0 text-muted text-xs">
-                            <span class="text-danger mr-2"><a href="repaircenter">Go To Repair Center</a></span>
+        <!-- Pending Requests Card Example -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Pending Repair Requests</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $count_repairs; ?></div>
+                            <div class="mt-2 mb-0 text-muted text-xs">
+                                <span class="text-danger mr-2"><a href="repaircenter">Go To Repair Center</a></span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-comments fa-2x text-warning"></i>
+                        <div class="col-auto">
+                            <i class="fas fa-comments fa-2x text-warning"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <!-- Pending Requests Card Example -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-uppercase mb-1">Total Saloon Appointments</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $count_services; ?></div>
-                        <div class="mt-2 mb-0 text-muted text-xs">
-                            <span class="text-danger mr-2"><a href="onlinebookings.php">View online bookings</a></span>
+        <!-- Pending Requests Card Example -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Total Saloon Appointments</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $count_services; ?></div>
+                            <div class="mt-2 mb-0 text-muted text-xs">
+                                <span class="text-danger mr-2"><a href="onlinebookings.php">View online bookings</a></span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-users fa-2x text-warning"></i>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-warning"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-uppercase mb-1">Inventory updates</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $unread_inv_log; ?></div>
-                        <div class="mt-2 mb-0 text-muted text-xs">
-                            <span class="text-danger mr-2"><a href="inventory_log_details.php">View logs</a></span>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Inventory updates</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $unread_inv_log; ?></div>
+                            <div class="mt-2 mb-0 text-muted text-xs">
+                                <span class="text-danger mr-2"><a href="inventory_log_details.php">View logs</a></span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-warehouse fa-2x text-warning"></i>
+                        <div class="col-auto">
+                            <i class="fas fa-warehouse fa-2x text-warning"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
 
-    <!-- Invoice Example -->
-    <div class="col-xl-12 col-lg-12 mb-4">
-        <div class="card">
-            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-primary">Recent Bookings</h6>
-                <a class="m-0 float-right btn btn-secondary btn-sm" href="onlinebookings.php">View More <i
-                        class="fas fa-chevron-right"></i></a>
-            </div>
+        <!-- Invoice Example -->
+        <div class="col-xl-12 col-lg-12 mb-4">
+            <div class="card">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Bookings</h6>
+                    <a class="m-0 float-right btn btn-secondary btn-sm" href="onlinebookings.php">View More <i
+                            class="fas fa-chevron-right"></i></a>
+                </div>
 
-            <div class="table-responsive">
-                <table class="table align-items-center table-flush">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>SN</th>
-                            <th>Booking ID</th>
-                            <th>Customer</th>
-                            <th>Total Amount</th>
-                            <th>Status</th>
-                            <th>View</th>
-                            <th>Reciept</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <div class="table-responsive">
+                    <table class="table align-items-center table-flush">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>SN</th>
+                                <th>Booking ID</th>
+                                <th>Customer</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                                <th>View</th>
+                                <th>Reciept</th>
+                            </tr>
+                        </thead>
+                        <tbody>
 
-                        <?php
+                            <?php
 
-              $sql = "SELECT  * FROM saloon_orders where section='spa' AND  pay_status='paid'  ORDER BY s DESC";
-              $sql2 = mysqli_query($con, $sql);
-              $i = 1;
-              while ($row = mysqli_fetch_array($sql2)) {
+                            $sql = "SELECT  * FROM saloon_orders where section='spa' AND  pay_status='paid'  ORDER BY s DESC";
+                            $sql2 = mysqli_query($con, $sql);
+                            $i = 1;
+                            while ($row = mysqli_fetch_array($sql2)) {
 
-                $status = $row['status'];
+                                $status = $row['status'];
 
-                //color
-                if ($status == "no") {
-                  $bg = "badge-warning";
-                  $status = "booking";
-                } else if ($status == "processing") {
-                  $bg = "badge-primary";
-                } else if ($status == "cancelled") {
-                  $bg = "badge-danger";
-                } else if ($status == "processed" || $status == "completed") {
-                  $bg = "badge-success";
-                }
+                                //color
+                                if ($status == "no") {
+                                    $bg = "badge-warning";
+                                    $status = "booking";
+                                } else if ($status == "processing") {
+                                    $bg = "badge-primary";
+                                } else if ($status == "cancelled") {
+                                    $bg = "badge-danger";
+                                } else if ($status == "processed" || $status == "completed") {
+                                    $bg = "badge-success";
+                                }
 
 
-                echo " 
+                                echo " 
                <tr>
                         <td> " . $i++ . " </td>
                         <td>" . $row['id'] . " </td>
@@ -254,39 +269,39 @@ mysqli_query($con, $createCustomerTableSQL);
                         <td><a href='viewbooking.php?order=" . $row['id'] . "' class='btn btn-sm btn-primary'> View Booking</a></td>
                         <td><a href='saloonreciept.php?order=" . $row['id'] . "' class='btn btn-sm btn-primary'> Print Receipt </a></td>	
                       </tr>";
-              }
+                            }
 
-              ?>
-                    </tbody>
-                </table>
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer"></div>
             </div>
-            <div class="card-footer"></div>
         </div>
-    </div>
 
     <?php } else {
 
-  $dateString = date("Y-m-d"); // Replace this with your date string
-  $timestamp = strtotime($dateString);
-  $dateInWords = date("F j, Y", $timestamp); // Example format: September 20, 2023
+    $dateString = date("Y-m-d"); // Replace this with your date string
+    $timestamp = strtotime($dateString);
+    $dateInWords = date("F j, Y", $timestamp); // Example format: September 20, 2023
 
 
 
-  ?>
+    ?>
 
 
 
-    <!-- Invoice Example -->
-    <div class="col-xl-12 col-lg-12 mb-4">
-        <div class="card">
-            <div class="card-header py-3 align-items-center justify-content-between" style="text-align:center;">
-                <h5>Hello there,<?php echo $name; ?> &#x1F60A; !</h5>
-                <p>Welcome to your dashboard or welcome abroad rather,whichever rocks your boat hehe<br>
-                    Well,get to work!</p>
-                <div class="card-footer">Today is <?php echo $dateInWords; ?> </div>
+        <!-- Invoice Example -->
+        <div class="col-xl-12 col-lg-12 mb-4">
+            <div class="card">
+                <div class="card-header py-3 align-items-center justify-content-between" style="text-align:center;">
+                    <h5>Hello there,<?php echo $name; ?> &#x1F60A; !</h5>
+                    <p>Welcome to your dashboard or welcome abroad rather,whichever rocks your boat hehe<br>
+                        Well,get to work!</p>
+                    <div class="card-footer">Today is <?php echo $dateInWords; ?> </div>
+                </div>
             </div>
         </div>
-    </div>
 
 
 
@@ -298,5 +313,5 @@ mysqli_query($con, $createCustomerTableSQL);
 
 
     <?php include "footer.php";
-  mysqli_multi_query($con, file_get_contents("../alter.sql"));
-  ?>
+    mysqli_multi_query($con, file_get_contents("../alter.sql"));
+    ?>

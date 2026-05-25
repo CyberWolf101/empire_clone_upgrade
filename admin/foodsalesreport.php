@@ -157,7 +157,7 @@ SELECT
     sales.period,
     sales.total_quantity,
     sales.total_price,
-    COALESCE(payments.total_paid, 0) AS amount_paid
+    COALESCE(payments.saloon_paid, 0) + COALESCE(credit_payments.credit_paid, 0) AS amount_paid
 
 FROM
 (
@@ -167,8 +167,8 @@ FROM
         SUM(r.quantity) AS total_quantity,
         SUM(r.totalprice) AS total_price
     FROM refreshments r
-    WHERE r.date >= ?
-      AND r.date <= ?
+    WHERE DATE(r.date) >= DATE(?)
+      AND DATE(r.date) <= DATE(?)
       AND r.status IN ('processed', 'partly paid','paid')
     GROUP BY r.orderid, DATE_FORMAT(r.date, '%Y-%m-%d')
 ) sales
@@ -178,16 +178,30 @@ LEFT JOIN
     SELECT 
         so.id AS orderid,
         DATE_FORMAT(so.date, '%Y-%m-%d') AS period,
-        SUM(so.cash_amount) AS total_paid
+        SUM(so.cash_amount) AS saloon_paid
     FROM saloon_orders so
-    WHERE so.pay_status = 'paid' OR so.pay_status = 'partly paid'
+    WHERE (so.pay_status = 'paid' OR so.pay_status = 'partly paid')
     AND so.status = 'completed'
-      AND so.date >= ?
-      AND so.date <= ?
+      AND DATE(so.date) >= DATE(?)
+      AND DATE(so.date) <= DATE(?)
     GROUP BY so.id, DATE_FORMAT(so.date, '%Y-%m-%d')
 ) payments
 
 ON sales.orderid = payments.orderid
+
+LEFT JOIN
+(
+    SELECT 
+        cs.orderid,
+        DATE_FORMAT(cs.added_on, '%Y-%m-%d') AS period,
+        SUM(cs.amount_paid) AS credit_paid
+    FROM credit_sales cs
+    WHERE DATE(cs.added_on) >= DATE(?)
+      AND DATE(cs.added_on) <= DATE(?)
+    GROUP BY cs.orderid, DATE_FORMAT(cs.added_on, '%Y-%m-%d')
+) credit_payments
+
+ON sales.orderid = credit_payments.orderid
 
 ORDER BY sales.period DESC
 LIMIT ? OFFSET ?
@@ -241,7 +255,9 @@ $stmt = mysqli_prepare($con, $sql_query);
 
 mysqli_stmt_bind_param(
     $stmt,
-    "ssssii",
+    "ssssssii",
+    $from_sql,
+    $to_sql,
     $from_sql,
     $to_sql,
     $from_sql,

@@ -87,6 +87,17 @@ $balance = $totalAmount - $totalPaid;
 // MINIMUM FIRST PAYMENT (25%)
 $minRequired = 1;
 
+// Load bank accounts for selection
+$bank_accounts = [];
+$bankSql = "SELECT * FROM bank_accounts ORDER BY bank_name";
+$bankRes = mysqli_query($con, $bankSql);
+while ($b = mysqli_fetch_assoc($bankRes)) {
+    $bank_accounts[] = $b;
+}
+
+// If only one bank exists, select it by default (keep as string so '0' is preserved)
+$selected_bank_id = count($bank_accounts) === 1 ? (string)$bank_accounts[0]['id'] : '';
+
 // HANDLE SUBMISSION
 if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
 
@@ -114,125 +125,67 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
 
         $fileUrl = $uploadResult['file_url'];
 
-        $bankId = isset($_POST['bank_account_id'])
-            ? (int)$_POST['bank_account_id']
-            : 0;
+        // ensure credit_sales_transfers has bank and bank_account_id
+        $checkBankCol = mysqli_query($con, "SHOW COLUMNS FROM credit_sales_transfers LIKE 'bank'");
+        if (mysqli_num_rows($checkBankCol) == 0) {
+            mysqli_query($con, "ALTER TABLE credit_sales_transfers ADD COLUMN bank VARCHAR(255) NULL AFTER method");
+        }
+        $checkBankIdCol = mysqli_query($con, "SHOW COLUMNS FROM credit_sales_transfers LIKE 'bank_account_id'");
+        if (mysqli_num_rows($checkBankIdCol) == 0) {
+            mysqli_query($con, "ALTER TABLE credit_sales_transfers ADD COLUMN bank_account_id INT NULL AFTER bank");
+        }
 
+        // Get bank inputs (only select existing bank)
+        // Keep raw POST value so '0' is preserved as a valid selection
+        $bank_account_id = isset($_POST['bank_account_id']) ? (string)$_POST['bank_account_id'] : '';
+        // If no bank selected but only one exists, use it (allow '0')
+        if ($bank_account_id === '' && $selected_bank_id !== '') {
+            $bank_account_id = (string)$selected_bank_id;
+        }
+
+        // Require a bank account id to be selected (accept '0' as a valid id)
+        if ($bank_account_id === '') {
+            $errors[] = "Please select a bank.";
+        }
+
+        // Try to fetch bank details; construct a fallback label so $bank is not empty
         $bank = '';
-
-        $bankSql = "
-            SELECT bank_name
-            FROM bank_accounts
-            WHERE id = '$bankId'
-            ";
-
-        $bankResult = mysqli_query($con, $bankSql);
-
-        if ($bankRow = mysqli_fetch_assoc($bankResult)) {
-
-            $bank = $bankRow['bank_name'];
+        if ($bank_account_id !== '') {
+            $bank_account_id_esc = mysqli_real_escape_string($con, $bank_account_id);
+            $bq = mysqli_query($con, "SELECT bank_name, account_number FROM bank_accounts WHERE id = '$bank_account_id_esc' LIMIT 1");
+            if ($br = mysqli_fetch_assoc($bq)) {
+                $bank = $br['bank_name'] ?? '';
+                if (empty($bank)) {
+                    $bank = $br['account_number'] ?? '';
+                }
+                if (empty($bank)) {
+                    $bank = 'Bank #' . $bank_account_id_esc;
+                }
+            } else {
+                // fallback to id label
+                $bank = 'Bank #' . $bank_account_id_esc;
+            }
         }
-
-        if (empty($bank)) {
-
-            $errors[] = "Please select a valid bank account.";
-        }
-
-        // INSERT PAYMENT
 
         if (empty($errors)) {
-
-            $paymentFor = 'credit_sale';
-
-            $insertSql = "
-            INSERT INTO bank_transfers (
-                id,
-                fileUrl,
-                payment_for,
-                item_id,
-                amount,
-                amount_paid,
-                bank
-            ) VALUES (
-                '$order_ref',
-                '$fileUrl',
-                '$paymentFor',
-                '$order_ref',
-                '$totalAmount',
-                '$enteredAmount',
-                '$bank'
-            )
-            ";
+            $insertSql = "INSERT INTO credit_sales_transfers (orderid, fileUrl, amount_paid, method, bank, bank_account_id) VALUES ('" . mysqli_real_escape_string($con, $order_ref) . "', '" . mysqli_real_escape_string($con, $fileUrl) . "', '" . mysqli_real_escape_string($con, $enteredAmount) . "', 'Bank Transfer', '" . mysqli_real_escape_string($con, $bank) . "', '" . mysqli_real_escape_string($con, $bank_account_id) . "')";
 
             if (!mysqli_query($con, $insertSql)) {
-
                 $errors[] = "Database insertion failed: " . mysqli_error($con);
             } else {
-
-                // CALCULATE NEW TOTAL PAID
-
-                $newAmountPaid = $totalPaid + $enteredAmount;
-
-                // DETERMINE STATUS
-
-                if ($newAmountPaid >= $totalAmount) {
-
-                    $paymentStatus = 'paid';
-                } else {
-
-                    $paymentStatus = 'partly paid';
-                }
-
-                // UPDATE CREDIT SALES
-                
-                $newAmount = $totalPaid + $enteredAmount;
-                $updateSql = "
-                UPDATE credit_sales
-                SET status = '$paymentStatus',
-                amount_paid = '$newAmount'
-                WHERE orderid = '$order_ref'
-                ";
-
-                $updateRefreshment = "
-                UPDATE refreshments 
-SET amount_paid = amount_paid + '$enteredAmount'
-WHERE orderid = '$order_ref'
-                ";
-                $paid_status = $totalAmount > $newAmount ? "partly paid" : "paid";
-                $updateSaloon = "
-                UPDATE saloon_orders SET pay_status = '$paid_status'
-                WHERE id = '$order_ref'
-                ";
-
-                mysqli_query($con, $updateSaloon);
-                mysqli_query($con, $updateRefreshment);
-                mysqli_query($con, $updateSql);
-
-                echo "
-                <div class='alert alert-success'>
-                    Payment submitted successfully! Redirecting...
-                </div>
-
-                <script>
-                    setTimeout(function(){
-
-                        window.location.href='index.php';
-
-                    },3000);
-                </script>
-                ";
-
+                echo "<div class='alert alert-success'>Payment submitted successfully! Redirecting...</div><script>setTimeout(function(){window.location.href='index.php';},3000);</script>";
                 exit;
             }
         }
-    } else {
+    }
+} else {
 
-        if (!empty($uploadResult['errors'])) {
+    if (!empty($uploadResult['errors'])) {
 
-            $errors = array_merge($errors, $uploadResult['errors']);
-        }
+        $errors = array_merge($errors, $uploadResult['errors']);
     }
 }
+
 ?>
 
 <div class="container mt-4 text-white">
@@ -351,18 +304,35 @@ WHERE orderid = '$order_ref'
             <?php if ($totalPaid <= 0): ?>
 
                 <small class="text-warning">
-                    Minimum first payment:
-                    ₦<?php echo number_format($minRequired); ?>
+                    Minimum payment: ₦<?php echo number_format($minRequired); ?>
                 </small>
 
             <?php endif; ?>
 
         </div>
 
-        <?php
-        $showAmountInput = false;
-        include "bank_account_selection.php";
-        ?>
+
+
+        <div class="mb-3">
+            <label>Select Bank</label>
+            <select name="bank_account_id" class="form-control" required>
+                <option value="">-- Select bank --</option>
+                <?php foreach ($bank_accounts as $acct): ?>
+                    <option value="<?= htmlspecialchars($acct['id']); ?>" <?= ($acct['id'] == $selected_bank_id) ? 'selected' : '' ?>><?= htmlspecialchars($acct['bank_name']); ?> - <?= htmlspecialchars($acct['account_number']); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="mb-3">
+
+            <label>Upload Proof of Payment</label>
+
+            <input type="file" name="file" class="form-control" required accept=".pdf,.jpg,.jpeg,.png,.gif">
+
+            <small class="text-muted">Accepted formats: PDF, JPG, PNG, GIF (Max 5MB)</small>
+
+        </div>
+
+        <button type="submit" name="submit_transfer" class="btn btn-primary">Submit Payment</button>
 
     </form>
 
