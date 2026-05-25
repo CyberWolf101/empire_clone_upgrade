@@ -117,7 +117,7 @@ if ($bot2->num_rows > 0) {
                     }
                 }
                 ?>
-                <div class="" id="takeCreditModal" tabindex="-1" role="dialog">
+                <div class="modal fade" id="takeCreditModal" tabindex="-1" role="dialog">
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
                             <form method="post">
