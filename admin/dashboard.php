@@ -1,5 +1,4 @@
 <?php include "header.php";
-
 $unread_sql = "SELECT COUNT(*) AS unread_count FROM inventory_log WHERE read_status = 0";
 $unread_inv_log = mysqli_fetch_assoc(mysqli_query($con, $unread_sql))['unread_count'];
 $createCustomerTableSQL = "
