@@ -81,7 +81,9 @@ while ($row = mysqli_fetch_array($sql2)) {
  
  <script>  
  $(document).ready(function(){  
-      $('#employee_data').DataTable();  
+      $('#employee_data').DataTable({
+          "lengthMenu": [[10, 25, 50, 100, 200], [10, 25, 50, 100, 200]]
+      });  
  });  
  </script>  
  

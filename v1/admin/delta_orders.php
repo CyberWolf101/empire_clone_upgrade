@@ -43,7 +43,9 @@
   <script type="text/javascript" src="datatables.min.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
-    $('#myTable').DataTable();
+    $('#myTable').DataTable({
+        "lengthMenu": [[10, 25, 50, 100, 200], [10, 25, 50, 100, 200]]
+    });
 });
 </script>
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>

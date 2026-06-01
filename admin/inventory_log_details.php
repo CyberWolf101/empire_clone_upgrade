@@ -112,6 +112,7 @@ table.dataTable th, table.dataTable td {
             $('#dataTable').DataTable({
                 "order": [[0, "desc"]], // Sort by Change Date (column 0, descending)
                 "pageLength": 10,
+                "lengthMenu": [[10, 25, 50, 100, 200], [10, 25, 50, 100, 200]],
                 "responsive": true,
                 "scrollX": true,
                 "paging": true

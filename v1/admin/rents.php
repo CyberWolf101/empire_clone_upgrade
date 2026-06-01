@@ -256,6 +256,8 @@ echo"
   <?php include "footer.php" ?>
     <script>  
 $(document).ready(function () {
-    $('#example').DataTable();
+    $('#example').DataTable({
+        "lengthMenu": [[10, 25, 50, 100, 200], [10, 25, 50, 100, 200]]
+    });
 });
  </script>  

@@ -105,6 +105,8 @@ session_start();
  
 <script>
     $(document).ready(function() {
-    $('#myTable').DataTable();
+    $('#myTable').DataTable({
+        "lengthMenu": [[10, 25, 50, 100, 200], [10, 25, 50, 100, 200]]
+    });
 } );
 </script>

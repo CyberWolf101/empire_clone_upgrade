@@ -62,8 +62,12 @@
  <!-- Page level custom scripts -->
   <script>
     $(document).ready(function () {
-      $('#dataTable').DataTable(); // ID From dataTable 
-      $('#dataTableHover').DataTable(); // ID From dataTable with Hover
+      $('#dataTable').DataTable({
+          "lengthMenu": [[10, 25, 50, 100, 200], [10, 25, 50, 100, 200]]
+      }); // ID From dataTable 
+      $('#dataTableHover').DataTable({
+          "lengthMenu": [[10, 25, 50, 100, 200], [10, 25, 50, 100, 200]]
+      }); // ID From dataTable with Hover
     });
     
       $(document).ready(function () {
