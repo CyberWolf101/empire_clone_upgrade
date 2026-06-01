@@ -136,7 +136,7 @@ AND t.status = 'paid'
     cu.email
 FROM credit_sales c
 INNER JOIN customers cu 
-    ON c.customer = cu.unique_id
+    ON c.customer = cu.unique_id OR c.customer = cu.name
 GROUP BY c.orderid
 ORDER BY order_date DESC
 ";

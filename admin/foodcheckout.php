@@ -77,7 +77,7 @@ $insert = mysqli_query($con, "UPDATE saloon_orders SET total_amount='$total_all'
       $bot = "SELECT all* from refreshments where orderid='$saloon' ";
       $bot2 = mysqli_query($con, $bot);
       if (mysqli_affected_rows($con) > 0) {
-        ?>
+      ?>
 
 
 
@@ -114,8 +114,6 @@ $insert = mysqli_query($con, "UPDATE saloon_orders SET total_amount='$total_all'
 		                <input type='text' name='foodid' value='" . $row['s'] . "' required hidden>  
                         <input type='submit' name='delete' value='Delete Item' class='btn btn-sm btn-danger' ></form></td>	
                         </tr>";
-
-
               }
               ?>
 
@@ -161,10 +159,10 @@ $insert = mysqli_query($con, "UPDATE saloon_orders SET total_amount='$total_all'
               style="width:100%;">
               <option value="" selected>- Select Regular Customer -</option>
               <?php
-              $sql = "SELECT * from saloon_orders where name!='' GROUP By name";
+              $sql = "SELECT DISTINCT unique_id, name FROM customers WHERE name != '' ORDER BY name";
               $sql2 = mysqli_query($con, $sql);
               while ($row = mysqli_fetch_array($sql2)) {
-                echo '<option value="' . $row['name'] . '">' . $row['name'] . '</option>';
+                echo '<option value="' . $row['unique_id'] . '">' . htmlspecialchars($row['name']) . ' (' . htmlspecialchars($row['unique_id']) . ')</option>';
               }
               ?>
             </select>
@@ -185,7 +183,71 @@ $insert = mysqli_query($con, "UPDATE saloon_orders SET total_amount='$total_all'
 
           <p style="text-align:center;"><input type='submit' name='pay' value='Complete Order' class='btn btn-primary'> -->
           <!-- ************** FORMER LOGIC ************** -->
+          <script>
+            function setCreditEligibilityStatus(isEligible, message) {
+              var creditChk = document.getElementById('credit');
+              var creditAmt = document.getElementById('creditAmount');
+              var overridePanel = document.getElementById('creditOverridePanel');
+              var overrideMessage = document.getElementById('creditOverrideMessage');
+              var overrideFlag = document.getElementById('creditOverrideFlag');
+              if (!creditChk || !overridePanel || !overrideMessage || !overrideFlag) return;
 
+              if (isEligible) {
+                creditChk.disabled = false;
+                overridePanel.style.display = 'none';
+                overrideMessage.textContent = '';
+                overrideFlag.value = '0';
+              } else {
+                creditChk.checked = false;
+                creditChk.disabled = true;
+                if (creditAmt) {
+                  creditAmt.style.display = 'none';
+                }
+                overridePanel.style.display = 'block';
+                overrideMessage.textContent = message || 'Selected customer is not eligible for credit sales.';
+                overrideFlag.value = '0';
+              }
+            }
+
+            function checkCustomerEligibility(customerId) {
+              if (!customerId) {
+                setCreditEligibilityStatus(true);
+                return;
+              }
+              fetch('customer_eligibility_check.php', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ customer_id: customerId })
+                })
+                .then(function(res) {
+                  return res.json();
+                })
+                .then(function(data) {
+                  if (data.status === true) {
+                    setCreditEligibilityStatus(data.eligible === true, data.eligible === false ? 'Selected customer is not eligible for credit sales.' : '');
+                  } else {
+                    setCreditEligibilityStatus(true);
+                  }
+                })
+                .catch(function() {
+                  setCreditEligibilityStatus(true);
+                });
+            }
+
+            var oldCustomerSelect = document.getElementById('oldCustomer');
+            if (oldCustomerSelect) {
+              function handleOldCustomerChange() {
+                checkCustomerEligibility(oldCustomerSelect.value);
+              }
+              oldCustomerSelect.addEventListener('change', handleOldCustomerChange);
+              oldCustomerSelect.addEventListener('input', handleOldCustomerChange);
+              if (window.jQuery) {
+                $(oldCustomerSelect).on('select2:select select2:unselect', handleOldCustomerChange);
+              }
+            }
+          </script>
           <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
             <h6 class="m-0 font-weight-bold text-warning">Select Payment Methods</h6>
           </div>
@@ -211,6 +273,20 @@ $insert = mysqli_query($con, "UPDATE saloon_orders SET total_amount='$total_all'
               <input type="number" step="0.01" min="0" class="form-control mt-1" id="payTransferAmount"
                 name="payment[transfer][amount]" placeholder="Enter Transfer amount" style="display:none;">
             </div>
+            <div class="form-check mt-2">
+              <input type="checkbox" id="credit" name="payment[credit][enabled]" class="form-check-input">
+              <label class="form-check-label" for="credit">Credit</label>
+              <input type="number" step="0.01" min="0" class="form-control mt-1" id="creditAmount"
+                name="payment[credit][amount]" placeholder="Enter Credit part payment(Leave empty if none)" style="display:none;">
+            </div>
+            <div id="creditOverridePanel" style="display:none; margin-top:10px;">
+              <p class="mb-2 text-danger">This customer is not eligible for credit sales. Enter admin password to enable credit.</p>
+              <input type="password" id="adminCreditPassword" name="admin_credit_password" class="form-control mb-2"
+                placeholder="Admin password">
+              <button type="button" id="enableCreditOverride" class="btn btn-sm btn-warning">Enable Credit</button>
+              <div id="creditOverrideMessage" class="text-danger small mt-2"></div>
+            </div>
+            <input type="hidden" id="creditOverrideFlag" name="credit_override" value="0">
           </div>
 
           <p style="text-align:center;">
@@ -218,20 +294,193 @@ $insert = mysqli_query($con, "UPDATE saloon_orders SET total_amount='$total_all'
           </p>
 
           <script>
-            function toggleAmountInput(checkboxId, inputId) {
-              document.getElementById(checkboxId).addEventListener('change', function () {
+            function toggleAmountInput(checkboxId, inputId, checkboxType) {
+              document.getElementById(checkboxId).addEventListener('change', function() {
                 document.getElementById(inputId).style.display = this.checked ? 'block' : 'none';
               });
             }
 
-            toggleAmountInput('payPos', 'payPosAmount');
-            toggleAmountInput('payCash', 'payCashAmount');
-            toggleAmountInput('payTransfer', 'payTransferAmount');
+            toggleAmountInput('payPos', 'payPosAmount', 'POS');
+            toggleAmountInput('payCash', 'payCashAmount', 'Cash');
+            toggleAmountInput('payTransfer', 'payTransferAmount', "Transfer");
+            toggleAmountInput('credit', 'creditAmount', "Credit");
+          </script>
+
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              var grandTotal = <?php echo json_encode($total_all); ?>;
+              // Only make other methods disabled when Credit is selected.
+              var others = [
+                {chk: 'payPos', amt: 'payPosAmount', names: ['payment[pos][enabled]', 'payment[pos][amount]']},
+                {chk: 'payCash', amt: 'payCashAmount', names: ['payment[cash][enabled]', 'payment[cash][amount]']},
+                {chk: 'payTransfer', amt: 'payTransferAmount', names: ['payment[transfer][enabled]', 'payment[transfer][amount]']}
+              ];
+
+              var paymentContainer = document.getElementById('paymentMethods');
+              if (!paymentContainer) return;
+              var form = paymentContainer.closest('form') || document.querySelector('form');
+              var creditChk = document.getElementById('credit');
+              var creditAmt = document.getElementById('creditAmount');
+
+              function addHidden(name, value) {
+                var h = document.querySelector('input[type="hidden"][name="' + name + '"]');
+                if (!h) { h = document.createElement('input'); h.type = 'hidden'; h.name = name; form.appendChild(h); }
+                h.value = value;
+              }
+
+              function removeHidden(name) {
+                var h = document.querySelector('input[type="hidden"][name="' + name + '"]');
+                if (h) h.parentNode.removeChild(h);
+              }
+
+              function disableOthers() {
+                others.forEach(function(o) {
+                  var chk = document.getElementById(o.chk);
+                  var amt = document.getElementById(o.amt);
+                  if (chk) { chk.checked = false; chk.disabled = true; }
+                  if (amt) { amt.style.display = 'none'; amt.value = '0'; amt.disabled = true; }
+                  o.names.forEach(function(n) { addHidden(n, '0'); });
+                });
+              }
+
+              function enableOthers() {
+                others.forEach(function(o) {
+                  var chk = document.getElementById(o.chk);
+                  var amt = document.getElementById(o.amt);
+                  if (chk) { chk.disabled = false; }
+                  if (amt) { amt.disabled = false; amt.style.display = (chk && chk.checked) ? 'block' : 'none'; }
+                  o.names.forEach(function(n) { removeHidden(n); });
+                });
+              }
+
+              function validateAdminPassword(password) {
+                return fetch('validate_admin_password.php', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ password: password })
+                })
+                .then(function(res) {
+                  return res.json();
+                });
+              }
+
+              function applyAdminOverride() {
+                var creditChk = document.getElementById('credit');
+                var creditAmt = document.getElementById('creditAmount');
+                var overrideFlag = document.getElementById('creditOverrideFlag');
+                var overrideMessage = document.getElementById('creditOverrideMessage');
+                var passwordInput = document.getElementById('adminCreditPassword');
+
+                if (!passwordInput || !passwordInput.value.trim()) {
+                  overrideMessage.textContent = 'Admin password is required to enable credit.';
+                  return;
+                }
+
+                validateAdminPassword(passwordInput.value.trim())
+                  .then(function(result) {
+                    if (result.valid === true) {
+                      overrideMessage.textContent = 'Admin password validated. Credit is enabled.';
+                      if (creditChk) {
+                        creditChk.disabled = false;
+                        creditChk.checked = true;
+                        creditChk.dispatchEvent(new Event('change'));
+                      }
+                      if (creditAmt) {
+                        creditAmt.style.display = 'block';
+                        creditAmt.disabled = false;
+                        creditAmt.readOnly = false;
+                      }
+                      if (overrideFlag) {
+                        overrideFlag.value = '1';
+                      }
+                    } else {
+                      overrideMessage.textContent = result.message || 'Invalid admin password. Credit override denied.';
+                      if (overrideFlag) {
+                        overrideFlag.value = '0';
+                      }
+                    }
+                  })
+                  .catch(function() {
+                    overrideMessage.textContent = 'Unable to validate admin password. Please try again.';
+                    if (overrideFlag) {
+                      overrideFlag.value = '0';
+                    }
+                  });
+              }
+
+              if (!creditChk) return;
+              var overrideButton = document.getElementById('enableCreditOverride');
+
+              // Do not pre-check credit; only act when user selects it
+              creditChk.addEventListener('change', function() {
+                if (this.checked) {
+                  if (creditAmt) {
+                    creditAmt.style.display = 'block';
+                    creditAmt.disabled = false;
+                    creditAmt.readOnly = false;
+                    creditAmt.value = grandTotal;
+                  }
+                  disableOthers();
+                  addHidden('payment[credit][enabled]', '1');
+                } else {
+                  if (creditAmt) {
+                    creditAmt.style.display = 'none';
+                    creditAmt.readOnly = false;
+                    creditAmt.value = '';
+                  }
+                  enableOthers();
+                  removeHidden('payment[credit][enabled]');
+                }
+              });
+
+              if (overrideButton) {
+                overrideButton.addEventListener('click', applyAdminOverride);
+              }
+
+              var oldCustomerSelect = document.getElementById('oldCustomer');
+              if (oldCustomerSelect) {
+                function handleOldCustomerChange() {
+                  checkCustomerEligibility(oldCustomerSelect.value);
+                }
+                oldCustomerSelect.addEventListener('change', handleOldCustomerChange);
+                oldCustomerSelect.addEventListener('input', handleOldCustomerChange);
+                if (window.jQuery) {
+                  $(oldCustomerSelect).on('select2:select select2:unselect', handleOldCustomerChange);
+                }
+                if (oldCustomerSelect.value) {
+                  checkCustomerEligibility(oldCustomerSelect.value);
+                }
+              }
+
+              var customerTypeSelect = document.getElementById('customerType');
+              if (customerTypeSelect) {
+                customerTypeSelect.addEventListener('change', function() {
+                  if (this.value === 'old') {
+                    if (oldCustomerSelect && oldCustomerSelect.value) {
+                      checkCustomerEligibility(oldCustomerSelect.value);
+                    } else {
+                      setCreditEligibilityStatus(true);
+                    }
+                  } else {
+                    setCreditEligibilityStatus(true);
+                  }
+                });
+              }
+
+              // Initialize amount fields visibility for non-credit checkboxes
+              others.forEach(function(o) {
+                var chk = document.getElementById(o.chk);
+                var amt = document.getElementById(o.amt);
+                if (chk && amt) { amt.style.display = chk.checked ? 'block' : 'none'; }
+              });
+            });
           </script>
 
         </form>
         </p>
-      </div>
+        </div>
     </div>
   </div>
 
@@ -242,7 +491,7 @@ $insert = mysqli_query($con, "UPDATE saloon_orders SET total_amount='$total_all'
 
 
   <script>
-    document.getElementById('customerType').addEventListener('change', function () {
+    document.getElementById('customerType').addEventListener('change', function() {
       var selectedValue = this.value;
       var newCustomerFields = document.getElementById('newCustomerFields');
       var oldCustomerFields = document.getElementById('oldCustomerFields');
@@ -257,6 +506,10 @@ $insert = mysqli_query($con, "UPDATE saloon_orders SET total_amount='$total_all'
         newCustomerFields.style.display = 'none';
         oldCustomerFields.style.display = 'none';
       }
+
+      if (selectedValue !== 'old' && typeof setCreditEligibilityStatus === 'function') {
+        setCreditEligibilityStatus(true);
+      }
     });
 
 
@@ -264,13 +517,13 @@ $insert = mysqli_query($con, "UPDATE saloon_orders SET total_amount='$total_all'
     const kitCheckboxNo = document.getElementById('kitCheckboxNo');
     const myForm = document.getElementById('myForm');
 
-    kitCheckboxYes.addEventListener('change', function () {
+    kitCheckboxYes.addEventListener('change', function() {
       if (this.checked) {
         myForm.submit();
       }
     });
 
-    kitCheckboxNo.addEventListener('change', function () {
+    kitCheckboxNo.addEventListener('change', function() {
       if (this.checked) {
         myForm.submit();
       }

@@ -157,11 +157,19 @@
     <?php
     include "../connect.php";
 
+    $creditMode = false;
+    $paymentType = 'Payment';
+    $amountPaid = 0;
+    $amountDue = 0;
+    $items = [];
+
     if (isset($_GET['order'])) {
         $order = $_GET['order'];
         $sql = "SELECT * from saloon_orders where id ='$order'";
         $sql2 = mysqli_query($con, $sql);
-        while ($row = mysqli_fetch_array($sql2)) {
+
+        if (mysqli_num_rows($sql2) > 0) {
+            $row = mysqli_fetch_array($sql2);
             $type = $row["bookingtype"];
             $kit = $row["saloonkit"];
             $customername = $row["name"];
@@ -169,9 +177,58 @@
             $date = $row["date"];
             $total = $row["total_amount"];
             $location = $row["type"];
+            $paymentType = $row["method"] ?: 'Payment';
+
+            $sql = "SELECT * from refreshments where orderid='$order'";
+            $sql2 = mysqli_query($con, $sql);
+            if (mysqli_num_rows($sql2) > 0) {
+                while ($row = mysqli_fetch_array($sql2)) {
+                    $items[] = [
+                        'item' => $row['item'],
+                        'quantity' => $row['quantity'],
+                        'price' => $row['totalprice'],
+                    ];
+                }
+            }
+        } elseif (isset($_GET['credit']) && $_GET['credit'] == '1') {
+            $creditMode = true;
+            $sql = "SELECT * from credit_sales cs LEFT JOIN customers c ON cs.customer = c.unique_id OR cs.customer = c.name where cs.orderid='$order'";
+            $sql2 = mysqli_query($con, $sql);
+            if (mysqli_num_rows($sql2) > 0) {
+                $amountPaid = 0;
+                $total = 0;
+                while ($row = mysqli_fetch_array($sql2)) {
+                    $customername = $row['name'] ?? 'Customer';
+                    $customerphone = $row['phone'] ?? '';
+                    $items[] = [
+                        'item' => $row['item'] ?: 'Credit Sale',
+                        'quantity' => $row['quantity'] ?: 1,
+                        'price' => $row['totalprice'],
+                    ];
+                    $total += (float)$row['totalprice'];
+                }
+
+                $transferSql = "SELECT SUM(amount_paid) AS paid_amount FROM credit_sales WHERE orderid = '$order'";
+                $transferResult = mysqli_query($con, $transferSql);
+                if ($transferResult && mysqli_num_rows($transferResult) > 0) {
+                    $paidRow = mysqli_fetch_assoc($transferResult);
+                    $amountPaid = (float)($paidRow['paid_amount'] ?? 0);
+                }
+
+                $paymentType = 'Credit';
+                $amountDue = max(0, $total - $amountPaid);
+                $date = date('Y-m-d H:i:s');
+            } else {
+                header("location:dashboard.php");
+                exit();
+            }
+        } else {
+            header("location:dashboard.php");
+            exit();
         }
     } else {
         header("location:dashboard.php");
+        exit();
     }
     ?>
 
@@ -191,39 +248,50 @@
         </center>
 
         <div class="overflow-auto">
-            <table class='table table-condensed table-hover table-striped' width='300px' border="0" cellspacing='2'
-                data-toggle='bootgrid'>
-                <thead>
-                    <tr bgcolor="#CCCCCC">
-                        <th data-column-id='employee_name' style="width:40px;">Item</th>
-                        <th data-column-id='employee_name' style="width:20px;">Quantity</th>
-                        <th data-column-id='employee_name' style="width:20px;">Price</th>
-                </thead>
-                <?php
-                $sql = "SELECT * from refreshments where orderid='$order'";
-                $sql2 = mysqli_query($con, $sql);
-
-                if (mysqli_num_rows($sql2) > 0) {
-                    $name = [];
-                    $surname = [];
-                    $address = [];
-
-                    while ($row = mysqli_fetch_array($sql2)) {
-                        echo "<tr bgcolor='#fff'>
-<td width='40px'>" . $row['item'] . "</td>
-<td width='20px'>" . $row['quantity'] . "</td>
-<td width='20px'>&#8358;" . $row['totalprice'] . "</td>
-<tr>";
+            <?php if ($creditMode && $amountDue > 0): ?>
+                <div style="padding: 15px; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; border-radius: 4px; margin-bottom: 15px;">
+                    <p style="margin:0; font-weight:bold;">Part amount paid</p>
+                    <p style="margin:0;">This order has not been fully paid yet. A full receipt will only be available once the full order amount has been completed.</p>
+                </div>
+            <?php else: ?>
+                <table class='table table-condensed table-hover table-striped' width='300px' border="0" cellspacing='2'
+                    data-toggle='bootgrid'>
+                    <thead>
+                        <tr bgcolor="#CCCCCC">
+                            <th data-column-id='employee_name' style="width:40px;">Item</th>
+                            <th data-column-id='employee_name' style="width:20px;">Quantity</th>
+                            <th data-column-id='employee_name' style="width:20px;">Price</th>
+                    </thead>
+                    <?php
+                    if (count($items) > 0) {
+                        foreach ($items as $itemRow) {
+                            echo "<tr bgcolor='#fff'>
+    <td width='40px'>" . htmlspecialchars($itemRow['item']) . "</td>
+    <td width='20px'>" . htmlspecialchars($itemRow['quantity']) . "</td>
+    <td width='20px'>&#8358;" . htmlspecialchars($itemRow['price']) . "</td>
+    </tr>";
+                        }
+                    } else {
+                        echo "<tr bgcolor='#fff'><td colspan='3'>No items found</td></tr>";
                     }
-                }
-                ?>
-            </table>
+                    ?>
+                </table>
+            <?php endif; ?>
         </div>
         </p>
         <div style="width:300px;">
             <center>
                 <p style="font-weight:900;">Grand Total: &#8358;<?php echo $total; ?> </p>
-                <p style=""><i>Thank you for your patronage</i></p>
+                <?php if ($creditMode): ?>
+                    <p style="font-weight:900;">Payment Type: Credit</p>
+                    <p style="font-weight:900;">Amount Paid: &#8358;<?php echo number_format($amountPaid, 2); ?></p>
+                    <?php if ($amountDue > 0): ?>
+                        <p style="font-weight:900;">Amount Due: &#8358;<?php echo number_format($amountDue, 2); ?></p>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <p style="font-weight:900;">Payment Type: <?php echo htmlspecialchars($paymentType); ?></p>
+                <?php endif; ?>
+                <p style="font-style: italic; font-size: 9px; margin: 2px 0;">Thank you for your patronage</p>
                 <a href="dashboard.php" class="con">Done</a>
             </center>
         </div>
@@ -231,7 +299,9 @@
 
     <script type="text/javascript">
         window.onload = function () {
-            window.print();
+            <?php if (!($creditMode && $amountDue > 0)): ?>
+                window.print();
+            <?php endif; ?>
         };
         function goBack() {
             window.history.back();

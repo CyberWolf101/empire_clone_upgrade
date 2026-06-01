@@ -4,3 +4,13 @@
 [12-May-2026 13:06:46 Europe/Berlin] PHP Warning:  session_start(): Failed to read session data: files (path: ../sessions) in C:\xampp\htdocs\empire_clone_upgrade\admin\header.php on line 10
 [12-May-2026 13:06:53 Europe/Berlin] PHP Warning:  session_start(): open(../sessions\sess_cs53kcfl59591fcbdfjogqkrvh, O_RDWR) failed: No such file or directory (2) in C:\xampp\htdocs\empire_clone_upgrade\admin\header.php on line 10
 [12-May-2026 13:06:53 Europe/Berlin] PHP Warning:  session_start(): Failed to read session data: files (path: ../sessions) in C:\xampp\htdocs\empire_clone_upgrade\admin\header.php on line 10
+[25-May-2026 16:37:14 Europe/Berlin] PHP Warning:  session_start(): open(../sessions\sess_hlrq2kb8h5b7a6eclgfbmei1so, O_RDWR) failed: No such file or directory (2) in C:\xampp\htdocs\empire_clone_upgrade\admin\header.php on line 10
+[25-May-2026 16:37:14 Europe/Berlin] PHP Warning:  session_start(): Failed to read session data: files (path: ../sessions) in C:\xampp\htdocs\empire_clone_upgrade\admin\header.php on line 10
+[25-May-2026 16:37:15 Europe/Berlin] PHP Warning:  session_start(): open(../sessions\sess_hlrq2kb8h5b7a6eclgfbmei1so, O_RDWR) failed: No such file or directory (2) in C:\xampp\htdocs\empire_clone_upgrade\admin\header.php on line 10
+[25-May-2026 16:37:15 Europe/Berlin] PHP Warning:  session_start(): Failed to read session data: files (path: ../sessions) in C:\xampp\htdocs\empire_clone_upgrade\admin\header.php on line 10
+[01-Jun-2026 10:55:48 Europe/Berlin] PHP Warning:  session_start(): open(../sessions\sess_qtelrpt2iq0390jm6959cdj4mt, O_RDWR) failed: No such file or directory (2) in C:\xampp\htdocs\empire_clone_upgrade\admin\header.php on line 10
+[01-Jun-2026 10:55:48 Europe/Berlin] PHP Warning:  session_start(): Failed to read session data: files (path: ../sessions) in C:\xampp\htdocs\empire_clone_upgrade\admin\header.php on line 10
+[01-Jun-2026 10:55:49 Europe/Berlin] PHP Warning:  session_start(): open(../sessions\sess_qtelrpt2iq0390jm6959cdj4mt, O_RDWR) failed: No such file or directory (2) in C:\xampp\htdocs\empire_clone_upgrade\admin\header.php on line 10
+[01-Jun-2026 10:55:49 Europe/Berlin] PHP Warning:  session_start(): Failed to read session data: files (path: ../sessions) in C:\xampp\htdocs\empire_clone_upgrade\admin\header.php on line 10
+[01-Jun-2026 10:55:50 Europe/Berlin] PHP Warning:  session_start(): open(../sessions\sess_qtelrpt2iq0390jm6959cdj4mt, O_RDWR) failed: No such file or directory (2) in C:\xampp\htdocs\empire_clone_upgrade\admin\header.php on line 10
+[01-Jun-2026 10:55:50 Europe/Berlin] PHP Warning:  session_start(): Failed to read session data: files (path: ../sessions) in C:\xampp\htdocs\empire_clone_upgrade\admin\header.php on line 10

@@ -8,8 +8,80 @@ if (isset($_POST['pay'])) {
             $totalEntered += (float) $data['amount'];
         }
     }
+    // If user selected Credit, normalize payment array so existing processing can handle it
+    $isCreditSelected = false;
+    $creditAmount = 0.0;
+    if (isset($_POST['payment']['credit'])) {
+        $creditData = $_POST['payment']['credit'];
+        if (isset($creditData['amount']) && is_numeric($creditData['amount'])) {
+            $creditAmount = (float) $creditData['amount'];
+        }
+        // consider either enabled flag or a non-zero amount as selection
+        if (!empty($creditData['enabled']) || $creditAmount > 0) {
+            $isCreditSelected = true;
+        }
+    }
 
-    if ($totalEntered != $total_all) {
+    if ($isCreditSelected) {
+        // ensure other methods are zeroed out so we don't change their handling elsewhere
+        $_POST['payment']['pos'] = ['enabled' => 0, 'amount' => '0'];
+        $_POST['payment']['cash'] = ['enabled' => 0, 'amount' => '0'];
+        $_POST['payment']['transfer'] = ['enabled' => 0, 'amount' => '0'];
+
+        // preserve entered credit amount, or 0 if empty/invalid
+        $_POST['payment']['credit']['amount'] = (string) $creditAmount;
+        $_POST['payment']['credit']['enabled'] = 1;
+
+        // rebuild $payments and $totalEntered from normalized POST
+        $payments = $_POST['payment'] ?? [];
+        $totalEntered = 0;
+        foreach ($payments as $method => $data) {
+            if (!empty($data['enabled']) && is_numeric($data['amount'])) {
+                $totalEntered += (float) $data['amount'];
+            }
+        }
+    }
+
+    $creditOverrideRequested = isset($_POST['credit_override']) && $_POST['credit_override'] === '1';
+    $adminCreditPassword = trim($_POST['admin_credit_password'] ?? '');
+    $creditValidationError = '';
+
+    if ($isCreditSelected && isset($_POST['customertype']) && $_POST['customertype'] === 'old' && !empty($_POST['customer'])) {
+        $customerName = $_POST['customer'];
+        $stmt = $con->prepare("SELECT credit_sales_eligibility FROM customers WHERE name = ? LIMIT 1");
+        $stmt->bind_param("s", $customerName);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $eligible = false;
+        if ($row = $result->fetch_assoc()) {
+            $eligible = in_array(strtolower(trim((string)$row['credit_sales_eligibility'])), ['1', 'yes', 'true', 'eligible'], true);
+        }
+        $stmt->close();
+
+        if (!$eligible) {
+            if ($creditOverrideRequested) {
+                $stmt = $con->prepare("SELECT COUNT(*) AS valid_admin FROM admin WHERE password = ? AND status IN ('superadmin', 'subadmin')");
+                $stmt->bind_param("s", $adminCreditPassword);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $validAdmin = 0;
+                if ($row = $result->fetch_assoc()) {
+                    $validAdmin = (int)$row['valid_admin'];
+                }
+                $stmt->close();
+
+                if ($validAdmin === 0) {
+                    $creditValidationError = 'Invalid admin password. Credit override denied.';
+                }
+            } else {
+                $creditValidationError = 'Selected customer is not eligible for credit sales. Use admin override to enable credit.';
+            }
+        }
+    }
+
+    if ($creditValidationError !== '') {
+        echo "<script>alert('" . addslashes($creditValidationError) . "');</script>";
+    } elseif ($totalEntered != $total_all) {
         echo "<script>alert('Error: Payment amounts must equal Grand Total (₦$total_all). You entered ₦$totalEntered');</script>";
     } else {
         $customertype = $_POST['customertype'];
@@ -24,12 +96,12 @@ if (isset($_POST['pay'])) {
         $datetime = date('Y-m-d H:i:s');
 
         if ($customertype == "old") {
-            $sql = "SELECT * FROM saloon_orders WHERE name = ?";
+            $sql = "SELECT name, phone, email FROM customers WHERE unique_id = ? OR name = ? LIMIT 1";
             $stmt = $con->prepare($sql);
-            $stmt->bind_param("s", $customer_id);
+            $stmt->bind_param("ss", $customer_id, $customer_id);
             $stmt->execute();
             $sql2 = $stmt->get_result();
-            while ($row = $sql2->fetch_assoc()) {
+            if ($row = $sql2->fetch_assoc()) {
                 $customername = $row['name'];
                 $customerphone = $row['phone'];
                 $customermail = $row['email'];
@@ -84,6 +156,86 @@ if (isset($_POST['pay'])) {
         $stmt->execute() or die('Could not connect: ' . mysqli_error($con));
         $stmt->close();
 
+        // ---------------------------------------------------------------------
+        // CREDIT-ONLY ORDER HOOK
+        // If this checkout is a credit-only order, insert the credit record here
+        // and then remove the order from the normal saloon_orders/refreshments tables.
+        // This must happen before the stock update / receipt generation below.
+        // Useful variables available:
+        // - $saloon             : current order id
+        // - $total_all          : grand total for the order
+        // - $payments['credit'] : array with ['enabled'] and ['amount']
+        // - $isCreditSelected   : boolean if credit was selected
+        // Example:
+        $creditAmount = isset($payments['credit']['amount']) ? (float)$payments['credit']['amount'] : 0;
+        if ($isCreditSelected) {
+            $creditCustomer = !empty($customer_id) && $customer_id !== 'nil' ? $customer_id : $customername;
+
+            $stmtSelect = $con->prepare("SELECT itemid, item, unitprice, quantity, totalprice, item_category FROM refreshments WHERE orderid = ?");
+            $stmtSelect->bind_param('s', $saloon);
+            $stmtSelect->execute();
+            $result = $stmtSelect->get_result();
+
+            if ($result && $result->num_rows > 0) {
+                $rows = $result->fetch_all(MYSQLI_ASSOC);
+                $totalRefreshmentPrice = 0.0;
+                foreach ($rows as $row) {
+                    $totalRefreshmentPrice += is_numeric($row['totalprice']) ? (float)$row['totalprice'] : 0.0;
+                }
+
+                $stmtInsert = $con->prepare("INSERT INTO credit_sales (orderid, itemid, item, unitprice, quantity, totalprice, item_category, customer, amount_paid, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $status = 'pending';
+                $allocatedPaid = 0.0;
+                $rowCount = count($rows);
+
+                foreach ($rows as $index => $row) {
+                    $itemid = $row['itemid'];
+                    $item = $row['item'];
+                    $unitprice = is_numeric($row['unitprice']) ? (float)$row['unitprice'] : 0.0;
+                    $quantity = is_numeric($row['quantity']) ? (int)$row['quantity'] : 1;
+                    $totalprice = is_numeric($row['totalprice']) ? (float)$row['totalprice'] : 0.0;
+                    $item_category = $row['item_category'] ?? '';
+
+                    $amountPaid = 0.0;
+                    if ($creditAmount > 0 && $totalRefreshmentPrice > 0) {
+                        if ($index === $rowCount - 1) {
+                            $amountPaid = round($creditAmount - $allocatedPaid, 2);
+                        } else {
+                            $amountPaid = round(($creditAmount * $totalprice) / $totalRefreshmentPrice, 2);
+                            $allocatedPaid += $amountPaid;
+                        }
+                    }
+
+                    $stmtInsert->bind_param('sssdiissds', $saloon, $itemid, $item, $unitprice, $quantity, $totalprice, $item_category, $creditCustomer, $amountPaid, $status);
+                    $stmtInsert->execute();
+                }
+
+                $stmtInsert->close();
+            } else {
+                $stmt = $con->prepare("INSERT INTO credit_sales (orderid, totalprice, amount_paid, status, itemid, item, unitprice, quantity, customer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $status = 'pending';
+                $stmt->bind_param('sddsssdss', $saloon, $total_all, $creditAmount, $status, 'CREDIT', 'Credit Sale Payment', 0.0, 1, $creditCustomer);
+                $stmt->execute();
+                $stmt->close();
+            }
+
+            $stmtSelect->close();
+
+            $stmt = $con->prepare("DELETE FROM refreshments WHERE orderid = ?");
+            $stmt->bind_param('s', $saloon);
+            $stmt->execute();
+            $stmt->close();
+
+            $stmt = $con->prepare("DELETE FROM saloon_orders WHERE id = ?");
+            $stmt->bind_param('s', $saloon);
+            $stmt->execute();
+            $stmt->close();
+
+            header('Location: foodreciept.php?order=' . urlencode($saloon) . '&credit=1');
+            exit();
+        }
+        // ---------------------------------------------------------------------
+
         // Update stock in food_menu and refreshments
         $sqk = "SELECT itemid, quantity FROM refreshments WHERE orderid = ?";
         $stmt = $con->prepare($sqk);
@@ -134,194 +286,192 @@ if (isset($_POST['pay'])) {
 
         $con->begin_transaction();
 
-try {
+        try {
 
-    $stmt = $con->prepare("
+            $stmt = $con->prepare("
         SELECT itemid, quantity 
         FROM refreshments 
         WHERE orderid = ?
     ");
 
-    $stmt->bind_param("s", $saloon);
-    $stmt->execute();
+            $stmt->bind_param("s", $saloon);
+            $stmt->execute();
 
-    $items = $stmt->get_result();
+            $items = $stmt->get_result();
 
-    while ($row = $items->fetch_assoc()) {
+            while ($row = $items->fetch_assoc()) {
 
-        $food = $row['itemid'];
-        $qty = (int)$row['quantity'];
+                $food = $row['itemid'];
+                $qty = (int)$row['quantity'];
 
-        // CHECK IF ITEM IS SPECIAL
-        $specialStmt = $con->prepare("
+                // CHECK IF ITEM IS SPECIAL
+                $specialStmt = $con->prepare("
             SELECT special_item 
             FROM food_menu 
             WHERE s = ?
         ");
 
-        $specialStmt->bind_param("s", $food);
-        $specialStmt->execute();
+                $specialStmt->bind_param("s", $food);
+                $specialStmt->execute();
 
-        $specialResult = $specialStmt->get_result();
-        $foodData = $specialResult->fetch_assoc();
+                $specialResult = $specialStmt->get_result();
+                $foodData = $specialResult->fetch_assoc();
 
-        // SPECIAL ITEM
-        if (
-            isset($foodData['special_item']) &&
-            $foodData['special_item'] == 'true'
-        ) {
+                // SPECIAL ITEM
+                if (
+                    isset($foodData['special_item']) &&
+                    $foodData['special_item'] == 'true'
+                ) {
 
-            $ingredientStmt = $con->prepare("
+                    $ingredientStmt = $con->prepare("
                 SELECT ingredient_id, quantity
                 FROM special_items
                 WHERE item_id = ?
             ");
 
-            $ingredientStmt->bind_param("s", $food);
-            $ingredientStmt->execute();
+                    $ingredientStmt->bind_param("s", $food);
+                    $ingredientStmt->execute();
 
-            $ingredients = $ingredientStmt->get_result();
+                    $ingredients = $ingredientStmt->get_result();
 
-            while ($ingredient = $ingredients->fetch_assoc()) {
+                    while ($ingredient = $ingredients->fetch_assoc()) {
 
-                $ingredientId = $ingredient['ingredient_id'];
+                        $ingredientId = $ingredient['ingredient_id'];
 
-                // quantity required for ONE item
-                $ingredientQty = (int)$ingredient['quantity'];
+                        // quantity required for ONE item
+                        $ingredientQty = (int)$ingredient['quantity'];
 
-                // total quantity to remove
-                $removeQty = $ingredientQty * $qty;
+                        // total quantity to remove
+                        $removeQty = $ingredientQty * $qty;
 
-                // lock ingredient stock
-                $stockStmt = $con->prepare("
+                        // lock ingredient stock
+                        $stockStmt = $con->prepare("
                     SELECT quantity
                     FROM food_menu
                     WHERE s = ?
                     FOR UPDATE
                 ");
 
-                $stockStmt->bind_param("s", $ingredientId);
-                $stockStmt->execute();
+                        $stockStmt->bind_param("s", $ingredientId);
+                        $stockStmt->execute();
 
-                $stockResult = $stockStmt->get_result();
+                        $stockResult = $stockStmt->get_result();
 
-                if ($stockResult->num_rows > 0) {
+                        if ($stockResult->num_rows > 0) {
 
-                    $stock = (int)$stockResult
-                        ->fetch_assoc()['quantity'];
+                            $stock = (int)$stockResult
+                                ->fetch_assoc()['quantity'];
 
-                    $newQty = max(0, $stock - $removeQty);
+                            $newQty = max(0, $stock - $removeQty);
 
-                    // UPDATE INGREDIENT STOCK
-                    $updateStmt = $con->prepare("
+                            // UPDATE INGREDIENT STOCK
+                            $updateStmt = $con->prepare("
                         UPDATE food_menu
                         SET quantity = ?
                         WHERE s = ?
                     ");
 
-                    $updateStmt->bind_param(
-                        "is",
-                        $newQty,
-                        $ingredientId
-                    );
+                            $updateStmt->bind_param(
+                                "is",
+                                $newQty,
+                                $ingredientId
+                            );
 
-                    $updateStmt->execute();
+                            $updateStmt->execute();
 
-                    // STOCK LOG
-                    $logStmt = $con->prepare("
+                            // STOCK LOG
+                            $logStmt = $con->prepare("
                         INSERT INTO stock_log
                         (id, action, value, date)
                         VALUES (?, 'minus', ?, ?)
                     ");
 
-                    $logStmt->bind_param(
-                        "sis",
-                        $ingredientId,
-                        $removeQty,
-                        $datetime
-                    );
+                            $logStmt->bind_param(
+                                "sis",
+                                $ingredientId,
+                                $removeQty,
+                                $datetime
+                            );
 
-                    $logStmt->execute();
-                }
-            }
+                            $logStmt->execute();
+                        }
+                    }
+                } else {
 
-        } else {
+                    // NORMAL ITEM STOCK UPDATE
 
-            // NORMAL ITEM STOCK UPDATE
-
-            $stmt2 = $con->prepare("
+                    $stmt2 = $con->prepare("
                 SELECT quantity
                 FROM food_menu
                 WHERE s = ?
                 FOR UPDATE
             ");
 
-            $stmt2->bind_param("s", $food);
-            $stmt2->execute();
+                    $stmt2->bind_param("s", $food);
+                    $stmt2->execute();
 
-            $result = $stmt2->get_result();
+                    $result = $stmt2->get_result();
 
-            if ($result->num_rows > 0) {
+                    if ($result->num_rows > 0) {
 
-                $stock = (int)$result
-                    ->fetch_assoc()['quantity'];
+                        $stock = (int)$result
+                            ->fetch_assoc()['quantity'];
 
-                $newQty = max(0, $stock - $qty);
+                        $newQty = max(0, $stock - $qty);
 
-                $upd = $con->prepare("
+                        $upd = $con->prepare("
                     UPDATE food_menu
                     SET quantity = ?
                     WHERE s = ?
                 ");
 
-                $upd->bind_param("is", $newQty, $food);
-                $upd->execute();
+                        $upd->bind_param("is", $newQty, $food);
+                        $upd->execute();
 
-                $ref = $con->prepare("
+                        $ref = $con->prepare("
                     UPDATE refreshments
                     SET total_left=?, date=?
                     WHERE orderid=? AND itemid=?
                 ");
 
-                $ref->bind_param(
-                    "issi",
-                    $newQty,
-                    $datetime,
-                    $saloon,
-                    $food
-                );
+                        $ref->bind_param(
+                            "issi",
+                            $newQty,
+                            $datetime,
+                            $saloon,
+                            $food
+                        );
 
-                $ref->execute();
+                        $ref->execute();
 
-                $log = $con->prepare("
+                        $log = $con->prepare("
                     INSERT INTO stock_log
                     (id, action, value, date)
                     VALUES (?, 'minus', ?, ?)
                 ");
 
-                $log->bind_param(
-                    "sis",
-                    $food,
-                    $qty,
-                    $datetime
-                );
+                        $log->bind_param(
+                            "sis",
+                            $food,
+                            $qty,
+                            $datetime
+                        );
 
-                $log->execute();
+                        $log->execute();
+                    }
+                }
             }
+
+            $con->commit();
+        } catch (Exception $e) {
+
+            $con->rollback();
+
+            error_log(
+                "Stock update failed: " .
+                    $e->getMessage()
+            );
         }
-    }
-
-    $con->commit();
-
-} catch (Exception $e) {
-
-    $con->rollback();
-
-    error_log(
-        "Stock update failed: " .
-        $e->getMessage()
-    );
-}
 
 
         // Generate receipt HTML
@@ -402,4 +552,3 @@ try {
         exit();
     }
 }
-?>

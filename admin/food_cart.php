@@ -161,7 +161,7 @@ if ($bot2->num_rows > 0) {
                     </div>
                 </div>
                 <center>
-                    <p><a href="javascript:void(0);" class='btn btn-sm btn-warning' data-bs-toggle="modal" data-bs-target="#takeCreditModal">Take as credit</a></p>
+                    <!-- <p><a href="javascript:void(0);" class='btn btn-sm btn-warning' data-bs-toggle="modal" data-bs-target="#takeCreditModal">Take as credit</a></p> -->
                     <p><a href="foodcheckout.php" class='btn btn-sm btn-warning'>Proceed to checkout</a></p>
                 </center>
             </div>
