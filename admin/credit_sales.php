@@ -1,73 +1,7 @@
 <?php
 include "header.php";
 ?>
-<?php
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["make_payment"])) {
-    $orderid = $_POST["orderid"];
-    $fileUrl = $_POST["fileUrl"];
-    $amount = $_POST["amount"];
-    $method = $_POST["method"];
-    $amountPaid = 0;
-    $selectPaid = "SELECT SUM(amount_paid) as paid_amount FROM credit_sales WHERE orderid = '$orderid'";
-    $res = mysqli_query($con, $selectPaid);
-    while ($ress = mysqli_fetch_assoc($res)) {
-        $amountPaid += $ress["paid_amount"];
-    }
-    $newAmountToPay = $amountPaid + $amount;
-    $totalAmount = 0;
 
-$getTotalSql = "
-SELECT SUM(totalprice) AS total_amount
-FROM credit_sales
-WHERE orderid = '$orderid'
-";
-
-$getTotalResult = mysqli_query($con, $getTotalSql);
-
-$getTotalRow = mysqli_fetch_assoc($getTotalResult);
-
-$totalAmount = (float)($getTotalRow['total_amount'] ?? 0);
-    if ($newAmountToPay <= $totalAmount) {
-        $makePayment = "INSERT INTO credit_sales_transfers(orderid,fileUrl,amount_paid,method) VALUES ('$orderid','$fileUrl','$amount','$method')";
-        mysqli_query($con, $makePayment) ? $_SESSION["success"] = "Payment successful" : $_SESSION["error"] = "Error occured while making payment";
-        /*$creditSalesWithId = [];
-        $selectCreditSalesWithId = "SELECT * FROM credit_sales WHERE orderid = '$orderid'";
-        $result = mysqli_query($con, $selectCreditSalesWithId);
-        while ($row = mysqli_fetch_assoc($result)) {
-            $creditSalesWithId[] = $row;
-        }*/
-        
-        // FIXED: Distribute payment proportionally across products based on their price share
-        // Calculate total price for the order
-        // $totalOrderPrice = 0;
-        // foreach ($creditSalesWithId as $item) {
-        //     $totalOrderPrice += (float)$item['totalprice'];
-        // }
-        
-        // Distribute payment proportionally to each item
-        // if ($totalOrderPrice > 0) {
-        //     foreach ($creditSalesWithId as $item) {
-        //         // Calculate this item's proportion of the total price
-        //         $itemProportion = (float)$item['totalprice'] / $totalOrderPrice;
-                
-        //         // Calculate proportional payment for this item
-        //         $proportionalPayment = $newAmountToPay * $itemProportion;
-                
-        //         // Round to 2 decimal places (normal currency format)
-        //         $proportionalPayment = round($proportionalPayment, 2);
-                
-        //         // Determine status based on payment completion
-        //         $itemStatus = $proportionalPayment >= (float)$item['totalprice'] ? 'paid' : 'partly paid';
-                
-        //         // Update amount_paid and status for this item
-        //         $itemId = $item['id']; // Assuming 's' is the primary key
-        //         $updateCreditSales = "UPDATE credit_sales SET amount_paid = $proportionalPayment, status = '$itemStatus' WHERE id = '$itemId'";
-        //         mysqli_query($con, $updateCreditSales);
-        //     }
-        // }
-    }
-}
-?>
 <?php
 if (! empty($_SESSION['success'])) {
     echo "<div class='alert alert-success'>" . htmlspecialchars($_SESSION['success']) . "</div>";
@@ -80,10 +14,13 @@ if (! empty($_SESSION['error'])) {
 ?>
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Credit Sales</h1>
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="dashboard.php">Home</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Orishirishi</li>
-    </ol>
+    <div>
+        <a href="#pendingTransfers" class="btn btn-sm btn-warning me-2">Pending Transfers</a>
+        <ol class="breadcrumb d-inline-flex align-items-center mb-0">
+            <li class="breadcrumb-item"><a href="dashboard.php">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Orishirishi</li>
+        </ol>
+    </div>
 </div>
 <div class="col-xl-12 col-lg-12 mb-4">
     <div class="card">
@@ -177,7 +114,7 @@ ORDER BY order_date DESC
 
                                         <div class="modal-body">
 
-                                            <form method="POST">
+                                            <form method="POST" action="make_credit_sale_payment.php">
                                                 <!-- Fields are: orderid,fileUrl, amount, method-->
 
                                                 <input type="hidden"
@@ -341,7 +278,7 @@ ORDER BY order_date DESC
     </div>
 </div>
 
-<div class="col-xl-12 col-lg-12 mb-4">
+<div class="col-xl-12 col-lg-12 mb-4" id="pendingTransfers">
     <div class="card">
         <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
             <h6 class="m-0 font-weight-bold text-primary">Pending Credit Sales Transfers</h6>
@@ -355,7 +292,7 @@ ORDER BY order_date DESC
                         <th>Amount</th>
                         <th>Method</th>
                         <th>Bank</th>
-                        <th>File</th>
+                        <th>Proof</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
@@ -373,19 +310,44 @@ ORDER BY order_date DESC
                         echo '<tr><td colspan="8" class="text-center">No transfers found</td></tr>';
                     } else {
                         foreach ($transfers as $t) {
+                            $proofButton = !empty($t['fileUrl'])
+                                ? '<a class="btn btn-sm btn-info" href="' . htmlspecialchars($t['fileUrl']) . '" target="_blank">View Proof</a>'
+                                : '-';
                             echo '<tr>';
                             echo '<td>' . htmlspecialchars($t['id']) . '</td>';
                             echo '<td>' . htmlspecialchars($t['orderid']) . '</td>';
                             echo '<td>&#8358; ' . number_format((float)$t['amount_paid'], 2) . '</td>';
                             echo '<td>' . htmlspecialchars($t['method']) . '</td>';
                             echo '<td>' . htmlspecialchars($t['bank'] ?? '') . '</td>';
-                            echo '<td>' . (!empty($t['fileUrl']) ? '<a href="' . htmlspecialchars($t['fileUrl']) . '" target="_blank">View</a>' : '-') . '</td>';
+                            echo '<td>' . $proofButton . '</td>';
                             echo '<td>' . htmlspecialchars($t['status'] ?? 'pending') . '</td>';
                             echo '<td>';
+                            echo '<a class="btn btn-sm btn-secondary me-2" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#transferInfoModal' . htmlspecialchars($t['id']) . '">Details</a>';
                             echo '<a class="btn btn-sm btn-success me-2" href="credit_sales_action.php?action=mark_transfer_paid&transfer_id=' . urlencode($t['id']) . '">Mark Paid</a>';
                             echo '<a class="btn btn-sm btn-danger me-2" href="credit_sales_action.php?action=delete_transfer&transfer_id=' . urlencode($t['id']) . '">Delete</a>';
                             echo '</td>';
                             echo '</tr>';
+                            echo '<div class="modal fade" id="transferInfoModal' . htmlspecialchars($t['id']) . '" tabindex="-1" aria-hidden="true">';
+                            echo '  <div class="modal-dialog modal-dialog-centered">';
+                            echo '    <div class="modal-content">';
+                            echo '      <div class="modal-header">';
+                            echo '        <h5 class="modal-title">Transfer Info #' . htmlspecialchars($t['id']) . '</h5>';
+                            echo '        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>';
+                            echo '      </div>';
+                            echo '      <div class="modal-body">';
+                            echo '        <p><strong>Order ID:</strong> ' . htmlspecialchars($t['orderid']) . '</p>';
+                            echo '        <p><strong>Amount:</strong> &#8358; ' . number_format((float)$t['amount_paid'], 2) . '</p>';
+                            echo '        <p><strong>Method:</strong> ' . htmlspecialchars($t['method']) . '</p>';
+                            echo '        <p><strong>Bank:</strong> ' . htmlspecialchars($t['bank'] ?? '-') . '</p>';
+                            echo '        <p><strong>Status:</strong> ' . htmlspecialchars($t['status'] ?? 'pending') . '</p>';
+                            echo '        <p><strong>Proof:</strong> ' . (!empty($t['fileUrl']) ? '<a href="' . htmlspecialchars($t['fileUrl']) . '" target="_blank">Open transfer proof</a>' : 'No proof attached') . '</p>';
+                            echo '      </div>';
+                            echo '      <div class="modal-footer">';
+                            echo '        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>';
+                            echo '      </div>';
+                            echo '    </div>';
+                            echo '  </div>';
+                            echo '</div>';
                         }
                     }
                     ?>

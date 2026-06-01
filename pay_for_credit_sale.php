@@ -256,7 +256,7 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST' && isset($_POST['submit_transfer'])) {
 
                     <td><?php echo $item['quantity']; ?></td>
 
-                    <td>₦<?php echo number_format($item['unitprice']); ?></td>
+                    <td>₦<?php echo $item['unitprice']; ?></td>
 
                     <td>₦<?php echo number_format($item['totalprice']); ?></td>
 
