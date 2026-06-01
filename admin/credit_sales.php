@@ -307,47 +307,73 @@ ORDER BY order_date DESC
                     }
 
                     if (!count($transfers)) {
-                        echo '<tr><td colspan="8" class="text-center">No transfers found</td></tr>';
+                    ?>
+                        <tr>
+                            <td colspan="8" class="text-center">No transfers found</td>
+                        </tr>
+                        <?php
                     } else {
                         foreach ($transfers as $t) {
-                            $proofButton = !empty($t['fileUrl'])
-                                ? '<a class="btn btn-sm btn-info" href="' . htmlspecialchars($t['fileUrl']) . '" target="_blank">View Proof</a>'
-                                : '-';
-                            echo '<tr>';
-                            echo '<td>' . htmlspecialchars($t['id']) . '</td>';
-                            echo '<td>' . htmlspecialchars($t['orderid']) . '</td>';
-                            echo '<td>&#8358; ' . number_format((float)$t['amount_paid'], 2) . '</td>';
-                            echo '<td>' . htmlspecialchars($t['method']) . '</td>';
-                            echo '<td>' . htmlspecialchars($t['bank'] ?? '') . '</td>';
-                            echo '<td>' . $proofButton . '</td>';
-                            echo '<td>' . htmlspecialchars($t['status'] ?? 'pending') . '</td>';
-                            echo '<td>';
-                            echo '<a class="btn btn-sm btn-secondary me-2" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#transferInfoModal' . htmlspecialchars($t['id']) . '">Details</a>';
-                            echo '<a class="btn btn-sm btn-success me-2" href="credit_sales_action.php?action=mark_transfer_paid&transfer_id=' . urlencode($t['id']) . '">Mark Paid</a>';
-                            echo '<a class="btn btn-sm btn-danger me-2" href="credit_sales_action.php?action=delete_transfer&transfer_id=' . urlencode($t['id']) . '">Delete</a>';
-                            echo '</td>';
-                            echo '</tr>';
-                            echo '<div class="modal fade" id="transferInfoModal' . htmlspecialchars($t['id']) . '" tabindex="-1" aria-hidden="true">';
-                            echo '  <div class="modal-dialog modal-dialog-centered">';
-                            echo '    <div class="modal-content">';
-                            echo '      <div class="modal-header">';
-                            echo '        <h5 class="modal-title">Transfer Info #' . htmlspecialchars($t['id']) . '</h5>';
-                            echo '        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>';
-                            echo '      </div>';
-                            echo '      <div class="modal-body">';
-                            echo '        <p><strong>Order ID:</strong> ' . htmlspecialchars($t['orderid']) . '</p>';
-                            echo '        <p><strong>Amount:</strong> &#8358; ' . number_format((float)$t['amount_paid'], 2) . '</p>';
-                            echo '        <p><strong>Method:</strong> ' . htmlspecialchars($t['method']) . '</p>';
-                            echo '        <p><strong>Bank:</strong> ' . htmlspecialchars($t['bank'] ?? '-') . '</p>';
-                            echo '        <p><strong>Status:</strong> ' . htmlspecialchars($t['status'] ?? 'pending') . '</p>';
-                            echo '        <p><strong>Proof:</strong> ' . (!empty($t['fileUrl']) ? '<a href="' . htmlspecialchars($t['fileUrl']) . '" target="_blank">Open transfer proof</a>' : 'No proof attached') . '</p>';
-                            echo '      </div>';
-                            echo '      <div class="modal-footer">';
-                            echo '        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>';
-                            echo '      </div>';
-                            echo '    </div>';
-                            echo '  </div>';
-                            echo '</div>';
+                        ?>
+                            <tr>
+                                <td><?= $t['id']  ?></td>
+                                <td><?= $t['orderid']  ?></td>
+                                <td>&#8358;<?= number_format((float)$t['amount_paid'], 2)  ?></td>
+                                <td><?= htmlspecialchars($t['method'])  ?></td>
+                                <td><?= htmlspecialchars($t['bank'] ?? '')  ?></td>
+                                <td><?php
+                                    if (!empty($t["fileUrl"])) {
+                                    ?>
+                                        <a class="btn btn-sm btn-info" href="<?= htmlspecialchars($t['fileUrl'])  ?>" target="_blank">View Proof</a>
+                                    <?php
+                                    } else {
+                                    ?>
+                                        -
+                                    <?php
+                                    }
+                                    ?>
+                                </td>
+                                <td><?= htmlspecialchars($t['status'] ?? 'pending') ?></td>
+                                <td>
+                                    <a class="btn btn-sm btn-secondary me-2" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#transferInfoModal<?= htmlspecialchars($t['id'])  ?>">Details</a>
+                                    <a class="btn btn-sm btn-success me-2" href="credit_sales_action.php?action=mark_transfer_paid&transfer_id=<?= urlencode($t['id']) ?>">Mark Paid</a>
+                                    <a class="btn btn-sm btn-danger me-2" href="credit_sales_action.php?action=delete_transfer&transfer_id=<?= urlencode($t['id']) ?>">Delete</a>
+                                </td>
+                            </tr>
+                            <div class="modal fade" id="transferInfoModal<?= htmlspecialchars($t['id']) ?>" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Transfer Info #<?= htmlspecialchars($t['id'])  ?></h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p><strong>Order ID:</strong> <?= htmlspecialchars($t['orderid']) ?></p>
+                                            <p><strong>Amount:</strong> &#8358; <?= number_format((float)$t['amount_paid'], 2) ?></p>
+                                            <p><strong>Method:</strong> <?= htmlspecialchars($t['method']) ?></p>
+                                            <p><strong>Bank:</strong> <?= htmlspecialchars($t['bank'] ?? '-') ?></p>
+                                            <p><strong>Status:</strong> <?= htmlspecialchars($t['status'] ?? 'pending') ?></p>
+                                            <p><strong>Proof:</strong>
+                                                <?php
+                                                if (!empty($t['fileUrl'])) {
+                                                ?>
+                                                    <a href="<?= htmlspecialchars($t['fileUrl']) ?>" target="_blank">Open transfer proof</a>
+                                                <?php
+                                                } else {
+                                                ?>
+                                            <p>No proof attached.</p>
+                                        <?php
+                                                }
+                                        ?>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            </tr>
+                    <?php
                         }
                     }
                     ?>
