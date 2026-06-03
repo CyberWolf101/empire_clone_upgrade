@@ -176,6 +176,19 @@ while ($row = mysqli_fetch_array($result)) {
                                                         <option value="repair_center">Repair Center</option>
                                                         <option value="delta_kitchen">Delta Kitchen</option>
                                                         <option value="e-giftcard">E-Giftcard</option>
+                                                        <?php
+                            $sqlQuery = "SELECT name FROM category";
+                            $names = [];
+                            $res = mysqli_query($con, $sqlQuery);
+                            while ($row = mysqli_fetch_assoc($res)) {
+                                $names[] = $row;
+                            }
+                            foreach ($names as $name) {
+                            ?>
+                                <option value="<?= $name["name"] ?>"><?= $name["name"] ?></option>
+                            <?php
+                            }
+                            ?>
                                                     </select>
                                                 </div>
                                                 <div class="mb-3">
@@ -228,10 +241,23 @@ while ($row = mysqli_fetch_array($result)) {
                         <label>Service Type</label>
                         <select class="form-control" name="service_type" required>
                             <option value="">---- Select Service Type ----</option>
-                            <option value="orishirishi">Orishirishi</option>
-                            <option value="repair_center">Repair Center</option>
-                            <option value="delta_kitchen">Delta Kitchen</option>
-                            <option value="e-giftcard">E-Giftcard</option>
+                            <option value="Orishirishi">Orishirishi</option>
+                            <option value="Repair Center">Repair Center</option>
+                            <option value="Delta Kitchen">Delta Kitchen</option>
+                            <option value="E-Giftcard">E-Giftcard</option>
+                            <?php
+                            $sqlQuery = "SELECT name FROM category";
+                            $names = [];
+                            $res = mysqli_query($con, $sqlQuery);
+                            while ($row = mysqli_fetch_assoc($res)) {
+                                $names[] = $row;
+                            }
+                            foreach ($names as $name) {
+                            ?>
+                                <option value="<?= $name["name"] ?>"><?= $name["name"] ?></option>
+                            <?php
+                            }
+                            ?>
                         </select>
                     </div>
                     <div class="mb-3">

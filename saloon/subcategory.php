@@ -6,7 +6,7 @@ $category=$_GET['category'];
 else{
 header("location: ../index.php");
 }
-  
+      setcookie("currentService", $_GET["current_service"], time() + (10 * 365 * 24 * 60 * 60));
 $sql = "SELECT * from category where id='$category' ";
 $sql2 = mysqli_query($con,$sql);
 while($row = mysqli_fetch_array($sql2))

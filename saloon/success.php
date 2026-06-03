@@ -26,14 +26,29 @@ include "header.php";  ?>
             $string = trim($ref);
             $saloon = $string;
 
+            $orderRow = null;
+            $orderResult = mysqli_query($con, "SELECT method, pay_status, status FROM saloon_orders WHERE id='$saloon' LIMIT 1");
+            if ($orderResult && mysqli_num_rows($orderResult) > 0) {
+                $orderRow = mysqli_fetch_assoc($orderResult);
+            }
+
             if ($reed == "cancelled") {
                 echo "<h3>Payment Cancelled. Please try Again</h3><p><a href='../index.php' style='color:#FFC700;;'><u>Go To Home</u></a></p>";
             } else {
-
+                $method = "Giftcard";
                 if (isset($_GET['transaction_id'])) {
                     $method = "Card";
-                } else {
-                    $method = "Giftcard";
+                }
+
+                if ($orderRow) {
+                    $currentMethod = $orderRow['method'] ?? '';
+                    $currentPayStatus = $orderRow['pay_status'] ?? '';
+                    $currentStatus = $orderRow['status'] ?? '';
+
+                    if (stripos($currentMethod, 'Bank Transfer') !== false || $currentPayStatus === 'pending' || $currentStatus === 'pending') {
+                        echo '<script>window.location.href="../index.php";</script>';
+                        exit;
+                    }
                 }
 
                 //check giftcard

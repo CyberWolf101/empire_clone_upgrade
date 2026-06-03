@@ -156,7 +156,7 @@ mysqli_query($con, $createCustomerTableSQL);
                                 <?php
                                 if ($row['isEnabled']) {
                                 ?>
-                                    <a href="saloon/subcategory.php?category=<?php echo $row['id'] ?>">
+                                    <a href="saloon/subcategory.php?current_service=<?= $row["name"] ?>&category=<?php echo $row['id'] ?>">
                                         <button class="btn-anim"><span>CLICK TO BOOK</span></button>
                                     </a>
                                 <?php
@@ -188,7 +188,7 @@ mysqli_query($con, $createCustomerTableSQL);
                             <img src="food.png" alt="" />
                             <p class="mt-4">Get all kind of drinks, meals, or snacks at chbluxuryempire. Order Now</p>
                             <div class="mt-4 button_container">
-                                <a href="food_page.php?current_service=orishirishi"><button class="btn-anim"><span>CLICK TO
+                                <a href="food_page.php?current_service=Orishirishi"><button class="btn-anim"><span>CLICK TO
                                             ORDER</span></button></a>
                             </div>
                         </div>
@@ -201,7 +201,7 @@ mysqli_query($con, $createCustomerTableSQL);
                             <img src="repair.jpeg" alt="" />
                             <p class="mt-4">Effective repairs of nail salon equipment</p>
                             <div class="mt-4 button_container">
-                                <a href="repaircenter.php?current_service=repair_center"><button
+                                <a href="repaircenter.php?current_service=Repair Center"><button
                                         class="btn-anim"><span>CLICK TO ORDER</span></button></a>
                             </div>
                         </div>
@@ -214,7 +214,7 @@ mysqli_query($con, $createCustomerTableSQL);
                             <img src="delta.jpeg" alt="" />
                             <p class="mt-4">Your one stop for specially made Urhobo delicacies</p>
                             <div class="mt-4 button_container">
-                                <a href="deltakitchen.php?current_service=delta_kitchen">
+                                <a href="deltakitchen.php?current_service=Delta Kitchen">
                                     <button class="btn-anim">
                                         <span>CLICK TO ORDER</span>
                                     </button>
@@ -230,7 +230,7 @@ mysqli_query($con, $createCustomerTableSQL);
                             <img src="gift.png" alt="" />
                             <p class="mt-4">Buy an e-gift card for your friends, loved ones, and family. Buy Now</p>
                             <div class="mt-4 button_container">
-                                <a href="giftcard.php?current_service=e-giftcard"><button class="btn-anim"><span>CLICK TO
+                                <a href="giftcard.php?current_service=E-Giftcard"><button class="btn-anim"><span>CLICK TO
                                             ORDER</span></button></a>
                             </div>
                         </div>

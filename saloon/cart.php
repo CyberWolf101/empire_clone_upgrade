@@ -167,30 +167,10 @@ if (isset($_GET['pedicure'])) {
                                 <td width="50" style="vertical-align: middle; border-left-style: hidden;">' . $row['quantity'] . '</td>
                                 <td style="vertical-align: middle; border-left-style: hidden;">&#8358;' . $row['totalprice'] . '</td>
                             </tr>';
-
                 }
                 ?>
               </tbody>
             </table>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             <table class="table table-bordered text-center" style="border-collapse: collapse;">
               <tfoot>
                 <tr style="white-space: nowrap;">
@@ -268,8 +248,8 @@ if (isset($_GET['pedicure'])) {
 
 
                 <script>
-                  $(document).ready(function () {
-                    $('#addcoupon').click(function () {
+                  $(document).ready(function() {
+                    $('#addcoupon').click(function() {
                       var giftcardValue = $('#giftcard').val();
                       var orderValue = $('#orderid').val();
                       $("#addcoupon").attr("disabled", "disabled");
@@ -282,7 +262,7 @@ if (isset($_GET['pedicure'])) {
                           giftcard: giftcardValue,
                           orderno: orderValue
                         },
-                        success: function (response) {
+                        success: function(response) {
                           if (response === 'success') {
                             alert('Payment has been initiated and is being processed.');
                             window.location.href = 'https://chbluxuryempire.com/saloon/success?status=completed&tx_ref=<?php echo $saloon; ?>';
@@ -305,8 +285,10 @@ if (isset($_GET['pedicure'])) {
                     $.ajax({
                       url: 'fetchamount.php',
                       type: 'POST',
-                      data: { orderno: orderValue },
-                      success: function (data) {
+                      data: {
+                        orderno: orderValue
+                      },
+                      success: function(data) {
                         // Update the values in your HTML
                         $('.topay').show();
                         $('#realamount').val(data);
@@ -322,69 +304,86 @@ if (isset($_GET['pedicure'])) {
                         }
 
                       },
-                      error: function () {
+                      error: function() {
                         alert('Failed to fetch data from the database.');
                       }
                     });
                   }
-
-
-
-
-
                 </script>
 
 
 
 
 
-                <form method="post" action="https://checkout.flutterwave.com/v3/hosted/pay">
-                  <input type="hidden" name="public_key" value="<?php echo $apikey; ?>" />
-                  <input type="email" name="customer[email]"
-                    style="border:0; color:#fff; width:300px;  outline:0; background:transparent; border-bottom:2px solid #fff;"
-                    value=" <?php echo $c_email; ?>" placeholder="Enter Email" hidden />
-                  <input type="hidden" name="customer[phone_number]"
-                    style="border:0; color:#fff; width:300px;  outline:0; background:transparent; border-bottom:2px solid #fff;"
-                    value=" <?php echo $c_phone; ?>" placeholder="Enter Phone Number" />
-                  <input type="hidden" name="customer[name]"
-                    style="border:0; color:#fff; width:300px;  outline:0; background:transparent; border-bottom:2px solid #fff;"
-                    value=" <?php echo $username; ?> " />
-          </div><br>
+                <div class="payment-methods p-3" style="background:#111; border:1px solid #FFC700; border-radius:10px;">
+                  <h4 style="color:#FFC700;">Choose payment method</h4>
+                  <div class="mb-3" style="max-width:360px;">
+                    <select id="paymentMethod" class="form-control" style="background:#000; color:#fff; border:1px solid #FFC700;">
+                      <option value="flutterwave">Flutterwave (Card)</option>
+                      <option value="banktransfer">Bank Transfer</option>
+                    </select>
+                  </div>
 
+                  <div id="flutterwaveSection">
+                    <form id="flutterwaveForm" method="post" action="https://checkout.flutterwave.com/v3/hosted/pay">
+                      <input type="hidden" name="public_key" value="<?php echo $apikey; ?>" />
+                      <input type="hidden" name="customer[email]" value="<?php echo $c_email; ?>" />
+                      <input type="hidden" name="customer[phone_number]" value="<?php echo $c_phone; ?>" />
+                      <input type="hidden" name="customer[name]" value="<?php echo $username; ?>" />
+                      <input type="hidden" name="tx_ref" value="<?php echo $saloon; ?>" />
+                      <input type="hidden" id="realamount" name="amount" value="<?php echo $total_all; ?>" />
+                      <input type="hidden" name="currency" value="NGN" />
+                      <input type="hidden" name="meta[token]" value="54" />
+                      <input type="hidden" name="redirect_url" value="https://chbluxuryempire.com/saloon/success.php" />
 
-          <input type="hidden" name="tx_ref" value=" <?php echo $saloon; ?>" />
-          <input type="hidden" id="realamount" name="amount" value=" <?php echo $total_all; ?> " />
-          <input type="hidden" name="currency" value="NGN" />
-          <input type="hidden" name="meta[token]" value="54" />
-          <input type="hidden" name="redirect_url" value="https://chbluxuryempire.com/saloon/success.php" />
-          <tr style="border-bottom-style: hidden;">
-            <th scope="row"></th>
-            <?php
-            //Checkout Condition
-            
+                      <?php if ($total_all > 1) {
+                        if ($type == "1" && $count_services < $type) {
+                          echo '<script type="text/javascript">$(document).ready(function(){ $("#myMod").modal("show"); });</script>';
+                          echo "<script type='text/javascript'>window.onload = () => { $('#myModal').modal('hide'); };</script>";
+                        } else {
+                          echo '<button type="submit" class="form-control" style="font-weight: 600; font-size: 0.8rem; color: #FFC700; background:#000; border:1px solid #FFC700;">Proceed To Flutterwave Checkout</button>';
+                        }
+                      }
+                      ?>
+                    </form>
+                  </div>
 
+                  <div id="bankTransferSection" style="display:none; margin-top:20px;">
+                    <p style="color:#fff;">You selected bank transfer. Click below to upload proof of payment and submit your transfer details.</p>
+                    <?php if ($total_all < 1) {
+                      if (!($type !== "1" && !$count_services < $type)) {
+                        echo '<form id="bankTransferForm" method="get" action="banktransfer.php">';
+                        echo '<button type="submit" class="form-control" style="font-weight: 600; font-size: 0.8rem; color: #000; background:#FFC700; border:1px solid #FFC700;">Proceed With Bank Transfer</button>';
+                        echo '</form>';
+                      }
+                    }
+                    ?>
+                  </div>
+                </div>
 
-            if ($total_all > 1) {
-              if ($type == "1" && $count_services < $type) {
-                echo '<script type="text/javascript">
-			                            $(document).ready(function(){
-			                            $("#myMod").modal("show");	});\</script>';
+                <script>
+                  document.addEventListener('DOMContentLoaded', function() {
+                    var paymentMethod = document.getElementById('paymentMethod');
+                    var flutterwaveSection = document.getElementById('flutterwaveSection');
+                    var bankTransferSection = document.getElementById('bankTransferSection');
 
-
-                echo "<script type='text/javascript'>
-                              window.onload = () => {
-                              $('#myModal').modal('hide');} </script>";
-              } else {
-                echo '<td colspan="2" class="align-middle"><button type="submit" class="form-control" style="font-weight: 600; font-size: 0.8rem; color: #FFC700;">
-                               Proceed To Checkout</button></td>';
-              }
-            }
-
-            ?>
-          </tr>
-          </tbody>
-          </table>
-          </form>
+                    paymentMethod.addEventListener('change', function() {
+                      if (paymentMethod.value === 'banktransfer') {
+                        flutterwaveSection.style.display = 'none';
+                        bankTransferSection.style.display = 'block';
+                      } else {
+                        flutterwaveSection.style.display = 'block';
+                        bankTransferSection.style.display = 'none';
+                      }
+                    });
+                  });
+                </script>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
         </div>
       </div>
     </div>
