@@ -8,17 +8,42 @@ CREATE TABLE IF NOT EXISTS bank_accounts (
     bank_name VARCHAR(100) NOT NULL,
     account_name VARCHAR(100) NOT NULL,
     account_number VARCHAR(20) NOT NULL,
+    service_type VARCHAR(50) DEFAULT 'general',
     username VARCHAR(100) NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_account (account_number, bank_name)
 )";
 mysqli_query($con, $createTableSql) or die('Could not create table: ' . mysqli_error($con));
 
-// Check if username column exists and add it if not
-$checkColumnSql = "SHOW COLUMNS FROM bank_accounts LIKE 'username'";
-$result = mysqli_query($con, $checkColumnSql);
-if (mysqli_num_rows($result) == 0) {
-    $alterTableSql = "ALTER TABLE bank_accounts ADD username VARCHAR(100) NOT NULL";
-    mysqli_query($con, $alterTableSql) or die('Could not add username column: ' . mysqli_error($con));
+// Ensure id column is primary key (migration for existing tables)
+$checkIdSql = "SHOW COLUMNS FROM bank_accounts WHERE Field='id'";
+$checkIdResult = @mysqli_query($con, $checkIdSql);
+
+if (!$checkIdResult || mysqli_num_rows($checkIdResult) == 0) {
+    // id column doesn't exist, add it
+    @mysqli_query($con, "ALTER TABLE bank_accounts ADD id INT NOT NULL AUTO_INCREMENT UNIQUE FIRST");
+}
+
+// Try to drop existing primary key if it exists (suppress error if it doesn't)
+try {
+    mysqli_query($con, "ALTER TABLE bank_accounts DROP PRIMARY KEY");
+} catch (Exception $e) {
+    // Primary key doesn't exist or other error - continue
+}
+
+// Now set id as primary key
+try {
+    mysqli_query($con, "ALTER TABLE bank_accounts MODIFY id INT NOT NULL AUTO_INCREMENT PRIMARY KEY");
+} catch (Exception $e) {
+    // If this fails, id may already be properly set
+}
+
+// Check if service_type column exists and add it if not
+$checkServiceTypeSql = "SHOW COLUMNS FROM bank_accounts LIKE 'service_type'";
+$serviceTypeResult = mysqli_query($con, $checkServiceTypeSql);
+if (!$serviceTypeResult || mysqli_num_rows($serviceTypeResult) == 0) {
+    $alterServiceTypeSql = "ALTER TABLE bank_accounts ADD service_type VARCHAR(50) DEFAULT 'general' AFTER account_number";
+    @mysqli_query($con, $alterServiceTypeSql);
 }
 
 // Handle add bank account submission
