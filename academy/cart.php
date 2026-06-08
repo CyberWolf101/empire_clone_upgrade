@@ -46,6 +46,13 @@ if ($username == "") {
                            <td style="border-right-style: hidden;"></td>
                            <td style="border-right-style: hidden; text-align: left;">Training</td>
                            <td style="border-right-style: hidden;">Duration</td>
+                           <?php
+                           if(isset($_SESSION["discount"]) && $_SESSION["discount"]["status"] == true){
+                              ?>
+                              <td style="border-right-style: hidden;">Duration</td>
+                              <?php
+                           }
+                           ?>
                            <td style="border-right-style: hidden;">Price</td>
                         </tr>
                      </thead>
@@ -64,6 +71,7 @@ if ($username == "") {
                                 <div><span style="font-weight: 500;">' . $row['trainingname'] . '</span></div>
                                 </td>
                                 <td style="vertical-align: middle; border-left-style: hidden;">' . $row['durationname'] . '</td>
+                                ' . ((isset($_SESSION["discount"]) && $_SESSION["discount"]["status"] == true) ? '<td style="vertical-align: middle; border-left-style: hidden;">' . $_SESSION["discount"]["percent"] . '%</td>' : '') . '
                                 <td style="vertical-align: middle; border-left-style: hidden;">&#8358;' . $row['price'] . '</td>
                             </tr>';
                         }

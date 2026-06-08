@@ -104,6 +104,9 @@ method VARCHAR(255) NOT NULL
   )";
   $alterAg2 = "ALTER TABLE training_items
   DROP COLUMN IF EXISTS image";
+  $alterAgg = "ALTER TABLE training
+  ADD COLUMN IF NOT EXISTS discount_added VARCHAR(255) NOT NULL DEFAULT '0'";
+mysqli_query($con, $alterAgg);
 mysqli_query($con, $alterAg2);
 mysqli_query($con, $trainingItemsTableSQL);
 mysqli_query($con, $academyCarttrainingItemsTableSQL);
