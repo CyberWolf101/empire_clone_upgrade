@@ -477,7 +477,7 @@ if ($result) {
               $sql2 = mysqli_stmt_get_result($stmt);
               while ($row = mysqli_fetch_array($sql2)) {
                 if ($row['isEnabled']) {
-                  echo '<li><a href="saloon/subcategory.php?category=' . $row['id'] . '" style="background:none; outline:none; border:none; color: #FFC700; font-size:12px; text-transform:capitalize; font-weight:500;">' . htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8') . '</a></li><br>';
+                  echo '<li><a href="saloon/subcategory.php?current_service='. $row["name"] . '&category=' . $row['id'] . '" style="background:none; outline:none; border:none; color: #FFC700; font-size:12px; text-transform:capitalize; font-weight:500;">' . htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8') . '</a></li><br>';
                 }
               }
               mysqli_free_result($sql2);
@@ -519,7 +519,7 @@ if ($result) {
                     echo '<li><a href="#" class="menu_links">' . $name . '</a></li><br>';
                   }
                 } else {
-                  echo '<li><a href="' . $url . '" class="menu_links">' . $name . '</a></li><br>';
+                  echo '<li><a href="' . $url . '?current_service='. $name . '" class="menu_links">' . $name . '</a></li><br>';
                 }
               }
             }

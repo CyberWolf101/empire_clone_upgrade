@@ -378,15 +378,15 @@ if (isset($_GET['pedicure'])) {
                     });
                   });
                 </script>
-              </div>
-            </div>
           </div>
         </div>
       </div>
     </div>
-        </div>
-      </div>
-    </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
 
 
 

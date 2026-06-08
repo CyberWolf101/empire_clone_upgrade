@@ -87,6 +87,23 @@ method VARCHAR(255) NOT NULL
   ADD COLUMN IF NOT EXISTS status VARCHAR(255) NOT NULL DEFAULT 'pending'";
   $alterCreditSalesTransfers2 = "ALTER TABLE credit_sales_transfers
   ADD COLUMN IF NOT EXISTS bank VARCHAR(255) NOT NULL DEFAULT ''";
+  $trainingItemsTableSQL = "CREATE TABLE IF NOT EXISTS training_items(
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    item_id VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    image VARCHAR(255) NOT NULL,
+    price VARCHAR(255) NOT NULL,
+    training_id VARCHAR(255) NOT NULL,
+    added_on DATETIME NOT NULL DEFAULT CURRENT_TIME
+  )";
+  $academyCarttrainingItemsTableSQL = "CREATE TABLE IF NOT EXISTS academy_cart_training_items(
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    training_item_id VARCHAR(255) NOT NULL,
+    training_id VARCHAR(255) NOT NULL,
+    added_on DATETIME NOT NULL DEFAULT CURRENT_TIME
+  )";
+mysqli_query($con, $trainingItemsTableSQL);
+mysqli_query($con, $academyCarttrainingItemsTableSQL);
 mysqli_query($con, $alterCreditSalesTransfers2);
 mysqli_query($con, $alterCreditSalesTransfers);
 mysqli_query($con, $createCreditSalesTransfers);

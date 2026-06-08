@@ -7,7 +7,7 @@ session_save_path("../sessions");
 
 // Only start session if none exists
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+  session_start();
 }
 
 // Release session lock early if you don't need to write anymore
@@ -66,7 +66,6 @@ if (mysqli_num_rows($query) == 0) {
     $staff_office = $row['office'] ?? 'N/A';        // safe default
     $admincategorie = $row['sections'] ?? '';
     $username = $name;
-
   }
 }
 
@@ -83,6 +82,8 @@ UNION ALL
 SELECT 'rentals' AS source, COALESCE(SUM(total_amount), 0) AS total_paid_amount FROM rentals WHERE paystatus = 'paid'
 UNION ALL
 SELECT 'members' AS source, COALESCE(SUM(total_amount), 0) AS total_paid_amount FROM members WHERE paystatus = 'paid'
+-- UNION ALL
+-- SELECT 'credit_sales' AS source, COALESCE(SUM(amount_paid), 0) AS total_paid_amount FROM credit_sales
 ";
 
 $result = mysqli_query($con, $query);
@@ -129,8 +130,24 @@ if (!$stmt) {
   $pending_transfers = $result->fetch_assoc()['pending_count'];
   $stmt->close();
 }
-
-
+$items = [];
+$items2 = [
+  "out-of-stock" => [],
+  "low-in-stock" => []
+];
+$sqlQuery = "SELECT * FROM food_menu";
+$res = mysqli_query($con, $sqlQuery);
+while ($row = mysqli_fetch_array($res)) {
+  $items[] = $row;
+}
+foreach ($items as $item) {
+  if ($item["quantity"] == 0 && $item["quantity"] < 1) {
+    $items2["out-of-stock"][] = $item;
+  }
+  if ($item["quantity"] >= 1 && $item["quantity"] <= 5) {
+    $items2["low-in-stock"][] = $item;
+  }
+}
 ?>
 
 
@@ -240,156 +257,156 @@ if (!$stmt) {
               <a class="collapse-item" href="delta_protein.php">Proteins</a>
               <a class="collapse-item" href="deltaorders.php">All Orders</a>
               <!--- <a class="collapse-item" href="startorder.php">Start Transaction</a> --->
+            </div>
           </div>
-        </div>
-      </li>
+        </li>
 
 
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRepair" aria-expanded="true"
-          aria-controls="collapseBootstrap">
-          <i class="fas fa-fw fa-tools"></i>
-          <span>Repair Center</span>
-        </a>
-        <div id="collapseRepair" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Repair Center</h6>
-            <a class="collapse-item" href="repaircenter.php">All Requests</a>
-            <a class="collapse-item" href="repairhistory.php">Repairs History</a>
-            <a class="collapse-item" href="startrepair.php">Submit Request</a>
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRepair" aria-expanded="true"
+            aria-controls="collapseBootstrap">
+            <i class="fas fa-fw fa-tools"></i>
+            <span>Repair Center</span>
+          </a>
+          <div id="collapseRepair" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+              <h6 class="collapse-header">Repair Center</h6>
+              <a class="collapse-item" href="repaircenter.php">All Requests</a>
+              <a class="collapse-item" href="repairhistory.php">Repairs History</a>
+              <a class="collapse-item" href="startrepair.php">Submit Request</a>
+            </div>
           </div>
-        </div>
-      </li>
+        </li>
 
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAca" aria-expanded="true"
-          aria-controls="collapseBootstrap">
-          <i class="fas fa-fw fa-graduation-cap"></i>
-          <span>Academy</span>
-        </a>
-        <div id="collapseAca" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">CHB LUXURY ACADEMY</h6>
-            <a class="collapse-item" href="training.php">Trainings</a>
-            <a class="collapse-item" href="duration.php">Durations</a>
-            <a class="collapse-item" href="academybooking.php">Bookings</a>
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAca" aria-expanded="true"
+            aria-controls="collapseBootstrap">
+            <i class="fas fa-fw fa-graduation-cap"></i>
+            <span>Academy</span>
+          </a>
+          <div id="collapseAca" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+              <h6 class="collapse-header">CHB LUXURY ACADEMY</h6>
+              <a class="collapse-item" href="training.php">Trainings</a>
+              <a class="collapse-item" href="duration.php">Durations</a>
+              <a class="collapse-item" href="academybooking.php">Bookings</a>
+            </div>
           </div>
-        </div>
-      </li>
+        </li>
 
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMember" aria-expanded="true"
-          aria-controls="collapseBootstrap">
-          <i class="fas fa-fw fa-credit-card"></i>
-          <span>Membership</span>
-        </a>
-        <div id="collapseMember" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Membership</h6>
-            <a class="collapse-item" href="packages.php">Packages</a>
-            <a class="collapse-item" href="members.php">All Members</a>
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMember" aria-expanded="true"
+            aria-controls="collapseBootstrap">
+            <i class="fas fa-fw fa-credit-card"></i>
+            <span>Membership</span>
+          </a>
+          <div id="collapseMember" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+              <h6 class="collapse-header">Membership</h6>
+              <a class="collapse-item" href="packages.php">Packages</a>
+              <a class="collapse-item" href="members.php">All Members</a>
+            </div>
           </div>
-        </div>
-      </li>
+        </li>
 
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVoucher"
-          aria-expanded="true" aria-controls="collapseBootstrap">
-          <i class="fas fa-fw  fa-fax"></i>
-          <span>Package Vouchers</span>
-        </a>
-        <div id="collapseVoucher" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Package Vouchers</h6>
-            <a class="collapse-item" href="createpackages.php">Packages</a>
-            <a class="collapse-item" href="vouchers.php">View Vouchers</a>
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVoucher"
+            aria-expanded="true" aria-controls="collapseBootstrap">
+            <i class="fas fa-fw  fa-fax"></i>
+            <span>Package Vouchers</span>
+          </a>
+          <div id="collapseVoucher" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+              <h6 class="collapse-header">Package Vouchers</h6>
+              <a class="collapse-item" href="createpackages.php">Packages</a>
+              <a class="collapse-item" href="vouchers.php">View Vouchers</a>
+            </div>
           </div>
-        </div>
-      </li>
+        </li>
 
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapserent" aria-expanded="true"
-          aria-controls="collapseBootstrap">
-          <i class="fas fa-fw fa-chair"></i>
-          <span>Rental Section</span>
-        </a>
-        <div id="collapserent" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Rental Section</h6>
-            <a class="collapse-item" href="rental_subcategory.php">Subcategories</a>
-            <a class="collapse-item" href="rentalitems.php">Items</a>
-            <a class="collapse-item" href="rentbookings.php">All Bookings</a>
-            <a class="collapse-item" href="gallery.php">Gallery</a>
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapserent" aria-expanded="true"
+            aria-controls="collapseBootstrap">
+            <i class="fas fa-fw fa-chair"></i>
+            <span>Rental Section</span>
+          </a>
+          <div id="collapserent" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+              <h6 class="collapse-header">Rental Section</h6>
+              <a class="collapse-item" href="rental_subcategory.php">Subcategories</a>
+              <a class="collapse-item" href="rentalitems.php">Items</a>
+              <a class="collapse-item" href="rentbookings.php">All Bookings</a>
+              <a class="collapse-item" href="gallery.php">Gallery</a>
+            </div>
           </div>
-        </div>
-      </li>
+        </li>
 
 
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseStaff" aria-expanded="true"
-          aria-controls="collapseBootstrap">
-          <i class="fas fa-fw fa-user"></i>
-          <span>Staff</span>
-        </a>
-        <div id="collapseStaff" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Staff</h6>
-            <a class="collapse-item" href="staff.php">All Staff</a>
-            <a class="collapse-item" href="managers.php">All Managers</a>
-            <a class="collapse-item" href="addstaff.php">Register Staff</a>
-            <a class="collapse-item" href="addsaloonstaff.php">Register Saloon Staff</a>
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseStaff" aria-expanded="true"
+            aria-controls="collapseBootstrap">
+            <i class="fas fa-fw fa-user"></i>
+            <span>Staff</span>
+          </a>
+          <div id="collapseStaff" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+              <h6 class="collapse-header">Staff</h6>
+              <a class="collapse-item" href="staff.php">All Staff</a>
+              <a class="collapse-item" href="managers.php">All Managers</a>
+              <a class="collapse-item" href="addstaff.php">Register Staff</a>
+              <a class="collapse-item" href="addsaloonstaff.php">Register Saloon Staff</a>
+            </div>
           </div>
-        </div>
-      </li>
+        </li>
 
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVent" aria-expanded="true"
-          aria-controls="collapseBootstrap">
-          <i class="fas fa-fw fa-graduation-cap"></i>
-          <span>Inventory</span>
-        </a>
-        <div id="collapseVent" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Inventory</h6>
-            <a class="collapse-item" href="inventory.php">Inventory</a>
-            <a class="collapse-item" href="inventory_departments.php">Inventory Departments</a>
-            <a class="collapse-item" href="inventory_system.php">Inventory System</a>
-            <a class="collapse-item" href="inventory_log_details.php">Inventory logs</a>
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVent" aria-expanded="true"
+            aria-controls="collapseBootstrap">
+            <i class="fas fa-fw fa-graduation-cap"></i>
+            <span>Inventory</span>
+          </a>
+          <div id="collapseVent" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+              <h6 class="collapse-header">Inventory</h6>
+              <a class="collapse-item" href="inventory.php">Inventory</a>
+              <a class="collapse-item" href="inventory_departments.php">Inventory Departments</a>
+              <a class="collapse-item" href="inventory_system.php">Inventory System</a>
+              <a class="collapse-item" href="inventory_log_details.php">Inventory logs</a>
+            </div>
           </div>
-        </div>
-      </li>
+        </li>
 
 
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseEx" aria-expanded="true"
-          aria-controls="collapseBootstrap">
-          <i class="fas fa-money-bill"></i>
-          <span>Expenses</span>
-        </a>
-        <div id="collapseEx" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="expenses.php">View expenses</a>
-            <a class="collapse-item" href="expense_title.php">Expense titles</a>
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseEx" aria-expanded="true"
+            aria-controls="collapseBootstrap">
+            <i class="fas fa-money-bill"></i>
+            <span>Expenses</span>
+          </a>
+          <div id="collapseEx" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+              <a class="collapse-item" href="expenses.php">View expenses</a>
+              <a class="collapse-item" href="expense_title.php">Expense titles</a>
+            </div>
           </div>
-        </div>
-      </li>
+        </li>
 
-      <li class="nav-item">
-        <a class="nav-link" href="delivery_rates.php">
-          <i class="fas fa-truck"></i>
-          <span>Delivery Rates</span>
-        </a>
-      </li>
+        <li class="nav-item">
+          <a class="nav-link" href="delivery_rates.php">
+            <i class="fas fa-truck"></i>
+            <span>Delivery Rates</span>
+          </a>
+        </li>
 
-      <li class="nav-item">
-        <a class="nav-link" href="pendingtransfers.php">
-          <i class="fas fa-money-bill-wave"></i>
-          <span>Pending transfers</span>
-        </a>
-      </li>
+        <li class="nav-item">
+          <a class="nav-link" href="pendingtransfers.php">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Pending transfers</span>
+          </a>
+        </li>
 
-      <li class="nav-item">
-        <!-- <a class="nav-link" href="salesreport.php"> -->
+        <li class="nav-item">
+          <!-- <a class="nav-link" href="salesreport.php"> -->
           <a class="nav-link" href="foodsalesreport.php">
             <i class="fas fa-fw fa-chart-area"></i>
             <span>Sales Report</span>
@@ -564,147 +581,147 @@ if (!$stmt) {
                   <a class="collapse-item" href="deltaorders.php">All Orders</a><?php } ?>
 
                 <!--- <a class="collapse-item" href="startorder.php">Start Transaction</a> --->
-          </div>
-        </div>
-      </li>
-      <?php } ?>
+              </div>
+            </div>
+          </li>
+        <?php } ?>
 
 
-      <?php if (in_array("repair", $admincategories)) { ?>
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRepair" aria-expanded="true"
-          aria-controls="collapseBootstrap">
-          <i class="fas fa-fw fa-tools"></i>
-          <span>Repair Center</span>
-        </a>
-        <div id="collapseRepair" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Repair Center</h6>
-            <a class="collapse-item" href="repaircenter.php">All Requests</a>
-            <a class="collapse-item" href="repairhistory.php">Repairs History</a>
-            <a class="collapse-item" href="startrepair.php">Submit Request</a>
-          </div>
-        </div>
-      </li>
-      <?php } ?>
+        <?php if (in_array("repair", $admincategories)) { ?>
+          <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRepair" aria-expanded="true"
+              aria-controls="collapseBootstrap">
+              <i class="fas fa-fw fa-tools"></i>
+              <span>Repair Center</span>
+            </a>
+            <div id="collapseRepair" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+              <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Repair Center</h6>
+                <a class="collapse-item" href="repaircenter.php">All Requests</a>
+                <a class="collapse-item" href="repairhistory.php">Repairs History</a>
+                <a class="collapse-item" href="startrepair.php">Submit Request</a>
+              </div>
+            </div>
+          </li>
+        <?php } ?>
 
-      <?php if (in_array("academy", $admincategories)) { ?>
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAca" aria-expanded="true"
-          aria-controls="collapseBootstrap">
-          <i class="fas fa-fw fa-graduation-cap"></i>
-          <span>Academy</span>
-        </a>
-        <div id="collapseAca" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">CHB LUXURY ACADEMY</h6>
-            <a class="collapse-item" href="training.php">Trainings</a>
-            <a class="collapse-item" href="duration.php">Durations</a>
-            <a class="collapse-item" href="academybooking.php">Bookings</a>
-          </div>
-        </div>
-      </li>
-      <?php } ?>
+        <?php if (in_array("academy", $admincategories)) { ?>
+          <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseAca" aria-expanded="true"
+              aria-controls="collapseBootstrap">
+              <i class="fas fa-fw fa-graduation-cap"></i>
+              <span>Academy</span>
+            </a>
+            <div id="collapseAca" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+              <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">CHB LUXURY ACADEMY</h6>
+                <a class="collapse-item" href="training.php">Trainings</a>
+                <a class="collapse-item" href="duration.php">Durations</a>
+                <a class="collapse-item" href="academybooking.php">Bookings</a>
+              </div>
+            </div>
+          </li>
+        <?php } ?>
 
-      <?php if (in_array("members", $admincategories)) { ?>
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMember" aria-expanded="true"
-          aria-controls="collapseBootstrap">
-          <i class="fas fa-fw fa-credit-card"></i>
-          <span>Membership</span>
-        </a>
-        <div id="collapseMember" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Membership</h6>
-            <a class="collapse-item" href="packages.php">Packages</a>
-            <a class="collapse-item" href="members.php">All Members</a>
-          </div>
-        </div>
-      </li>
-      <?php } ?>
+        <?php if (in_array("members", $admincategories)) { ?>
+          <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseMember" aria-expanded="true"
+              aria-controls="collapseBootstrap">
+              <i class="fas fa-fw fa-credit-card"></i>
+              <span>Membership</span>
+            </a>
+            <div id="collapseMember" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+              <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Membership</h6>
+                <a class="collapse-item" href="packages.php">Packages</a>
+                <a class="collapse-item" href="members.php">All Members</a>
+              </div>
+            </div>
+          </li>
+        <?php } ?>
 
-      <?php if (in_array("vouchers", $admincategories)) { ?>
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVoucher"
-          aria-expanded="true" aria-controls="collapseBootstrap">
-          <i class="fas fa-fw  fa-fax"></i>
-          <span>Package Vouchers</span>
-        </a>
-        <div id="collapseVoucher" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Package Vouchers</h6>
-            <a class="collapse-item" href="createpackages.php">Packages</a>
-            <a class="collapse-item" href="vouchers.php">View Vouchers</a>
-          </div>
-        </div>
-      </li>
-      <?php } ?>
+        <?php if (in_array("vouchers", $admincategories)) { ?>
+          <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVoucher"
+              aria-expanded="true" aria-controls="collapseBootstrap">
+              <i class="fas fa-fw  fa-fax"></i>
+              <span>Package Vouchers</span>
+            </a>
+            <div id="collapseVoucher" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+              <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Package Vouchers</h6>
+                <a class="collapse-item" href="createpackages.php">Packages</a>
+                <a class="collapse-item" href="vouchers.php">View Vouchers</a>
+              </div>
+            </div>
+          </li>
+        <?php } ?>
 
-      <?php if (in_array("rental", $admincategories)) { ?>
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapserent" aria-expanded="true"
-          aria-controls="collapseBootstrap">
-          <i class="fas fa-fw fa-chair"></i>
-          <span>Rental Section</span>
-        </a>
-        <div id="collapserent" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Rental Section</h6>
-            <a class="collapse-item" href="rental_subcategory.php">Subcategories</a>
-            <a class="collapse-item" href="rentalitems.php">Items</a>
-            <a class="collapse-item" href="rentbookings.php">All Bookings</a>
-            <a class="collapse-item" href="gallery.php">Gallery</a>
-          </div>
-        </div>
-      </li>
-      <?php } ?>
-
-
-      <?php if (in_array("staff", $admincategories)) { ?>
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseStaff" aria-expanded="true"
-          aria-controls="collapseBootstrap">
-          <i class="fas fa-fw fa-user"></i>
-          <span>Staff</span>
-        </a>
-        <div id="collapseStaff" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-          <div class="bg-white py-2 collapse-inner rounded">
-            <h6 class="collapse-header">Staff</h6>
-            <a class="collapse-item" href="staff.php">All Staff</a>
-            <a class="collapse-item" href="managers.php">All Managers</a>
-            <a class="collapse-item" href="addstaff.php">Register Staff</a>
-            <a class="collapse-item" href="addsaloonstaff.php">Register Saloon Staff</a>
-          </div>
-        </div>
-      </li>
-      <?php } ?>
-
-      <?php if (in_array("giftcard", $admincategories)) { ?>
-      <li class="nav-item">
-        <a class="nav-link" href="giftcard.php">
-          <i class="fas fa-fw fa-id-card"></i>
-          <span>Giftcard</span>
-        </a>
-      </li>
-      <?php } ?>
+        <?php if (in_array("rental", $admincategories)) { ?>
+          <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapserent" aria-expanded="true"
+              aria-controls="collapseBootstrap">
+              <i class="fas fa-fw fa-chair"></i>
+              <span>Rental Section</span>
+            </a>
+            <div id="collapserent" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+              <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Rental Section</h6>
+                <a class="collapse-item" href="rental_subcategory.php">Subcategories</a>
+                <a class="collapse-item" href="rentalitems.php">Items</a>
+                <a class="collapse-item" href="rentbookings.php">All Bookings</a>
+                <a class="collapse-item" href="gallery.php">Gallery</a>
+              </div>
+            </div>
+          </li>
+        <?php } ?>
 
 
-      <?php if (in_array("giftcard", $admincategories)) { ?>
-      <li class="nav-item">
-        <a class="nav-link" href="giftcard.php">
-          <i class="fas fa-fw fa-id-card"></i>
-          <span>Giftcard</span>
-        </a>
-      </li>
-      <?php } ?>
+        <?php if (in_array("staff", $admincategories)) { ?>
+          <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseStaff" aria-expanded="true"
+              aria-controls="collapseBootstrap">
+              <i class="fas fa-fw fa-user"></i>
+              <span>Staff</span>
+            </a>
+            <div id="collapseStaff" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+              <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Staff</h6>
+                <a class="collapse-item" href="staff.php">All Staff</a>
+                <a class="collapse-item" href="managers.php">All Managers</a>
+                <a class="collapse-item" href="addstaff.php">Register Staff</a>
+                <a class="collapse-item" href="addsaloonstaff.php">Register Saloon Staff</a>
+              </div>
+            </div>
+          </li>
+        <?php } ?>
 
-      <?php if (in_array("review", $admincategories)) { ?>
-      <li class="nav-item">
-        <a class="nav-link" href="reviews.php">
-          <i class="fas fa-fw fa-chart-area"></i>
-          <span>Reviews</span>
-        </a>
-      </li>
+        <?php if (in_array("giftcard", $admincategories)) { ?>
+          <li class="nav-item">
+            <a class="nav-link" href="giftcard.php">
+              <i class="fas fa-fw fa-id-card"></i>
+              <span>Giftcard</span>
+            </a>
+          </li>
+        <?php } ?>
+
+
+        <?php if (in_array("giftcard", $admincategories)) { ?>
+          <li class="nav-item">
+            <a class="nav-link" href="giftcard.php">
+              <i class="fas fa-fw fa-id-card"></i>
+              <span>Giftcard</span>
+            </a>
+          </li>
+        <?php } ?>
+
+        <?php if (in_array("review", $admincategories)) { ?>
+          <li class="nav-item">
+            <a class="nav-link" href="reviews.php">
+              <i class="fas fa-fw fa-chart-area"></i>
+              <span>Reviews</span>
+            </a>
+          </li>
 
 
       <?php }
@@ -735,6 +752,33 @@ if (!$stmt) {
                   ?>
                 </div>
                 <?php if ($status === 'superadmin' || $status === 'cashier'): ?>
+                  <a href="deficientitems.php">
+                    <div class="text-white p-3">
+                      <div style="position: relative;">
+
+                        <div class='notification-count'>
+                          <div class="ripple-container">
+                            <div class="circle-text bg-danger"><?php echo count($items2["out-of-stock"]) ?></div>
+                            <div>
+                              <div class='ripple-circle border-danger'></div>
+                              <div class='ripple-circle border-danger'></div>
+                              <div class='ripple-circle border-danger'></div>
+                            </div>
+                          </div>
+                          <div class="ripple-container ripple-container-down">
+                            <div class="circle-text bg-warning"><?php echo count($items2["low-in-stock"]) ?></div>
+                            <div>
+                              <div class='ripple-circle border-warning'></div>
+                              <div class='ripple-circle border-warning'></div>
+                              <div class='ripple-circle border-warning'></div>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                      <i class="fas fa-envelope"></i>
+                    </div>
+                  </a>
                   <a href="pendingtransfers.php">
                     <div class="text-white p-3">
                       <div style="position: relative;">
@@ -926,6 +970,10 @@ if (!$stmt) {
               transform: translate(-50%, -50%) scale(0);
               opacity: 0;
               animation: ripple-animation 3s infinite;
+            }
+            .ripple-container-down .ripple-circle,.ripple-container-down .circle-text{
+              top: 100%;
+              left: 60%;
             }
 
 
@@ -1348,7 +1396,7 @@ if (!$stmt) {
               }
             }
 
-            .bold-num{
+            .bold-num {
               color: teal;
               font-weight: 900;
               font-size: 20px;

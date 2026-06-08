@@ -2,7 +2,7 @@
 $bank_accounts = [];
 if (isset($_COOKIE["currentService"])) {
     $service_type = $_COOKIE["currentService"];
-    $sql = "SELECT * FROM bank_accounts WHERE service_type='$service_type'";
+    $sql = "SELECT * FROM bank_accounts WHERE service_type='$service_type' UNION ALL SELECT * FROM bank_accounts WHERE service_type='all'";
     $result = mysqli_query($con, $sql);
     while ($row = mysqli_fetch_array($result)) {
         $bank_accounts[] = $row;

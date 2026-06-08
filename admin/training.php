@@ -108,13 +108,14 @@ echo "<script>alert('Details Updated Successfully!'); window.location.href = 'tr
                     <tfoot>
                       <tr>
                       <th>Name</th>
+                      <th>Training Items / Price</th>
                         <th></th>
                         <th></th>
                       </tr>
                     </tfoot>
                     <tbody>
                         <?php
-$sql = "SELECT * from training  ORDER BY s ASC";
+$sql = "SELECT t.*,(ti.name) as item_name from training t LEFT JOIN training_items ti ON t.id = ti.training_id ORDER BY t.s ASC";
 $sql2 = mysqli_query($con,$sql);
 while ($row = mysqli_fetch_array($sql2)) {
 
@@ -124,6 +125,7 @@ while ($row = mysqli_fetch_array($sql2)) {
 echo "
                          <tr>
                          <td>".$row['name']."</td>
+                         <td>".$row['item_name']."</td>
                          <td> <button type='button'  data-toggle='modal' data-target='#modal".$row['s']."' class='btn btn-sm btn-primary'>Edit</button></td>
                           <td><form action=''  method='get' onsubmit='return confirm(\"Are you sure you want to delete this (".$row['name'].")?\");'>
 		                <input type='text' name='categoryid' value='" . $row['s'] . "' required hidden>  

@@ -1,4 +1,6 @@
-<?php include "header.php"; ?>
+<?php include "header.php";
+setcookie("currentService", $_GET["current_service"], time() + (10 * 365 * 24 * 60 * 60));
+ ?>
 
 
 
