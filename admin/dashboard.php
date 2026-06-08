@@ -102,6 +102,9 @@ method VARCHAR(255) NOT NULL
     training_id VARCHAR(255) NOT NULL,
     added_on DATETIME NOT NULL DEFAULT CURRENT_TIME
   )";
+  $alterAg2 = "ALTER TABLE training_items
+  DROP COLUMN IF EXISTS image";
+mysqli_query($con, $alterAg2);
 mysqli_query($con, $trainingItemsTableSQL);
 mysqli_query($con, $academyCarttrainingItemsTableSQL);
 mysqli_query($con, $alterCreditSalesTransfers2);
