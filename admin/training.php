@@ -193,7 +193,6 @@ if (isset($_POST['update_store'])) {
                                         }
 
                                       }
-
                                       function loadOldItems() {
                                         fetch('all_training_items.php', {
                                             method: "POST",
