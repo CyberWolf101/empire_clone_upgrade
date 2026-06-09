@@ -114,7 +114,6 @@ mysqli_query($con, $trainingItemsTableSQL);
 mysqli_query($con, $academyCarttrainingItemsTableSQL);
 mysqli_query($con, $createCreditSalesTransfers);
 mysqli_query($con, $createSpecialItemsTableSQL);
-mysqli_query($con, $correction);
 mysqli_query($con, $creditSalesTableSQL);
 mysqli_query($con, $createCustomerDiscountTable);
 mysqli_query($con, $createCustomerTableSQL);
@@ -133,6 +132,7 @@ mysqli_query($con, $creditSalesAlterSQL);
 mysqli_query($con, $academyCartAlter);
 mysqli_query($con, $refreshmentAlter);
 mysqli_query($con, $customerDiscountsAlterSQL);
+mysqli_query($con, $correction);
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
