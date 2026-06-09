@@ -49,7 +49,7 @@ if ($username == "") {
                            <?php
                            if(isset($_SESSION["discount"]) && $_SESSION["discount"]["status"] == true){
                               ?>
-                              <td style="border-right-style: hidden;">Duration</td>
+                              <td style="border-right-style: hidden;">Discount</td>
                               <?php
                            }
                            ?>

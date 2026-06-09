@@ -235,12 +235,16 @@ if (isset($_POST['submit'])) {
       // echo $discount;
       // var_dump($result);
       $amountToDiscount = $discount > 0 ? $calculatedprice / $discount : 0;
-      if(!($amountToDiscount <= 0)){
+      if(($amountToDiscount > 0)){
         $calculatedprice -= $amountToDiscount;
         $_SESSION["discount"] = [
           "status"=>true,
           "percent"=>$discount
         ];
+        setcookie("discount", "[
+          'status'=>true,
+          'percent'=>$discount
+        ]" , time() - 3600, "/", "", true, true);
       }
     }
     // echo count($trainingItems);

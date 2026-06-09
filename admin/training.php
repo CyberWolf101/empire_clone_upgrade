@@ -227,7 +227,7 @@ if (isset($_POST['add_training_item'])) {
 
 ';
 
-               echo '<div class="modal fade" id="addTrainingItemModal' . $row['s'] . '" tabindex="-1">
+               echo '<div class="" id="addTrainingItemModal' . $row['s'] . '" tabindex="-1">
                 <div class="modal-dialog">
                   <div class="modal-content">
                     <div class="modal-header">
