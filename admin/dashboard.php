@@ -108,28 +108,31 @@ method VARCHAR(255) NOT NULL
   ADD COLUMN IF NOT EXISTS discount_added VARCHAR(255) NOT NULL DEFAULT '0'";
   $alterAAg = "ALTER TABLE academy_cart_training_items
   ADD COLUMN IF NOT EXISTS item_for VARCHAR(255) NOT NULL DEFAULT ''";
+  $academyCartAlter = "ALTER TABLE academy_cart
+  ADD COLUMN IF NOT EXISTS discount_applied VARCHAR(255) NOT NULL DEFAULT 'false'";
+mysqli_query($con, $trainingItemsTableSQL);
+mysqli_query($con, $academyCarttrainingItemsTableSQL);
+mysqli_query($con, $createCreditSalesTransfers);
+mysqli_query($con, $createSpecialItemsTableSQL);
+mysqli_query($con, $correction);
+mysqli_query($con, $creditSalesTableSQL);
+mysqli_query($con, $createCustomerDiscountTable);
+mysqli_query($con, $createCustomerTableSQL);
 mysqli_query($con, $alterAAg);
 mysqli_query($con, $alterAgg);
 mysqli_query($con, $alterAg2);
-mysqli_query($con, $trainingItemsTableSQL);
-mysqli_query($con, $academyCarttrainingItemsTableSQL);
-mysqli_query($con, $alterCreditSalesTransfers2);
-mysqli_query($con, $alterCreditSalesTransfers);
-mysqli_query($con, $createCreditSalesTransfers);
 mysqli_query($con, $alterRefreshmentSQL);
 mysqli_query($con, $alterSpecialItemsSQL3);
 mysqli_query($con, $alterSpecialItemsSQL2);
 mysqli_query($con, $alterSpecialItemsSQL);
-mysqli_query($con, $createSpecialItemsTableSQL);
+mysqli_query($con, $alterCreditSalesTransfers2);
+mysqli_query($con, $alterCreditSalesTransfers);
 mysqli_query($con, $foodMenuAlter2);
 mysqli_query($con, $foodMenuAlter);
-mysqli_query($con, $correction);
 mysqli_query($con, $creditSalesAlterSQL);
-mysqli_query($con, $customerDiscountsAlterSQL);
-mysqli_query($con, $creditSalesTableSQL);
+mysqli_query($con, $academyCartAlter);
 mysqli_query($con, $refreshmentAlter);
-mysqli_query($con, $createCustomerDiscountTable);
-mysqli_query($con, $createCustomerTableSQL);
+mysqli_query($con, $customerDiscountsAlterSQL);
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">

@@ -90,12 +90,14 @@ if (isset($_GET['order'])) {
               <th>Training</th>
               <th>Duration</th>
               <th>Duration Price</th>
+              <!-- <th>Discount</th> -->
+              <th>Discount Applied</th>
               <th>Total Price</th>
             </tr>
           </thead>
           <tbody>
             <?php
-            $sql = "SELECT a.*,(d.price) as duration_price from academy_cart a LEFT JOIN durations d ON a.training = d.category where a.id='$saloon' ORDER BY s ASC";
+            $sql = "SELECT a.*,(SELECT t.discount_added FROM training t WHERE t.id = d.category) as discount_added,(d.price) as duration_price from academy_cart a LEFT JOIN durations d ON a.training = d.category where a.id='$saloon' ORDER BY s ASC";
             $sql2 = mysqli_query($con, $sql);
             $i = 1;
             $arr = [];
@@ -107,7 +109,8 @@ if (isset($_GET['order'])) {
                           <td> " . $i++ . " </td>
                          <td>" . $row['trainingname'] . "</td>	
                          <td>" . $row['durationname'] . "</td>
-                         <td>" . $row["duration_price"] . "</td>
+                         <td>&#8358;" . $row["duration_price"] . "</td>
+                         <td>" . ($row["discount_applied"] == true ? ($row["discount_added"]) : ("0")) . "%</td>
                          <td>&#8358;" . $row["price"] . "</td>
                         </tr>";
               }

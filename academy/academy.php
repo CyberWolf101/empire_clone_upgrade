@@ -219,13 +219,13 @@ if (isset($_POST['submit'])) {
   $calculatedprice = 0;
 
   $calculatedprice += $itemprice;
+      $discount = 0;
   foreach ($items as $oneItem) {
     $trainingId = $oneItem["training_id"];
     $itemId = $oneItem["item_id"];
     $submit2 = mysqli_query($con, "INSERT INTO academy_cart_training_items(training_item_id, training_id, item_for) VALUES ('$itemId','$trainingId','$saloon')");
     $calculatedprice += $oneItem["price"];
     if (count($trainingItems) == count($items)) {
-      $discount = 0;
       $result = mysqli_fetch_assoc(mysqli_query($con, "SELECT discount_added FROM training WHERE id = '$trainingId'"));
         
         foreach($result as $r){
@@ -247,10 +247,10 @@ if (isset($_POST['submit'])) {
         ]" , time() - 3600, "/", "", true, true);
       }
     }
-    // echo count($trainingItems);
   }
-  $submit = mysqli_query($con, "INSERT INTO academy_cart(`id`, `training`, `trainingname`, `duration`, `durationname`, `price`) 
-   VALUES ('$saloon','$category','$name','$itemID','$trainingname','$calculatedprice')") or die('Could not connect: ' . mysqli_error($con));
+  $discount_applied = $discount > 0 ? "true" : "false";
+  $submit = mysqli_query($con, "INSERT INTO academy_cart(`id`, `training`, `trainingname`, `duration`, `durationname`, `price`,`discount_applied`) 
+   VALUES ('$saloon','$category','$name','$itemID','$trainingname','$calculatedprice','$discount_applied')") or die('Could not connect: ' . mysqli_error($con));
 
   header("location:cart.php");
 }

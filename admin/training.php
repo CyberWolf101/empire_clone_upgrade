@@ -12,6 +12,7 @@ if (isset($_GET['categoryid'])) {
 if (isset($_POST['update_store'])) {
   $id = $_POST['id'];
   $name = $_POST['name'];
+  $discount = $_POST['discount'];
   $des = mysqli_real_escape_string($con, $_POST['details']);
   $fileName = basename($_FILES["file"]["name"]);
 
@@ -48,27 +49,14 @@ if (isset($_POST['update_store'])) {
 
 
 
-  $insert = mysqli_query($con, "UPDATE training  SET name='$name' where s='$id'") or die('Could not connect: ' . mysqli_error($con));
+  $insert = mysqli_query($con, "UPDATE training  SET name='$name', discount_added = '$discount' where s='$id'") or die('Could not connect: ' . mysqli_error($con));
   $insert = mysqli_query($con, "UPDATE training  SET description='$des' where s='$id'") or die('Could not connect: ' . mysqli_error($con));
   echo "<script>alert('Details Updated Successfully!'); window.location.href = 'training.php';</script>";
 }
 
 // Add training items
 
-if (isset($_POST['add_training_item'])) {
-  $name = $_POST["name"];
-  $price = $_POST["price"];
-  $trainingId = $_POST["training_id"];
-  $sqlToQuery = "INSERT INTO training_items(name,price,item_id,training_id) VALUES ('$name','$price','$name','$trainingId')";
-  if (mysqli_query($con, $sqlToQuery)) {
-?>
-    <script>
-      alert('Training Item added successfully!');
-      window.location.href = 'training.php';
-    </script>
-<?php
-  }
-}
+
 
 ?>
 
@@ -176,25 +164,28 @@ if (isset($_POST['add_training_item'])) {
 
 
 
-              echo '	<div class="modal fade" id="modal' . $row['s'] . '" tabindex="-1">
+              echo '<div class="modal fade" id="modal' . $row['s'] . '" tabindex="-1">
                 <div class="modal-dialog modal-dialog-scrollable  modal-dialog-centered">
                 <div class="modal-content">
+                  <form id="form" name="form" action="" method="post" enctype="multipart/form-data"> 
 				<div class="modal-header">
 				<h6 style="color:black;">Edit Details</h6>
 				</div>
                 <div class="modal-body">
-                  <form id="form" name="form" action="" method="post" enctype="multipart/form-data"> 
                       <div class="row mb-3">
                       <div class="col-md-12">
                           
                           
                    <p><input type="text" name="name" class="form-control" value="' . $row['name'] . '" placeholder="Name" required></p>
                    <p><textarea name="details" class="form-control" placeholder="Enter description here">' . $row['description'] . '</textarea></p>
+                   <p><label>Discount(%)</label><input type="number" class="form-control" name="discount" value="' . $row["discount_added"] . '" /></p>
                    <p><label>Add New File</label><input type="file" class="form-control" name="file" /></p>
-                   <p><input type="hidden" name="id" class="form-control" value="' . $row['s'] . '" placeholder="Advert Text" required></p> </div>
-					  <div class="modal-footer">
-					  <input id="submit" name="update_store" class="btn btn-sm btn-primary shadow-sm w-100" type="submit" value="Update Details"></form>
+                   <p><input type="hidden" name="id" class="form-control" value="' . $row['s'] . '" placeholder="Advert Text" required></p>
                     </div>
+					  <div class="modal-footer">
+					  <input id="submit" name="update_store" class="btn btn-sm btn-primary shadow-sm w-100" type="submit" value="Update Details">
+                    </div>
+                    </form>
                   </div>
                 </div></div>
                </div><!-- End Modal Dialog Scrollable-->
@@ -227,33 +218,172 @@ if (isset($_POST['add_training_item'])) {
 
 ';
 
-               echo '<div class="" id="addTrainingItemModal' . $row['s'] . '" tabindex="-1">
-                <div class="modal-dialog">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h6 style="color:black;">Add Training Items</h6>
-                    </div>
-                    <div class="modal-body">
-                      <form id="form" name="form" action="" method="post" enctype="multipart/form-data">
+              ?>
+              <form id="add-training-items-form" action="javascript:void();" method="post">
+                <div class="modal fade addTrainingItemModal" id="addTrainingItemModal<?= $row['s'] ?>" tabindex="-1">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h6 style="color:black;">Add Training Items</h6>
+                      </div>
+                      <div class="modal-body">
+                        <div id="add-training-item-message" class="w-100"></div>
                         <div class="row mb-3">
                           <div class="col-md-12">
-
-
                             <p><input type="text" name="name" class="form-control" placeholder="Item Name" required></p>
                             <p><input type="number" name="price" class="form-control" placeholder="Item Price" required></p>
-                            <input type="hidden" class="form-control" name="training_id" value="' . $row["id"] . '" />
+                            <input type="hidden" id="training_id_input" class="form-control" name="training_id" value="<?= $row["id"] ?>" />
                           </div>
-                          <div class="modal-footer">
-                            <input id="submit" name="add_training_item" class="btn btn-sm btn-primary shadow-sm w-100" type="submit" value="Add Training Item">
-                      </form>
+                          <div class="d-flex">
+                            <button id="add" name="add_training_item" class="btn btn-sm btn-primary shadow-sm w-100" type="button">Add</button>
+                            <input id="save_changes" name="save_changes" class="btn btn-sm btn-success shadow-sm w-100" type="button" value="Save changes">
+                          </div>
+
+                          <div class="w-100 mb-3 d-grid">
+                            <!-- <p>New (unsaved) items</p> -->
+                            <div id="new_changes_page"></div>
+                            <div>
+                              <hr>
+                              <p>Old Items</p>
+                              <div id="old-items"></div>
+                              <script>
+                                function loadOldItems() {
+                                  fetch('all_training_items.php', {
+                                      method: "POST",
+                                      body: JSON.stringify({
+                                        training_id: document.querySelector("#training_id_input").value
+                                      }),
+                                    }).then(res => res.json())
+                                    .then(data => {
+                                      const page = document.querySelector("#old-items");
+                                      page.innerHTML = "";
+                                      if (data.length < 1) {
+                                        page.innerHTML = "No old items";
+                                      } else {
+                                        data.forEach((item, index) => {
+                                          page.innerHTML += `
+                                            <div class="card shadow-sm bg-light m-3 p-1 d-flex justify-content-between">
+                                              <div class="d-grid">
+                                                <p class="p-1 font-weight-bold">${item.name}</p>
+                                                <p class="px-1">${item.price}</p>
+                                              </div>
+                                              <div class="d-flex justify-content-end">
+                                                <button class="btn btn-sm bg-danger btn-close" onclick=''><i class="bi bi-trash"></i></button>
+                                              </div>
+                                            </div>
+                                        `;
+                                        })
+
+                                      }
+                                    })
+                                }
+                                setInterval(loadOldItems(), 100);
+                              </script>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+
+                      </div>
+
+                      <script>
+                        const formToSubmit = document.querySelector("#add-training-items-form");
+                        let newItems = [];
+                        const html = document.getElementById("new_changes_page");
+
+                        function deleteI(index) {
+                          newItems.splice(index, 1);
+                          console.log(newItems);
+                          html.innerHTML = "";
+                          newItems.forEach((item, index) => {
+                            html.innerHTML += `
+                            <div class="card shadow-sm bg-light m-3 p-1 d-flex justify-content-between">
+                              <div class="d-grid">
+                                <p class="p-1 font-weight-bold">${item.name}</p>
+                                <p class="px-1">${item.price}</p>
+                              </div>
+                              <div class="d-flex justify-content-end">
+                              <button class="btn btn-sm bg-danger btn-close" onclick='deleteI(${index})'><i class="bi bi-trash"></i></button>
+                              </div>
+                            </div>`;
+                          })
+                        }
+                        document.querySelector("button#add").addEventListener("click", function() {
+                          // e.preventDefault();
+                          const form = new FormData(formToSubmit);
+                          console.log(form);
+                          let name = form.get("name");
+                          let price = form.get("price");
+                          if (!(name == "" || price == "") && !(newItems.find((x) => name == x.name))) {
+                            newItems.push({
+                              name,
+                              price
+                            })
+                          }
+                          html.innerHTML = "";
+                          if (newItems.length < 1) {
+                            // html.innerHTML = "No new items";
+                          } else {
+                            newItems.forEach((item, index) => {
+                              html.innerHTML += `
+                                <div class="card shadow-sm bg-light m-3 p-1 d-flex justify-content-between">
+                                  <div class="d-grid">
+                                    <p class="p-1 font-weight-bold">${item.name}</p>
+                                    <p class="px-1">${item.price}</p>
+                                  </div>
+                                  <div class="d-flex justify-content-end">
+                                  <button class="btn btn-sm bg-danger btn-close" onclick='deleteI(${index})'><i class="bi bi-trash"></i></button>
+                                  </div>
+                                </div>
+                              `;
+                            })
+                          }
+
+                        })
+                        document.querySelector("input#save_changes").addEventListener("click", function() {
+                          fetch("add_training_items.php", {
+                              method: "POST",
+                              headers: {
+                                "Content-type": "application/json"
+                              },
+                              body: JSON.stringify({
+                                training_id: document.querySelector("#training_id_input").value,
+                                data: JSON.stringify(newItems)
+                              })
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                              if (data) {
+                                if (data.status == true) {
+                                  document.querySelector("#add-training-item-message").innerHTML = `
+                                  <div class="alert alert-success alert-dismissable">
+                                    <p class="alert-text">${data.message}</p>
+                                  </div>
+                                  `;
+                                  loadOldItems();
+                                  const cartModal = new bootstrap.Modal(document.querySelector('addTrainingItemModal'), {});
+                                  cartModal.hide();
+                                } else {
+                                  document.querySelector("#add-training-item-message").innerHTML = `
+                                  <div class="alert alert-danger alert-dismissable">
+                                    <p class="alert-text">${data.message}</p>
+                                  </div>
+                                  `;
+                                }
+                              }
+                            });
+                          newItems = [];
+                          html.innerHTML = "";
+                        })
+                      </script>
                     </div>
                   </div>
                 </div>
-              </div>
-      </div><!-- End Modal Dialog Scrollable-->
-               ';
+              </form>
+              <?php
 
-              $i++;
+              // $i++;
               ?>
               <!-- ADD TRAINING ITEMS MODAL -->
 
