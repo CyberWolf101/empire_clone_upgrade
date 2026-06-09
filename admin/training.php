@@ -119,7 +119,7 @@ if (isset($_POST['add_training_item'])) {
           <thead class="thead-light">
             <tr>
               <th>Name</th>
-              <th>Training Items / Price</th>
+              <!-- <th>Training Items / Price</th> -->
               <th></th>
               <th></th>
               <th></th>
@@ -128,7 +128,7 @@ if (isset($_POST['add_training_item'])) {
           <tfoot>
             <tr>
               <th>Name</th>
-              <th>Training Items / Price</th>
+              <!-- <th>Training Items / Price</th> -->
               <th></th>
               <th></th>
               <th></th>
@@ -152,15 +152,15 @@ if (isset($_POST['add_training_item'])) {
             ?>
                 <tr>
                   <td><?= $training['name'] ?></td>
-                  <td>
+                  <!-- <td>
                     <?php
-                    foreach ($trainingItems as $item) {
-                      echo $item["name"] . ": &#8358;" . $item["price"];
-                    }
+                    // foreach ($trainingItems as $item) {
+                    //   echo $item["name"] . ": &#8358;" . $item["price"];
+                    // }
                     ?>
-                  </td>
+                  </td> -->
                   <td> <button type='button' data-toggle='modal' data-target='#modal<?= $training['s'] ?>' class='btn btn-sm btn-primary'>Edit</button></td>
-                  <td> <button type='button' data-bs-toggle='modal' data-bs-target='#addTrainingItemModal<?= $training['s'] ?>' class='btn btn-sm btn-primary'>Add Training Item</button></td>
+                  <td> <button type='button' data-toggle='modal' data-target='#addTrainingItemModal<?= $training['s'] ?>' class='btn btn-sm btn-primary'>Add Training Item</button></td>
                   <td>
                     <form action='' method='get' onsubmit='return confirm("Are you sure you want to delete this \"<?= $training["name"] ?>\"?")'>
                       <input type='text' name='categoryid' value='<?= $training['s'] ?>' required hidden>
@@ -225,9 +225,9 @@ if (isset($_POST['add_training_item'])) {
 
 
 
+';
 
-
-               <div class="modal fade" id="addTrainingItemModal' . $row['s'] . '" tabindex="-1">
+               echo '<div class="modal fade" id="addTrainingItemModal' . $row['s'] . '" tabindex="-1">
                 <div class="modal-dialog">
                   <div class="modal-content">
                     <div class="modal-header">

@@ -222,7 +222,7 @@ if (isset($_POST['submit'])) {
   foreach ($items as $oneItem) {
     $trainingId = $oneItem["training_id"];
     $itemId = $oneItem["item_id"];
-    $submit2 = mysqli_query($con, "INSERT INTO academy_cart_training_items(training_item_id, training_id) VALUES ('$itemId','$trainingId')");
+    $submit2 = mysqli_query($con, "INSERT INTO academy_cart_training_items(training_item_id, training_id, item_for) VALUES ('$itemId','$trainingId','$saloon')");
     $calculatedprice += $oneItem["price"];
     if (count($trainingItems) == count($items)) {
       $discount = 0;
