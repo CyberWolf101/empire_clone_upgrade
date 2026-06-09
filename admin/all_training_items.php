@@ -2,7 +2,7 @@
 
 include "../connect.php";
 $trainingId = json_decode(file_get_contents("php://input"), true)["training_id"];
-$query = "SELECT * FROM training_items WHERE training_id = '$trainingId'";
+$query = "SELECT * FROM training_items WHERE training_id = '$trainingId' ORDER BY id DESC";
 $res = mysqli_query($con, $query);
 $trainingItems = [];
 while ($row = mysqli_fetch_array($res)) {
