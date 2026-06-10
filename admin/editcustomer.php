@@ -126,6 +126,7 @@ if (isset($_GET["customer_unique_id"]) && getCustomer($con, $_GET["customer_uniq
         $editSuccess     = mysqli_query($con, $editCustomerSQL);
         if ($editSuccess) {
             $_SESSION["success"] = "✅ Customer edited successfully";
+            header("Refresh: 4");
         } else {
             $_SESSION["error"] = "❌ Failed to edit customer";
         }

@@ -1,5 +1,7 @@
-<?php include "header.php";
-include "../mailer.php"; ?>
+<?php 
+include "header.php";
+include "../mailer.php";
+?>
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
   <h1 class="h3 mb-0 text-gray-800">Academy Bookings</h1>
   <ol class="breadcrumb">
@@ -15,7 +17,7 @@ if (isset($_GET["set-date"])) {
   $executeSQL = "";
   $date = mysqli_real_escape_string($con, $_GET["date"]);
   $training_id_from_saloon_orders = mysqli_real_escape_string($con, $_GET["training_id_from_saloon_orders"]);
-  
+
   // Format a reader-friendly version of the date for the email
   $formattedDate = date("F j, Y", strtotime($date));
 
@@ -23,7 +25,7 @@ if (isset($_GET["set-date"])) {
   $findSQL = "SELECT * FROM training_dates WHERE training_id_from_saloon_orders = '$training_id_from_saloon_orders'";
   $res = mysqli_query($con, $findSQL);
   $result = mysqli_fetch_array($res);
-  
+
   $dbUpdatedOrInserted = false;
 
   if ($result) {
@@ -43,26 +45,26 @@ if (isset($_GET["set-date"])) {
   }
 
   // 2. If database operation succeeded, gather information and trigger email orchestration
-  if ($dbUpdatedOrInserted) {
-    
+
+
     /* A. FETCH CUSTOMER DETAILS 
       Assumes your relational link is tied to 'training_id_from_saloon_orders'. 
       Adjust table/column fields below if your customer mapping uses a different ID variant.
     */
     $customerSql = "SELECT name, email FROM customers WHERE name = '$customerName' LIMIT 1";
     $customerRes = mysqli_query($con, $customerSql);
-    
+
     if ($customerRes && mysqli_num_rows($customerRes) > 0) {
       $customerData = mysqli_fetch_assoc($customerRes);
-      $toEmail = $customerData['customer_email'];
-      $recipientName = $customerData['customer_name'];
-      
+      $toEmail = $customerData['email'];
+      $recipientName = $customerData['name'];
+
       /* B. FETCH "ITEMS TO BRING" FOR THIS SPECIFIC TRAINING
         Adjust column names if your table signature differs from your previous backend steps
       */
       $itemsSql = "SELECT item_name FROM training_items_to_bring WHERE training_id = '$training_id_from_saloon_orders'";
       $itemsRes = mysqli_query($con, $itemsSql);
-      
+
       $itemsListString = "";
       if ($itemsRes && mysqli_num_rows($itemsRes) > 0) {
         while ($itemRow = mysqli_fetch_assoc($itemsRes)) {
@@ -75,7 +77,7 @@ if (isset($_GET["set-date"])) {
       /* C. COMPOSE EMAIL CONTENT (HTML Format)
       */
       $subject = "Important: Your Training Commencement Date & Checklists";
-      
+
       $message = "
         <html>
         <head>
@@ -103,21 +105,9 @@ if (isset($_GET["set-date"])) {
       /* D. CALL YOUR EXISTING sendEmail FUNCTION
         Pass your variable requirements matching your local helper signature parameters
       */
-      if(sendEmail($toEmail, $subject, $message)){
-        ?>
-        <script>
-          console.log("Email Sent");
-        </script>
-        <?php
-      }else{
-        ?>
-        <script>
-          console.log("Email not Sent");
-        </script>
-        <?php
-      }
+      sendEmail($toEmail, $subject, $message);
     }
-  }
+
 }
 ?>
 <!-- Invoice Example -->
