@@ -157,7 +157,7 @@ if (isset($_GET['order'])) {
 
         <br>
         <center>
-          <?php if ($stats == "paid") { ?><p>
+          <?php if ($stats == "pending") { ?><p>
             <form action='' method='get' onsubmit='return confirm("Are you sure you want mark this training as completed?");'>
               <input type='text' name='categoryid' value='<?php echo $saloon; ?>' required hidden>
               <input type='submit' name='delete' value='Mark as Completed' class='btn btn-sm btn-danger w-100'>

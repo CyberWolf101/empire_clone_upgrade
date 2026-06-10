@@ -21,6 +21,7 @@
             <th>Customer</th>
             <th>Total Amount</th>
             <th>Payment Status</th>
+            <th>Start Date</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
