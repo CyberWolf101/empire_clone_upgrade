@@ -23,20 +23,20 @@ if (isset($_GET['order'])) {
     $customerphone = $row["phone"];
     $email = $row["email"];
 
-    $stats = $row['pay_status'];
+    $stats = $row['status'];
 
     //color
     //color
-    // if ($stats == "no") {
-    //   $bg = "badge-warning";
-    //   $stats = "booking";
-    // } else if ($stats == "processing") {
-    //   $bg = "badge-primary";
-    // } else if ($stats == "cancelled") {
-    //   $bg = "badge-danger";
-    // } else if ($stats == "processed" || $stats == "completed") {
-    //   $bg = "badge-success";
-    // }
+    if ($stats == "no") {
+      $bg = "badge-warning";
+      $stats = "booking";
+    } else if ($stats == "processing") {
+      $bg = "badge-primary";
+    } else if ($stats == "cancelled") {
+      $bg = "badge-danger";
+    } else if ($stats == "processed" || $stats == "completed") {
+      $bg = "badge-success";
+    }
   }
 } else {
   header("location:dashboard.php");
@@ -97,23 +97,56 @@ if (isset($_GET['order'])) {
           </thead>
           <tbody>
             <?php
-            $sql = "SELECT a.*,(SELECT t.discount_added FROM training t WHERE t.id = d.category) as discount_added,(d.price) as duration_price from academy_cart a LEFT JOIN durations d ON a.training = d.category where a.id='$saloon' ORDER BY s ASC";
+            $sql = "SELECT a.*,(d.duration) as duration_int,(d.duration_unit) as duration_unit,(SELECT t.discount_added FROM training t WHERE t.id = d.category) as discount_added,(d.price) as duration_price from academy_cart a LEFT JOIN durations d ON a.training = d.category where a.id='$saloon' GROUP BY a.trainingname ORDER BY a.s ASC";
             $sql2 = mysqli_query($con, $sql);
             $i = 1;
             $arr = [];
             while ($row1 = mysqli_fetch_array($sql2)) {
               $arr[] = $row1;
-              foreach($arr as $row){
-                echo "
+            }
+            foreach ($arr as $row) {
+              echo "
                          <tr>
-                          <td> " . $i++ . " </td>
+                          <td>" . $i++ . "</td>
                          <td>" . $row['trainingname'] . "</td>	
-                         <td>" . $row['durationname'] . "</td>
+                         ";
+            ?>
+              <td>
+                <?= $row["duration_int"] ?>
+                <?php
+                $unitOutputs = [
+                  [
+                    "short_form" => "d",
+                    "full_form" => "Day(s)"
+                  ],
+                  [
+                    "short_form" => "w",
+                    "full_form" => "Weeks(s)"
+                  ],
+                  [
+                    "short_form" => "m",
+                    "full_form" => "Months(s)"
+                  ],
+                  [
+                    "short_form" => "y",
+                    "full_form" => "Year(s)"
+                  ]
+                ];
+                foreach ($unitOutputs as $output) {
+                  if ($row['duration_unit'] == $output["short_form"]) {
+                ?>
+                    <?= $output["full_form"] ?>
+                <?php
+                  }
+                }
+                ?>
+              </td>
+            <?php
+              echo "
                          <td>&#8358;" . $row["duration_price"] . "</td>
-                         <td>" . ($row["discount_applied"] == true ? ($row["discount_added"]) : ("0")) . "%</td>
+                         <td>" . ($row["discount_applied"] == "true" ? ($row["discount_added"]) : ("0")) . "%</td>
                          <td>&#8358;" . $row["price"] . "</td>
                         </tr>";
-              }
             }
             ?>
 
@@ -149,7 +182,7 @@ if (isset($_GET['order'])) {
           </thead>
           <tbody>
             <?php
-            $query = "SELECT t.id,t.name, t.price FROM training_items t LEFT JOIN academy_cart_training_items a ON t.training_id = a.training_id WHERE a.item_for = '$saloon' GROUP BY t.name";
+            $query = "SELECT t.id,t.name, t.price FROM training_items t LEFT JOIN academy_cart_training_items a ON a.training_id = t.training_id AND a.training_item_id = t.name WHERE a.item_for = '$saloon' GROUP BY t.name";
             $result = mysqli_query($con, $query);
             $res = [];
             while ($row = mysqli_fetch_array($result)) {

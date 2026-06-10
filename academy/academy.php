@@ -151,7 +151,37 @@ while ($row = mysqli_fetch_array($sql2)) {
 
                     echo '<tr class="ter mx-3" onclick=\'this.querySelector("input[type=radio]").click();\' >
 	<td class="check"><input type="radio" style="pointer-events:none;"  value="' . $row['s'] . '" name="item"  required/></td>
-	<td class="check"><span>&nbsp; &nbsp; &nbsp; &nbsp;  ' . $row['duration'] . '</span></td>
+	<td class="check"><span>&nbsp; &nbsp; &nbsp; &nbsp;  ' . $row['duration'];
+                  ?>
+                    <?php
+                    $unitOutputs = [
+                      [
+                        "short_form" => "d",
+                        "full_form" => "Day(s)"
+                      ],
+                      [
+                        "short_form" => "w",
+                        "full_form" => "Weeks(s)"
+                      ],
+                      [
+                        "short_form" => "m",
+                        "full_form" => "Months(s)"
+                      ],
+                      [
+                        "short_form" => "y",
+                        "full_form" => "Year(s)"
+                      ]
+                    ];
+                    foreach ($unitOutputs as $output) {
+                      if ($row['duration_unit'] == $output["short_form"]) {
+                    ?>
+                        <?= $output["full_form"] ?>
+                    <?php
+                      }
+                    }
+                    ?>
+                  <?php
+                    echo '</span></td>
     <td class="check" style="font-size:16px">&#8358;' . $row['price'] . '.00</td>
     </tr>';
                   }
@@ -162,8 +192,23 @@ while ($row = mysqli_fetch_array($sql2)) {
                 </tbody>
               </table>
           </div>
+          <?php
 
-          <p>Select Training items</p>
+          $discountTOADD = "SELECT discount_added FROM training WHERE id = '$category'";
+          $response = mysqli_query($con, $discountTOADD);
+          $toAdd = 0;
+          while ($rrrrrow = mysqli_fetch_array($response)) {
+            $toAdd += $rrrrrow["discount_added"];
+          }
+          ?>
+          <p class="ms-4">Select Training items</p>
+          <?php
+          if ($toAdd > 0) {
+          ?>
+            <p class="ms-4" style="color: green;">Purchase all items to get <?= $toAdd ?>% discount</p>
+          <?php
+          }
+          ?>
 
           <table id="results" width="95%" border="0" cellspacing='0' style="border-collapse:separate; border:none; outline:none; margin:auto; border-spacing:0px 10px; padding:10px 0px;">
             <tbody>
@@ -209,42 +254,50 @@ if (isset($_POST['submit'])) {
       $itemprice = $rowe['price'];
     }
   }
-  $items = [];
-  foreach ($trainingItems as $item) {
-    $ress = mysqli_fetch_assoc(mysqli_query($con, "SELECT * FROM training_items WHERE name = '$item'"));
-    $items[] = $ress;
-    // var_dump($ress);
+  $fullItems = [];
+  $fullSQL = "SELECT * FROM training_items WHERE training_id = '$category'";
+  $sql2 = mysqli_query($con, $fullSQL);
+  while ($rrrrr = mysqli_fetch_array($sql2)) {
+    $fullItems[] = $rrrrr;
   }
-  // var_dump($items);
+  $items = [];
+  // Confuser part
+  // foreach ($trainingItems as $item) {
+  //   $sqll = mysqli_query($con, "SELECT * FROM training_items WHERE name = '$item'");
+  //   if ($sqll) {
+  //     $ress = mysqli_fetch_array($sqll);
+  //     while ($rrrow = $ress) {
+  //       echo "<br>";
+  //       var_dump($rrrow);
+  //     }
+  //   }
+  // }
   $calculatedprice = 0;
 
   $calculatedprice += $itemprice;
-      $discount = 0;
+  $discount = 0;
   foreach ($items as $oneItem) {
     $trainingId = $oneItem["training_id"];
     $itemId = $oneItem["item_id"];
     $submit2 = mysqli_query($con, "INSERT INTO academy_cart_training_items(training_item_id, training_id, item_for) VALUES ('$itemId','$trainingId','$saloon')");
     $calculatedprice += $oneItem["price"];
-    if (count($trainingItems) == count($items)) {
+    if (count($trainingItems) == count($fullItems)) {
       $result = mysqli_fetch_assoc(mysqli_query($con, "SELECT discount_added FROM training WHERE id = '$trainingId'"));
-        
-        foreach($result as $r){
-          $discount += $result["discount_added"];
-        }
-      // echo "<br>";
-      // echo $discount;
-      // var_dump($result);
+
+      foreach ($result as $r) {
+        $discount += $result["discount_added"];
+      }
       $amountToDiscount = $discount > 0 ? $calculatedprice / $discount : 0;
-      if(($amountToDiscount > 0)){
+      if (($amountToDiscount > 0)) {
         $calculatedprice -= $amountToDiscount;
         $_SESSION["discount"] = [
-          "status"=>true,
-          "percent"=>$discount
+          "status" => true,
+          "percent" => $discount
         ];
         setcookie("discount", "[
           'status'=>true,
           'percent'=>$discount
-        ]" , time() - 3600, "/", "", true, true);
+        ]", time() - 3600, "/", "", true, true);
       }
     }
   }

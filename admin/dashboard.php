@@ -110,6 +110,8 @@ method VARCHAR(255) NOT NULL
   ADD COLUMN IF NOT EXISTS item_for VARCHAR(255) NOT NULL DEFAULT ''";
   $academyCartAlter = "ALTER TABLE academy_cart
   ADD COLUMN IF NOT EXISTS discount_applied VARCHAR(255) NOT NULL DEFAULT 'false'";
+  $alterDuration = "ALTER TABLE durations
+  ADD COLUMN IF NOT EXISTS duration_unit VARCHAR(255) NOT NULL";
 mysqli_query($con, $trainingItemsTableSQL);
 mysqli_query($con, $academyCarttrainingItemsTableSQL);
 mysqli_query($con, $createCreditSalesTransfers);
@@ -133,6 +135,7 @@ mysqli_query($con, $academyCartAlter);
 mysqli_query($con, $refreshmentAlter);
 mysqli_query($con, $customerDiscountsAlterSQL);
 mysqli_query($con, $correction);
+mysqli_query($con, $alterDuration);
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">

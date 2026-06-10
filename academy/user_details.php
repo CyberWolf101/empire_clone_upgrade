@@ -1,4 +1,5 @@
 <?php include "header.php";
+$username = "Makinde Ayooluwa";
 if($username!=""){echo header("location:cart.php");} 
 ?>
 
@@ -14,26 +15,6 @@ if($username!=""){echo header("location:cart.php");}
 	</div>
 <div class="col-lg-12"> <p> <button type="submit" name="submitdetails" value="1" class="btn-buya">SUBMIT</button>  </p> </div>
 </form></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <?php
 
 
