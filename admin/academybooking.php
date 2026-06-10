@@ -1,4 +1,5 @@
-<?php include "header.php"; ?>
+<?php include "header.php";
+include "../mailer.php"; ?>
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
   <h1 class="h3 mb-0 text-gray-800">Academy Bookings</h1>
   <ol class="breadcrumb">
@@ -6,6 +7,119 @@
     <li class="breadcrumb-item active" aria-current="page">Academy</li>
   </ol>
 </div>
+<?php
+// Ensure $con is accessible and the sendEmail function is included/defined above this script
+
+if (isset($_GET["set-date"])) {
+  $customerName = isset($_POST["customer_name"]) ? mysqli_real_escape_string($con, $_POST["customer_name"]) : "";
+  $executeSQL = "";
+  $date = mysqli_real_escape_string($con, $_GET["date"]);
+  $training_id_from_saloon_orders = mysqli_real_escape_string($con, $_GET["training_id_from_saloon_orders"]);
+  
+  // Format a reader-friendly version of the date for the email
+  $formattedDate = date("F j, Y", strtotime($date));
+
+  // 1. Check if the training date entry exists
+  $findSQL = "SELECT * FROM training_dates WHERE training_id_from_saloon_orders = '$training_id_from_saloon_orders'";
+  $res = mysqli_query($con, $findSQL);
+  $result = mysqli_fetch_array($res);
+  
+  $dbUpdatedOrInserted = false;
+
+  if ($result) {
+    // Entry exists -> Update it
+    $executeSQL = "UPDATE training_dates SET start_date = '$date' WHERE training_id_from_saloon_orders = '$training_id_from_saloon_orders'";
+    if (mysqli_query($con, $executeSQL)) {
+      $dbUpdatedOrInserted = true;
+      echo "<script>alert('Start date updated successfully');</script>";
+    }
+  } else {
+    // Entry doesn't exist -> Insert it
+    $executeSQL = "INSERT INTO training_dates(start_date, training_id_from_saloon_orders) VALUES ('$date', '$training_id_from_saloon_orders')";
+    if (mysqli_query($con, $executeSQL)) {
+      $dbUpdatedOrInserted = true;
+      echo "<script>alert('Start date set successfully');</script>";
+    }
+  }
+
+  // 2. If database operation succeeded, gather information and trigger email orchestration
+  if ($dbUpdatedOrInserted) {
+    
+    /* A. FETCH CUSTOMER DETAILS 
+      Assumes your relational link is tied to 'training_id_from_saloon_orders'. 
+      Adjust table/column fields below if your customer mapping uses a different ID variant.
+    */
+    $customerSql = "SELECT name, email FROM customers WHERE name = '$customerName' LIMIT 1";
+    $customerRes = mysqli_query($con, $customerSql);
+    
+    if ($customerRes && mysqli_num_rows($customerRes) > 0) {
+      $customerData = mysqli_fetch_assoc($customerRes);
+      $toEmail = $customerData['customer_email'];
+      $recipientName = $customerData['customer_name'];
+      
+      /* B. FETCH "ITEMS TO BRING" FOR THIS SPECIFIC TRAINING
+        Adjust column names if your table signature differs from your previous backend steps
+      */
+      $itemsSql = "SELECT item_name FROM training_items_to_bring WHERE training_id = '$training_id_from_saloon_orders'";
+      $itemsRes = mysqli_query($con, $itemsSql);
+      
+      $itemsListString = "";
+      if ($itemsRes && mysqli_num_rows($itemsRes) > 0) {
+        while ($itemRow = mysqli_fetch_assoc($itemsRes)) {
+          $itemsListString .= "<li>" . htmlspecialchars($itemRow['item_name']) . "</li>";
+        }
+      } else {
+        $itemsListString = "<li>No specific requirements listed. Bring your learning enthusiasm!</li>";
+      }
+
+      /* C. COMPOSE EMAIL CONTENT (HTML Format)
+      */
+      $subject = "Important: Your Training Commencement Date & Checklists";
+      
+      $message = "
+        <html>
+        <head>
+          <title>Training Commencement Schedule</title>
+        </head>
+        <body>
+          <h2>Hello, " . htmlspecialchars($recipientName) . "!</h2>
+          <p>We are excited to inform you that your upcoming training session schedule has been finalized.</p>
+          
+          <p><strong>Training Start Date:</strong> " . $formattedDate . "</p>
+          
+          <hr/>
+          <h3>Required Checklists (Things to Bring):</h3>
+          <ul>
+            " . $itemsListString . "
+          </ul>
+          <hr/>
+          
+          <p>Please make sure you arrive early with the required items listed above. If you have any inquiries, feel free to respond directly to this email message.</p>
+          <p>Best regards,<br/>Academy Training Team</p>
+        </body>
+        </html>
+      ";
+
+      /* D. CALL YOUR EXISTING sendEmail FUNCTION
+        Pass your variable requirements matching your local helper signature parameters
+      */
+      if(sendEmail($toEmail, $subject, $message)){
+        ?>
+        <script>
+          console.log("Email Sent");
+        </script>
+        <?php
+      }else{
+        ?>
+        <script>
+          console.log("Email not Sent");
+        </script>
+        <?php
+      }
+    }
+  }
+}
+?>
 <!-- Invoice Example -->
 <div class="col-xl-12 col-lg-12 mb-4">
   <div class="card">
@@ -61,6 +175,44 @@
               <td><?= $row['name'] ?></td>
               <td>&#8358;<?= $row['total_amount'] ?></td>
               <td><span class='badge <?= $statusbg ?>' style='text-transform:capitalize;'><?= $pay_status ?></span></td>
+              <td>
+                <?php
+                $id = $row["id"];
+                $datesSQL = "SELECT * FROM training_dates WHERE training_id_from_saloon_orders = '$id'";
+                $response = mysqli_query($con, $datesSQL);
+                $result = mysqli_fetch_array($response);
+                if (empty($result)) {
+                ?>
+                  Unset
+                <?php
+                }
+                ?>
+                <?= $result["start_date"] ?>
+                <br>
+                <button class="btn btn-danger p-1" data-bs-toggle="modal" data-bs-target="#setStartDateModal">Set Date</button>
+                <!-- SET DATE -->
+                <form action="" method="get">
+                  <div class="modal fade" id="setStartDateModal">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          Set Start Date
+                        </div>
+                        <div class="modal-body">
+                          <label for="" class="form-label">Select date</label>
+                          <input type="date" name="date" class="form-control" required>
+                          <input type="hidden" name="training_id_from_saloon_orders" value="<?= $row["id"] ?>">
+                          <input type="hidden" name="customer_name" value="<?= $row["name"] ?>">
+                        </div>
+                        <div class="modal-footer">
+                          <button class="btn btn-secondary" data-bs-close="modal">Cancel</button>
+                          <button class="btn btn-danger" name="set-date" type="submit">Set Date</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </td>
               <td><span class='badge <?= $bg ?>' style='text-transform:capitalize;'><?= $status ?></span></td>
               <td>
                 <div class="dropdown">

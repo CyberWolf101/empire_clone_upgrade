@@ -112,13 +112,13 @@ method VARCHAR(255) NOT NULL
   ADD COLUMN IF NOT EXISTS discount_applied VARCHAR(255) NOT NULL DEFAULT 'false'";
   $alterDuration = "ALTER TABLE durations
   ADD COLUMN IF NOT EXISTS duration_unit VARCHAR(255) NOT NULL";
-  $createListOfItemsToBring = "CREATE TABLE training_items_to_brings(
+  $createListOfItemsToBring = "CREATE TABLE IF NOT EXISTS training_items_to_bring(
     id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
     training_id VARCHAR(255) NOT NULL,
     item_name VARCHAR(255) NOT NULL,
     required VARCHAR(255) NOT NULL DEFAULT 'true'
   )";
-  $createTrainingStartAndEndDates = "CREATE TABLE training_dates(
+  $createTrainingStartAndEndDates = "CREATE TABLE IF NOT EXISTS training_dates(
     id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
     training_id_from_saloon_orders VARCHAR(255) NOT NULL,
     start_date VARCHAR(255) NOT NULL,

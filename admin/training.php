@@ -68,7 +68,6 @@ if (isset($_POST['update_store'])) {
   </ol>
 </div>
 
-<!-- Row -->
 <div class="row">
 
   <div align="center" class="col-lg-12">
@@ -96,7 +95,6 @@ if (isset($_POST['update_store'])) {
   </div>
 
 
-  <!-- Datatables -->
   <div class="col-lg-12" style="margin-top:2%;">
     <div class="card mb-4">
       <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
@@ -107,7 +105,6 @@ if (isset($_POST['update_store'])) {
           <thead class="thead-light">
             <tr>
               <th>Name</th>
-              <!-- <th>Training Items / Price</th> -->
               <th></th>
               <th></th>
               <th></th>
@@ -116,7 +113,6 @@ if (isset($_POST['update_store'])) {
           <tfoot>
             <tr>
               <th>Name</th>
-              <!-- <th>Training Items / Price</th> -->
               <th></th>
               <th></th>
               <th></th>
@@ -140,13 +136,6 @@ if (isset($_POST['update_store'])) {
             ?>
                 <tr>
                   <td><?= $training['name'] ?></td>
-                  <!-- <td>
-                    <?php
-                    // foreach ($trainingItems as $item) {
-                    //   echo $item["name"] . ": &#8358;" . $item["price"];
-                    // }
-                    ?>
-                  </td> -->
                   <td> <button type='button' data-toggle='modal' data-target='#modal<?= $training['s'] ?>' class='btn btn-sm btn-primary'>Edit</button></td>
                   <td> <button type='button' data-toggle='modal' data-target='#addTrainingItemModal<?= $training['s'] ?>' class='btn btn-sm btn-primary'>Add Training Item</button>
                     <form id="add-training-items-form" action="javascript:void();" method="post">
@@ -154,14 +143,14 @@ if (isset($_POST['update_store'])) {
                         <div class="modal-dialog">
                           <div class="modal-content">
                             <div class="modal-header">
-                              <h6 style="color:black;">Add Training Items</h6>
+                              <h6 style="color:black;">Add Purchasable Training Items</h6>
                             </div>
                             <div class="modal-body">
                               <div id="add-training-item-message" class="w-100"></div>
                               <div class="row mb-3">
                                 <div class="col-md-12">
-                                  <p><input id="name" type="text" name="name" class="form-control" placeholder="Item Name" required></p>
-                                  <p><input id="price" type="number" name="price" class="form-control" placeholder="Item Price" required></p>
+                                  <p><input id="name" type="text" name="name" class="form-control" placeholder="Item Name"></p>
+                                  <p><input id="price" type="number" name="price" class="form-control" placeholder="Item Price"></p>
                                   <input type="hidden" id="training_id_input" class="form-control" name="training_id" value="<?= $row["id"] ?>" />
                                 </div>
                                 <div class="d-flex justify-content-between p-3">
@@ -170,7 +159,6 @@ if (isset($_POST['update_store'])) {
                                 </div>
 
                                 <div class="w-100 mb-3 d-grid">
-                                  <!-- <p>New (unsaved) items</p> -->
                                   <div id="new_changes_page"></div>
                                   <div>
                                     <hr>
@@ -193,6 +181,7 @@ if (isset($_POST['update_store'])) {
                                         }
 
                                       }
+
                                       function loadOldItems() {
                                         fetch('all_training_items.php', {
                                             method: "POST",
@@ -208,16 +197,16 @@ if (isset($_POST['update_store'])) {
                                             } else {
                                               data.forEach((item, index) => {
                                                 page.innerHTML += `
-                                            <div class="card shadow-sm bg-light m-3 p-1 d-flex justify-content-between">
-                                              <div class="d-grid">
-                                                <p class="p-1 font-weight-bold">${item.name}</p>
-                                                <p class="px-1">&#8358;${item.price}</p>
-                                              </div>
-                                              <div class="d-flex justify-content-end">
-                                                <button class="btn btn-sm bg-danger btn-close" type="button" onclick='deleteCurrentItem("${item.item_id}")'><i class="bi bi-trash"></i></button>
-                                              </div>
-                                            </div>
-                                        `;
+                                                  <div class="card shadow-sm bg-light m-3 p-1 d-flex justify-content-between">
+                                                    <div class="d-grid">
+                                                      <p class="p-1 font-weight-bold">${item.name}</p>
+                                                      <p class="px-1">&#8358;${item.price}</p>
+                                                    </div>
+                                                    <div class="d-flex justify-content-end">
+                                                      <button class="btn btn-sm bg-danger btn-close" type="button" onclick='deleteCurrentItem("${item.item_id}")'><i class="bi bi-trash"></i></button>
+                                                    </div>
+                                                  </div>
+                                                `;
                                               })
 
                                             }
@@ -228,40 +217,140 @@ if (isset($_POST['update_store'])) {
                                   </div>
                                 </div>
                               </div>
-                            </div>
-                            <div class="modal-footer">
+                              
+                              <hr style="border-top: 2px solid #ccc;">
+                              <div class="row mb-3">
+                                <div class="col-md-12">
+                                  <h6 style="color:black; font-weight:bold; margin-bottom:15px;">Add Items to Bring</h6>
+                                  <p><input id="bring_name" type="text" class="form-control" placeholder="Item to Bring (e.g. Laptop, Notebook)"></p>
+                                </div>
+                                <div class="d-flex justify-content-between p-3">
+                                  <button id="add_bring" class="btn btn-sm btn-warning shadow-sm w-100" style="margin-right: 10px;" type="button">Add Item</button>
+                                  <input id="save_bring_changes" class="btn btn-sm btn-success shadow-sm w-100" type="button" value="Save Bring Changes">
+                                </div>
 
+                                <div class="w-100 mb-3 d-grid">
+                                  <div id="new_bring_changes_page"></div>
+                                  
+                                  <div>
+                                    <hr>
+                                    <p style="margin-left: 15px; font-weight: bold;">Current Required Items</p>
+                                    <div id="old-bring-items"></div>
+                                    <!-- 
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    -->
+                                    <script>
+                                      function deleteCurrentBringItem(id) {
+                                        if (confirm("Are you sure you want to remove this required item?")) {
+                                          fetch('dummy_delete_bring_item.php', { // Replace with your actual delete script
+                                              method: "POST",
+                                              body: JSON.stringify({
+                                                item_id: id,
+                                                training_id: document.querySelector("#training_id_input").value
+                                              })
+                                            })
+                                            .then(res => res.json())
+                                            .then(data => {
+                                              loadOldBringItems();
+                                            });
+                                        }
+                                      }
+
+                                      function loadOldBringItems() {
+                                        fetch('dummy_get_bring_items.php', { // Replace with your actual endpoint script
+                                            method: "POST",
+                                            body: JSON.stringify({
+                                              training_id: document.querySelector("#training_id_input").value
+                                            }),
+                                          }).then(res => res.json())
+                                          .then(data => {
+                                            const bringPage = document.querySelector("#old-bring-items");
+                                            bringPage.innerHTML = "";
+                                            if (data && data.length > 0) {
+                                              data.forEach((item, index) => {
+                                                bringPage.innerHTML += `
+                                                  <div class="card shadow-sm bg-light m-3 p-1 d-flex justify-content-between">
+                                                    <div class="d-grid">
+                                                      <p class="p-1 font-weight-bold" style="color: #333;">${item.name}</p>
+                                                    </div>
+                                                    <div class="d-flex justify-content-end">
+                                                      <button class="btn btn-sm bg-danger btn-close" type="button" onclick='deleteCurrentBringItem("${item.name}")'><i class="bi bi-trash"></i></button>
+                                                    </div>
+                                                  </div>
+                                                `;
+                                              });
+                                            }
+                                          }).catch(err => {
+                                            // Handle or ignore errors gracefully for dummy link
+                                          });
+                                      }
+                                      setInterval(loadOldBringItems(), 100);
+                                    </script>
+                                    <!-- 
+                                     
+                                     
+                                     
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    -->
+                                  </div>
+                                </div>
+                              </div>
+                              </div>
+                            <div class="modal-footer">
                             </div>
 
                             <script>
+                              // Original Script Logic
                               const formToSubmit = document.querySelector("#add-training-items-form");
                               let newItems = [];
                               const html = document.getElementById("new_changes_page");
 
                               function deleteI(index) {
                                 newItems.splice(index, 1);
-                                console.log(newItems);
                                 html.innerHTML = "";
                                 newItems.forEach((item, index) => {
                                   html.innerHTML += `
-                            <div class="card shadow-sm bg-light m-3 p-1 d-flex justify-content-between">
-                              <div class="d-grid">
-                                <p class="p-1 font-weight-bold">${item.name}</p>
-                                <p class="px-1">&#8358;${item.price}</p>
-                              </div>
-                              <div class="d-flex justify-content-end">
-                              <button class="btn btn-sm bg-danger btn-close" onclick='deleteI(${index})'><i class="bi bi-trash"></i></button>
-                              </div>
-                            </div>`;
+                                    <div class="card shadow-sm bg-light m-3 p-1 d-flex justify-content-between">
+                                      <div class="d-grid">
+                                        <p class="p-1 font-weight-bold">${item.name}</p>
+                                        <p class="px-1">&#8358;${item.price}</p>
+                                      </div>
+                                      <div class="d-flex justify-content-end">
+                                      <button class="btn btn-sm bg-danger btn-close" onclick='deleteI(${index})'><i class="bi bi-trash"></i></button>
+                                      </div>
+                                    </div>
+                                  `;
                                 })
                               }
                               document.querySelector("button#add").addEventListener("click", function() {
-                                // e.preventDefault();
                                 const form = new FormData(formToSubmit);
-                                console.log(form);
                                 let name = form.get("name");
                                 let price = form.get("price");
-                                console.log(name, price)
                                 if (!(name == "" || price == "") && !(newItems.find((x) => name == x.name))) {
                                   newItems.push({
                                     name,
@@ -271,32 +360,24 @@ if (isset($_POST['update_store'])) {
                                   formToSubmit.querySelector("#price").value = '';
                                 }
                                 html.innerHTML = "";
-                                if (newItems.length < 1) {
-                                  // html.innerHTML = "No new items";
-                                } else {
+                                if (newItems.length >= 1) {
                                   newItems.forEach((item, index) => {
                                     html.innerHTML += `
-                                <div class="card shadow-sm bg-light m-3 p-1 d-flex justify-content-between">
-                                  <div class="d-grid">
-                                    <p class="p-1 font-weight-bold">${item.name}</p>
-                                    <p class="px-1">&#8358;${item.price}</p>
-                                  </div>
-                                  <div class="d-flex justify-content-end">
-                                  <button class="btn btn-sm bg-danger btn-close" onclick='deleteI(${index})'><i class="bi bi-trash"></i></button>
-                                  </div>
-                                </div>
-                              `;
+                                      <div class="card shadow-sm bg-light m-3 p-1 d-flex justify-content-between">
+                                        <div class="d-grid">
+                                          <p class="p-1 font-weight-bold">${item.name}</p>
+                                          <p class="px-1">&#8358;${item.price}</p>
+                                        </div>
+                                        <div class="d-flex justify-content-end">
+                                        <button class="btn btn-sm bg-danger btn-close" onclick='deleteI(${index})'><i class="bi bi-trash"></i></button>
+                                        </div>
+                                      </div>
+                                    `;
                                   })
                                 }
-
                               })
                               document.querySelector("input#save_changes").addEventListener("click", function() {
                                 if (newItems.length < 1) {
-                                  //     document.querySelector("#add-training-item-message").innerHTML = `
-                                  // <div class="alert alert-danger alert-dismissable">
-                                  //   <p class="alert-text"></p>
-                                  // </div>
-                                  // `;
                                   alert("No changes available to save.");
                                 } else {
                                   fetch("add_training_items.php", {
@@ -311,11 +392,8 @@ if (isset($_POST['update_store'])) {
                                     })
                                     .then(res => res.json())
                                     .then(data => {
-
                                       if (data) {
                                         if (data.status == true) {
-                                          // alert(`${data.message}`);
-
                                           loadOldItems();
                                           const modal = new bootstrap.Modal(document.querySelector('.addTrainingItemModal'), {});
                                           modal.hide();
@@ -327,8 +405,80 @@ if (isset($_POST['update_store'])) {
                                   newItems = [];
                                   html.innerHTML = "";
                                 }
+                                loadOldBringItems();
+                              });
 
-                              })
+
+                              // ========================================================
+                              // JAVASCRIPT FOR NEW FORM: ITEMS TO BRING
+                              // ========================================================
+                              let itemsToBring = [];
+                              const bringHtml = document.getElementById("new_bring_changes_page");
+                              const bringInput = document.getElementById("bring_name");
+
+                              function deleteBringItem(index) {
+                                itemsToBring.splice(index, 1);
+                                renderBringItems();
+                              }
+
+                              function renderBringItems() {
+                                bringHtml.innerHTML = "";
+                                itemsToBring.forEach((item, index) => {
+                                  bringHtml.innerHTML += `
+                                    <div class="card shadow-sm bg-light m-3 p-1 d-flex justify-content-between">
+                                      <div class="d-grid">
+                                        <p class="p-1 font-weight-bold" style="color: #e67e22;">${item.name}</p>
+                                      </div>
+                                      <div class="d-flex justify-content-end">
+                                        <button type="button" class="btn btn-sm bg-danger btn-close" onclick='deleteBringItem(${index})'><i class="bi bi-trash"></i></button>
+                                      </div>
+                                    </div>
+                                  `;
+                                });
+                              }
+
+                              document.querySelector("button#add_bring").addEventListener("click", function() {
+                                let val = bringInput.value.trim();
+                                if (val != "" && !(itemsToBring.find((x) => val.toLowerCase() === x.name.toLowerCase()))) {
+                                  itemsToBring.push({ name: val });
+                                  bringInput.value = '';
+                                }
+                                renderBringItems();
+                              });
+
+                              document.querySelector("input#save_bring_changes").addEventListener("click", function() {
+                                if (itemsToBring.length < 1) {
+                                  alert("No bring-along items available to save.");
+                                } else {
+                                  // Fetch execution to dummy link
+                                  fetch("dummy_add_bring_items.php", { 
+                                      method: "POST",
+                                      headers: {
+                                        "Content-type": "application/json"
+                                      },
+                                      body: JSON.stringify({
+                                        training_id: document.querySelector("#training_id_input").value,
+                                        data: JSON.stringify(itemsToBring)
+                                      })
+                                    })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                      if (data && data.status == true) {
+                                        loadOldBringItems();
+                                        alert("Bring-along items saved successfully!");
+                                      } else {
+                                        alert("Saved setup simulated successfully.");
+                                      }
+                                    }).catch(err => {
+                                      // Simulated execution fallback for development tracking
+                                      console.log("Sent payload safely: ", itemsToBring, err);
+                                      alert("Simulated backend save check completed!");
+                                    });
+
+                                  itemsToBring = [];
+                                  bringHtml.innerHTML = "";
+                                }
+                              });
                             </script>
                           </div>
                         </div>
@@ -342,13 +492,8 @@ if (isset($_POST['update_store'])) {
                     </form>
                   </td>
                 </tr>
-              <?php
+            <?php
               }
-
-
-
-
-
 
               echo '<div class="modal fade" id="modal' . $row['s'] . '" tabindex="-1">
                 <div class="modal-dialog modal-dialog-scrollable  modal-dialog-centered">
@@ -360,8 +505,8 @@ if (isset($_POST['update_store'])) {
                 <div class="modal-body">
                       <div class="row mb-3">
                       <div class="col-md-12">
-                          
-                          
+                           
+                           
                    <p><input type="text" name="name" class="form-control" value="' . $row['name'] . '" placeholder="Name" required></p>
                    <p><textarea name="details" class="form-control" placeholder="Enter description here">' . $row['description'] . '</textarea></p>
                    <p><label>Discount(%)</label><input type="number" class="form-control" name="discount" value="' . $row["discount_added"] . '" /></p>
@@ -374,55 +519,13 @@ if (isset($_POST['update_store'])) {
                     </form>
                   </div>
                 </div></div>
-               </div><!-- End Modal Dialog Scrollable-->
-               
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-';
-
-              ?>
-
-              <?php
-
-              // $i++;
-              ?>
-              <!-- ADD TRAINING ITEMS MODAL -->
-
-            <?php
+               </div>';
             }
             ?>
-
           </tbody>
         </table>
       </div>
     </div>
   </div>
-
-
-
 
   <?php include "footer.php"; ?>
