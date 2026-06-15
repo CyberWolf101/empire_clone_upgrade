@@ -1,0 +1,15 @@
+<?php
+
+include "mailer.php";
+sendEmail("tobiolaleye39@gmail.com","Test","
+            <div style='background-color:; color:; padding:10px 20px; font-family: Arial, sans-serif;'>
+                <p style='text-align:left;'>
+                    <img src='http://chbluxuryempire.com/assets/img/luxury/logo_luxury.png' width='100px' height='60px;' style='margin-top:13px;'>
+                    <span style='float:right; font-size:15px; color:#FFFFFF; padding-right:6px; margin-top:13px;'>Date: Guess the date</span>
+                </p>
+                <h5 style='color:#FFC700;'>UPCOMING CLASS REMINDER</h5>
+                <p style='color:;'>Hello CyberWolf,</p>
+                <p style='color:;'>This is a war/unfriendly reminder that your session for <strong>The training</strong> is scheduled for <strong>Today</strong>.</p>
+                <br><br>
+                <p style='text-align:center;'><a href='http://chbluxuryempire.com' style='color:#FFC700; text-decoration:none;'>CHBLUXURYEMPIRE</a></p>
+            </div>");

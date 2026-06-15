@@ -2,7 +2,7 @@
 // mailer.php
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-// 4Ew5939xu8QzwbICPC
+
 require 'vendor/autoload.php';
 
 function sendEmail($to, $subject, $message, $from = 'no-reply@example.com')
@@ -10,18 +10,21 @@ function sendEmail($to, $subject, $message, $from = 'no-reply@example.com')
     $mail = new PHPMailer(true);
 
     try {
-        // Detect environment: local vs production
-        $isLocal = in_array($_SERVER['SERVER_NAME'], ['localhost', '127.0.0.1']);
+        // Safe environment check: Default to local if $_SERVER is not set (like in CLI/Cron environments)
+        $serverName = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'localhost';
+        $isLocal = in_array($serverName, ['localhost', '127.0.0.1']);
 
         if ($isLocal) {
-            // Local: MailHog (default runs on port 1025)
+            // Local fallback config: Connect directly to live Gmail via TLS to bypass MailHog if not installed
             $mail->isSMTP();
             $mail->Host = 'smtp.gmail.com';
-            $mail->Port = 1025;
-            $mail->SMTPAuth = false;
-            $mail->SMTPSecure = false;
+            $mail->SMTPAuth = true;
+            $mail->Username = 'corporatehair.sales@gmail.com';
+            $mail->Password = 'yjasvosugikipzyj';
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = 587;
         } else {
-            // Production: real SMTP (adjust these settings to your host)
+            // Production: real SMTP 
             $mail->isSMTP();
             $mail->Host = 'smtp.gmail.com';
             $mail->SMTPAuth = true;
@@ -30,9 +33,6 @@ function sendEmail($to, $subject, $message, $from = 'no-reply@example.com')
             $mail->SMTPSecure = 'ssl';
             $mail->Port = 465;
         }
-        // 587
-        // $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        // $mail->Host = 'mail.chbluxuryempire.com';
 
         // Email settings
         $mail->setFrom($from, 'Empire Clone');
@@ -42,10 +42,10 @@ function sendEmail($to, $subject, $message, $from = 'no-reply@example.com')
         $mail->isHTML(true);
 
         $mail->send();
-        // return true;
+        return true; // ✔️ FIXED: Crucial return status flag added back
+        
     } catch (Exception $e) {
         error_log("Mailer Error: " . $mail->ErrorInfo);
-        // echo "Email not sent due to: " . $mail->ErrorInfo;
-        return false;
+        return false; 
     }
 }
