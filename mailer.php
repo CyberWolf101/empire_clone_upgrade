@@ -42,9 +42,10 @@ function sendEmail($to, $subject, $message, $from = 'no-reply@example.com')
         $mail->isHTML(true);
 
         $mail->send();
-        return true;
+        // return true;
     } catch (Exception $e) {
         error_log("Mailer Error: " . $mail->ErrorInfo);
+        // echo "Email not sent due to: " . $mail->ErrorInfo;
         return false;
     }
 }

@@ -1,4 +1,4 @@
-<?php 
+<?php
 include "header.php";
 include "../mailer.php";
 ?>
@@ -12,11 +12,12 @@ include "../mailer.php";
 <?php
 // Ensure $con is accessible and the sendEmail function is included/defined above this script
 
-if (isset($_GET["set-date"])) {
+if (isset($_POST["set-date"])) {
   $customerName = isset($_POST["customer_name"]) ? mysqli_real_escape_string($con, $_POST["customer_name"]) : "";
   $executeSQL = "";
-  $date = mysqli_real_escape_string($con, $_GET["date"]);
-  $training_id_from_saloon_orders = mysqli_real_escape_string($con, $_GET["training_id_from_saloon_orders"]);
+  $date = mysqli_real_escape_string($con, $_POST["date"]);
+  $training_id_from_saloon_orders = mysqli_real_escape_string($con, $_POST["training_id_from_saloon_orders"]);
+  $training_id = mysqli_real_escape_string($con, $_POST["real_training_id"]);
 
   // Format a reader-friendly version of the date for the email
   $formattedDate = date("F j, Y", strtotime($date));
@@ -47,38 +48,39 @@ if (isset($_GET["set-date"])) {
   // 2. If database operation succeeded, gather information and trigger email orchestration
 
 
-    /* A. FETCH CUSTOMER DETAILS 
+  /* A. FETCH CUSTOMER DETAILS 
       Assumes your relational link is tied to 'training_id_from_saloon_orders'. 
       Adjust table/column fields below if your customer mapping uses a different ID variant.
     */
-    $customerSql = "SELECT name, email FROM customers WHERE name = '$customerName' LIMIT 1";
-    $customerRes = mysqli_query($con, $customerSql);
+  $customerSql = "SELECT * FROM customers WHERE unique_id = '$customerName'";
+  $customerRes = mysqli_query($con, $customerSql);
 
-    if ($customerRes && mysqli_num_rows($customerRes) > 0) {
-      $customerData = mysqli_fetch_assoc($customerRes);
-      $toEmail = $customerData['email'];
-      $recipientName = $customerData['name'];
-
-      /* B. FETCH "ITEMS TO BRING" FOR THIS SPECIFIC TRAINING
+  if ($customerRes && mysqli_num_rows($customerRes) > 0) {
+    $customerData = mysqli_fetch_assoc($customerRes);
+    $toEmail = $customerData['email'];
+    $recipientName = $customerData['name'];
+    // echo $toEmail . " " . $recipientName;
+    /* B. FETCH "ITEMS TO BRING" FOR THIS SPECIFIC TRAINING
         Adjust column names if your table signature differs from your previous backend steps
       */
-      $itemsSql = "SELECT item_name FROM training_items_to_bring WHERE training_id = '$training_id_from_saloon_orders'";
-      $itemsRes = mysqli_query($con, $itemsSql);
+    $itemsSql = "SELECT item_name FROM training_items_to_bring WHERE training_id = '$training_id'";
+    $itemsRes = mysqli_query($con, $itemsSql);
 
-      $itemsListString = "";
-      if ($itemsRes && mysqli_num_rows($itemsRes) > 0) {
-        while ($itemRow = mysqli_fetch_assoc($itemsRes)) {
-          $itemsListString .= "<li>" . htmlspecialchars($itemRow['item_name']) . "</li>";
-        }
-      } else {
-        $itemsListString = "<li>No specific requirements listed. Bring your learning enthusiasm!</li>";
+    $itemsListString = "";
+    if ($itemsRes && mysqli_num_rows($itemsRes) > 0) {
+      while ($itemRow = mysqli_fetch_assoc($itemsRes)) {
+        $itemsListString .= "<li>" . htmlspecialchars($itemRow['item_name']) . "</li>";
       }
+    } else {
+      $itemsListString = "<li>No specific requirements listed. Bring your learning enthusiasm!</li>";
+    }
+    // echo $itemsListString;
 
-      /* C. COMPOSE EMAIL CONTENT (HTML Format)
+    /* C. COMPOSE EMAIL CONTENT (HTML Format)
       */
-      $subject = "Important: Your Training Commencement Date & Checklists";
+    $subject = "Important: Your Training Commencement Date & Checklists";
 
-      $message = "
+    $message = "
         <html>
         <head>
           <title>Training Commencement Schedule</title>
@@ -102,12 +104,18 @@ if (isset($_GET["set-date"])) {
         </html>
       ";
 
-      /* D. CALL YOUR EXISTING sendEmail FUNCTION
+    /* D. CALL YOUR EXISTING sendEmail FUNCTION
         Pass your variable requirements matching your local helper signature parameters
       */
-      sendEmail($toEmail, $subject, $message);
+    if(sendEmail($toEmail, $subject, $message)){
+      ?>
+      <?php
+    }else{
+      ?>
+      <?php
     }
-
+    unset($_POST["set-date"]);
+  }
 }
 ?>
 <!-- Invoice Example -->
@@ -132,7 +140,7 @@ if (isset($_GET["set-date"])) {
         </thead>
         <tbody>
           <?php
-          $sql = "SELECT  * FROM saloon_orders where pay_status='paid' AND section='academy' ORDER BY s DESC";
+          $sql = "SELECT s.*, (a.training) as real_training_id,(SELECT c.unique_id FROM customers c WHERE c.name = s.name) as customer_id FROM saloon_orders s LEFT JOIN academy_cart a ON s.id = a.id where s.pay_status='paid' AND s.section='academy' ORDER BY s.s DESC";
           $sql2 = mysqli_query($con, $sql);
           $i = 1;
           while ($row = mysqli_fetch_array($sql2)) {
@@ -181,7 +189,7 @@ if (isset($_GET["set-date"])) {
                 <br>
                 <button class="btn btn-danger p-1" data-bs-toggle="modal" data-bs-target="#setStartDateModal">Set Date</button>
                 <!-- SET DATE -->
-                <form action="" method="get">
+                <form action="" method="post">
                   <div class="modal fade" id="setStartDateModal">
                     <div class="modal-dialog">
                       <div class="modal-content">
@@ -192,7 +200,8 @@ if (isset($_GET["set-date"])) {
                           <label for="" class="form-label">Select date</label>
                           <input type="date" name="date" class="form-control" required>
                           <input type="hidden" name="training_id_from_saloon_orders" value="<?= $row["id"] ?>">
-                          <input type="hidden" name="customer_name" value="<?= $row["name"] ?>">
+                          <input type="hidden" name="real_training_id" value="<?= $row["real_training_id"] ?>">
+                          <input type="hidden" name="customer_name" value="<?= $row["customer_id"] ?>">
                         </div>
                         <div class="modal-footer">
                           <button class="btn btn-secondary" data-bs-close="modal">Cancel</button>
