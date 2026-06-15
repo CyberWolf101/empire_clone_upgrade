@@ -197,7 +197,7 @@ WHERE (
             } else {
               $bg = "badge-danger";
             }
-            $hasPaid = $row['pay_status'] == 'paid' ? 1 : 0;
+            $hasPaid = $row['pay_status'] == 'paid' ? true : false;
             $completeHidden = !$hasPaid ? 'hidden' : '';
             $completeDisabled = ($status == "processed" || $status == "completed" || $completeHidden || ($row["amount_paid"] < $row["total_amount"])) ? 'disabled' : '';
             $completeText = ($status == "processed" || $status == "completed") ? 'Completed' : 'Complete';
