@@ -12,7 +12,7 @@ mysqli_query($con, "SET time_zone = '+01:00'") or die("Cannot set timezone: " . 
 $now = new DateTime();
 $today = $now->format("Y-m-d");
 
-echo "<h3>Cron Engine Active - Current Server Time: " . $now->format("Y-m-d H:i:s") . "</h3>";
+// echo "<h3>Cron Engine Active - Current Server Time: " . $now->format("Y-m-d H:i:s") . "</h3>";
 
 // 2. Fetch all paid academy bookings
 $reminder_sql = "SELECT 
@@ -39,12 +39,12 @@ if ($reminder_query) {
         $class_time = $academy_row['real_class_date'] ?? ''; 
 
         if (empty($class_time)) {
-            echo "Booking ID: $booking_id | <span style='color:orange;'>Skipped: Missing class date.</span><br>";
+            // echo "Booking ID: $booking_id | <span style='color:orange;'>Skipped: Missing class date.</span><br>";
             continue;
         }
 
         if (empty($student_email) || !filter_var($student_email, FILTER_VALIDATE_EMAIL)) {
-            echo "Booking ID: $booking_id | <span style='color:orange;'>Skipped: Invalid email layout ($student_email).</span><br>";
+            // echo "Booking ID: $booking_id | <span style='color:orange;'>Skipped: Invalid email layout ($student_email).</span><br>";
             continue;
         }
 
@@ -69,7 +69,7 @@ if ($reminder_query) {
 
         // If the class date has passed, close it down out of the engine cycle
         if ($now >= $class_datetime) {
-            echo "Booking ID: $booking_id | Status: Finished (Class date has already passed).<br>";
+            // echo "Booking ID: $booking_id | Status: Finished (Class date has already passed).<br>";
             continue;
         }
 
@@ -115,13 +115,13 @@ if ($reminder_query) {
             
             if (mysqli_num_rows($check_log) > 0) {
                 $should_send = false; 
-                echo "Booking ID: $booking_id | status: <span style='color:blue;'>Waiting (Milestone '$milestone_string' already sent for this interval).</span><br>";
+                // echo "Booking ID: $booking_id | status: <span style='color:blue;'>Waiting (Milestone '$milestone_string' already sent for this interval).</span><br>";
             }
         }
 
         // 5. Fire off communication if criteria matches cleanly
         if ($should_send) {
-            echo "Booking ID: $booking_id | <span style='color:purple;'>Match found! Connecting to mailer endpoint...</span><br>";
+            // echo "Booking ID: $booking_id | <span style='color:purple;'>Match found! Connecting to mailer endpoint...</span><br>";
             
             $reminder_subject = "Reminder: Your Academy Class is coming up! - CHBLUXURYEMPIRE";
             $clean_student_name = htmlspecialchars($student_name, ENT_QUOTES, 'UTF-8');
@@ -146,14 +146,14 @@ if ($reminder_query) {
                 $current_now_string = $now->format('Y-m-d H:i:s');
                 mysqli_query($con, "INSERT INTO reminder_logs (booking_id, milestone_sent, sent_at) VALUES ('$booking_id', '$milestone_string', '$current_now_string')");
                 $processed_count++;
-                echo "Booking ID: $booking_id | <span style='color:green;'><strong>✔️ SUCCESS: Mail sent and tracked!</strong></span><br>";
+                // echo "Booking ID: $booking_id | <span style='color:green;'><strong>✔️ SUCCESS: Mail sent and tracked!</strong></span><br>";
             } else {
-                echo "Booking ID: $booking_id | <span style='color:red;'>❌ FAILED: Mailer accepted request but could not transmit.</span><br>";
+                // echo "Booking ID: $booking_id | <span style='color:red;'>❌ FAILED: Mailer accepted request but could not transmit.</span><br>";
             }
         }
     }
-    echo "<br><strong>Execution Finished.</strong> Total active alerts dispatched: " . $processed_count;
+    // echo "<br><strong>Execution Finished.</strong> Total active alerts dispatched: " . $processed_count;
 } else {
-    echo "SQL Query Error: " . mysqli_error($con);
+    // echo "SQL Query Error: " . mysqli_error($con);
 }
 ?>
