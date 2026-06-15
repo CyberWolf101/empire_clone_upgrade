@@ -753,6 +753,43 @@ foreach ($items as $item) {
                   ?>
                 </div>
                 <?php if ($status === 'superadmin' || $status === 'cashier'): ?>
+                  <?php
+                  // ==========================================================
+                  // 💳 UNPAID/PENDING ACADEMY BOOKINGS PROCESSING ENGINE
+                  // ==========================================================
+
+                  $pendingBookings = [];
+                  $pendingQuery = "SELECT * FROM saloon_orders WHERE section = 'academy' AND pay_status != 'paid'";
+                  $res = mysqli_query($con, $pendingQuery);
+
+                  if ($res) {
+                    while ($pending = mysqli_fetch_assoc($res)) {
+                      $pendingBookings[] = $pending;
+                    }
+                  }
+                  ?>
+                  <!-- PENDING BOOKINGS -->
+                  <a href="academybooking.php">
+                    <div class="text-white p-3">
+                      <div style="position: relative;">
+
+                        <div class='notification-count'>
+                          <div class="ripple-container">
+                            <div class="circle-text"><?php echo count($pendingBookings) ?></div>
+                            <?php if (count($pendingBookings) > 0): ?>
+                              <div>
+                                <div class='ripple-circle'></div>
+                                <div class='ripple-circle'></div>
+                                <div class='ripple-circle'></div>
+                              </div>
+                            <?php endif; ?>
+                          </div>
+                        </div>
+
+                      </div>
+                      <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                  </a>
                   <a href="deficientitems.php">
                     <div class="text-white p-3">
                       <div style="position: relative;">
@@ -780,6 +817,7 @@ foreach ($items as $item) {
                       <i class="fas fa-envelope"></i>
                     </div>
                   </a>
+                  <!-- PENDING TRANSFERS -->
                   <a href="pendingtransfers.php">
                     <div class="text-white p-3">
                       <div style="position: relative;">
@@ -801,6 +839,7 @@ foreach ($items as $item) {
                       <i class="fas fa-money-bill-wave"></i>
                     </div>
                   </a>
+
                 <?php endif; ?>
 
                 <!-- <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown"
@@ -972,7 +1011,9 @@ foreach ($items as $item) {
               opacity: 0;
               animation: ripple-animation 3s infinite;
             }
-            .ripple-container-down .ripple-circle,.ripple-container-down .circle-text{
+
+            .ripple-container-down .ripple-circle,
+            .ripple-container-down .circle-text {
               top: 100%;
               left: 60%;
             }

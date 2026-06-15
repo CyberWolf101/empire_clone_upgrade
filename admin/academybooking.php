@@ -141,7 +141,7 @@ if (isset($_POST["set-date"])) {
         </thead>
         <tbody>
           <?php
-          $sql = "SELECT s.*, (a.training) as real_training_id,(SELECT c.unique_id FROM customers c WHERE c.name = s.name) as customer_id,(SELECT td.reminder_interval FROM training_dates td WHERE td.training_id_from_saloon_orders = s.id) as reminder_interval,(SELECT td.reminder_unit FROM training_dates td WHERE td.training_id_from_saloon_orders = s.id) as reminder_unit FROM saloon_orders s LEFT JOIN academy_cart a ON s.id = a.id where s.pay_status='paid' AND s.section='academy' ORDER BY s.s DESC";
+          $sql = "SELECT s.*, (a.training) as real_training_id,(SELECT c.unique_id FROM customers c WHERE c.name = s.name) as customer_id,(SELECT td.reminder_interval FROM training_dates td WHERE td.training_id_from_saloon_orders = s.id) as reminder_interval,(SELECT td.reminder_unit FROM training_dates td WHERE td.training_id_from_saloon_orders = s.id) as reminder_unit FROM saloon_orders s LEFT JOIN academy_cart a ON s.id = a.id where s.section='academy' ORDER BY s.s DESC";
           $sql2 = mysqli_query($con, $sql);
           $i = 1;
           while ($row = mysqli_fetch_array($sql2)) {
@@ -182,11 +182,14 @@ if (isset($_POST["set-date"])) {
                 $result = mysqli_fetch_array($response);
                 if (empty($result)) {
                 ?>
-                  Unset
+                  <span class="badge bg-warning text-white p-1">Unset</span>
                 <?php
+                }else{
+                  ?>
+                <?= $result["start_date"] ?>
+                  <?php
                 }
                 ?>
-                <?= $result["start_date"] ?>
                 <br>
                 <button class="btn btn-danger p-1" data-bs-toggle="modal" data-bs-target="#setStartDateModal">Set Date</button>
                 <!-- SET DATE -->
@@ -215,7 +218,10 @@ if (isset($_POST["set-date"])) {
               </td>
               <!-- REMINDER INTERVAL -->
               <td>
-                <?= $row["reminder_interval"] ?>
+                <?php
+                if(!empty($row["reminder_interval"])){
+                  ?>
+                  <?= $row["reminder_interval"] ?>
                 <?php
                 $unitOutputs = [
                   [
@@ -241,6 +247,13 @@ if (isset($_POST["set-date"])) {
                     <?= $output["full_form"] ?>
                 <?php
                   }
+                }
+                ?>
+                  <?php
+                }else{
+                  ?>
+                  <span class="badge bg-warning text-white p-1">Unset</span>
+                  <?php
                 }
                 ?>
                 <button class="btn btn-danger p-1" data-bs-toggle="modal" data-bs-target="#setReminderModal">Set Reminder</button>
