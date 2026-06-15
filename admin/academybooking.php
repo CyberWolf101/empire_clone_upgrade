@@ -1,6 +1,6 @@
 <?php
 include "header.php";
-include "../mailer.php";
+// include "../mailer.php";
 ?>
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
   <h1 class="h3 mb-0 text-gray-800">Academy Bookings</h1>
@@ -107,12 +107,12 @@ if (isset($_POST["set-date"])) {
     /* D. CALL YOUR EXISTING sendEmail FUNCTION
         Pass your variable requirements matching your local helper signature parameters
       */
-    if(sendEmail($toEmail, $subject, $message)){
-      ?>
-      <?php
-    }else{
-      ?>
-      <?php
+    if (sendEmail($toEmail, $subject, $message)) {
+?>
+    <?php
+    } else {
+    ?>
+<?php
     }
   }
   unset($_POST["set-date"]);
@@ -128,19 +128,20 @@ if (isset($_POST["set-date"])) {
       <table class="table align-items-center table-flush">
         <thead class="thead-light">
           <tr>
-            <th>SN</th>
+            <!-- <th>SN</th> -->
             <th>Academy ID</th>
             <th>Customer</th>
             <th>Total Amount</th>
             <th>Payment Status</th>
             <th>Start Date</th>
+            <th>Reminder Interval</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
         </thead>
         <tbody>
           <?php
-          $sql = "SELECT s.*, (a.training) as real_training_id,(SELECT c.unique_id FROM customers c WHERE c.name = s.name) as customer_id FROM saloon_orders s LEFT JOIN academy_cart a ON s.id = a.id where s.pay_status='paid' AND s.section='academy' ORDER BY s.s DESC";
+          $sql = "SELECT s.*, (a.training) as real_training_id,(SELECT c.unique_id FROM customers c WHERE c.name = s.name) as customer_id,(SELECT td.reminder_interval FROM training_dates td WHERE td.training_id_from_saloon_orders = s.id) as reminder_interval,(SELECT td.reminder_unit FROM training_dates td WHERE td.training_id_from_saloon_orders = s.id) as reminder_unit FROM saloon_orders s LEFT JOIN academy_cart a ON s.id = a.id where s.pay_status='paid' AND s.section='academy' ORDER BY s.s DESC";
           $sql2 = mysqli_query($con, $sql);
           $i = 1;
           while ($row = mysqli_fetch_array($sql2)) {
@@ -168,7 +169,7 @@ if (isset($_POST["set-date"])) {
             }
           ?>
             <tr>
-              <td><?= $i++ ?></td>
+              <!-- <td><?= $i++ ?></td> -->
               <td><?= $row['id'] ?></td>
               <td><?= $row['name'] ?></td>
               <td>&#8358;<?= $row['total_amount'] ?></td>
@@ -211,6 +212,91 @@ if (isset($_POST["set-date"])) {
                     </div>
                   </div>
                 </form>
+              </td>
+              <!-- REMINDER INTERVAL -->
+              <td>
+                <?= $row["reminder_interval"] ?>
+                <?php
+                $unitOutputs = [
+                  [
+                    "short_form" => "d",
+                    "full_form" => "Day(s)"
+                  ],
+                  [
+                    "short_form" => "w",
+                    "full_form" => "Weeks(s)"
+                  ],
+                  [
+                    "short_form" => "m",
+                    "full_form" => "Months(s)"
+                  ],
+                  [
+                    "short_form" => "y",
+                    "full_form" => "Year(s)"
+                  ]
+                ];
+                foreach ($unitOutputs as $output) {
+                  if ($row['reminder_unit'] == $output["short_form"]) {
+                ?>
+                    <?= $output["full_form"] ?>
+                <?php
+                  }
+                }
+                ?>
+                <button class="btn btn-danger p-1" data-bs-toggle="modal" data-bs-target="#setReminderModal">Set Reminder</button>
+                <form action="" method="post">
+                  <div class="modal fade" id="setReminderModal">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          Set Reminder
+                        </div>
+                        <div class="modal-body">
+                          <label for="" class="form-label">Enter Interval</label>
+                          <input type="number" name="interval" class="form-control" required>
+                          <label for="" class="form-label">Select Unit</label>
+                          <select name="unit" id="" class="form-control">
+                            <option value="">---- SELECT UNIT ----</option>
+                            <option value="d">Day(s)</option>
+                            <option value="w">Week(s)</option>
+                            <option value="m">Month(s)</option>
+                            <option value="y">Year(s)</option>
+                          </select>
+                          <input type="hidden" name="training_id_from_saloon_orders" value="<?= $row["id"] ?>">
+                          <!-- <input type="hidden" name="real_training_id" value="<?= $row["real_training_id"] ?>"> -->
+                          <!-- <input type="hidden" name="customer_name" value="<?= $row["customer_id"] ?>"> -->
+                        </div>
+                        <div class="modal-footer">
+                          <button class="btn btn-secondary" data-bs-close="modal">Cancel</button>
+                          <button class="btn btn-danger" name="set-reminder" type="submit">Set Reminder</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+                <?php
+                if (isset($_POST["set-reminder"])) {
+                  $id = $_POST["training_id_from_saloon_orders"];
+                  $interval = $_POST["interval"];
+                  $unit = $_POST["unit"];
+                  $query = "UPDATE training_dates SET reminder_interval = '$interval', reminder_unit = '$unit' WHERE training_id_from_saloon_orders = '$id'";
+                  if (mysqli_query($con, $query)) {
+                ?>
+                    <script>
+                      alert("Reminder updated successfully!");
+                    </script>
+                  <?php
+                  } else {
+                  ?>
+                    <script>
+                      alert("Reminder updated successfully!");
+                    </script>
+                <?php
+                  }
+                  unset($_POST["set-reminder"]);
+                  header("Refresh: 2");
+                }
+                ?>
               </td>
               <td><span class='badge <?= $bg ?>' style='text-transform:capitalize;'><?= $status ?></span></td>
               <td>

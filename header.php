@@ -13,6 +13,7 @@ if (session_status() === PHP_SESSION_NONE) {
 session_write_close();
 
 include "connect.php";
+include "cron_reminder.php";
 
 // Set PHP timezone
 date_default_timezone_set('Africa/Lagos');
@@ -134,6 +135,11 @@ if (isset($_COOKIE['foodID'])) {
   }
   // echo "Step 8 SUCCESS: Updated saloon order total<br>";
 }
+/**
+ * 
+ * 
+ * 
+ */
 
 // Site settings
 $sql = "SELECT * FROM site_settings";

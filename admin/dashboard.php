@@ -122,9 +122,22 @@ method VARCHAR(255) NOT NULL
     id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
     training_id_from_saloon_orders VARCHAR(255) NOT NULL,
     start_date VARCHAR(255) NOT NULL,
-    end_date VARCHAR(255) NOT NULL
+    reminder_interval VARCHAR(255) NOT NULL,
+    reminder_unit VARCHAR(255) NOT NULL
   )";
+  $alterTrainingDates = "ALTER TABLE saloon_orders
+  ADD COLUMN IF NOT EXISTS added_on DATETIME NOT NULL DEFAULT CURRENT_TIME";
+  $alterTrainingDates2 = "ALTER TABLE training_dates
+  ADD COLUMN IF NOT EXISTS reminder_unit VARCHAR(255) NOT NULL";
+  $log = "CREATE TABLE IF NOT EXISTS `reminder_logs` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `booking_id` VARCHAR(50) NOT NULL,
+  `milestone_sent` VARCHAR(100) NOT NULL,
+  `sent_at` DATETIME NOT NULL,
+  UNIQUE KEY `unique_reminder` (`booking_id`, `milestone_sent`)
+);";
 mysqli_query($con, $createListOfItemsToBring);
+mysqli_query($con, $log);
 mysqli_query($con, $createTrainingStartAndEndDates);
 mysqli_query($con, $trainingItemsTableSQL);
 mysqli_query($con, $academyCarttrainingItemsTableSQL);
@@ -150,6 +163,8 @@ mysqli_query($con, $refreshmentAlter);
 mysqli_query($con, $customerDiscountsAlterSQL);
 mysqli_query($con, $correction);
 mysqli_query($con, $alterDuration);
+mysqli_query($con, $alterTrainingDates);
+// mysqli_query($con, $alterTrainingDates2);
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
