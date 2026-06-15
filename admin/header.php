@@ -19,7 +19,7 @@ ini_set('display_errors', 1);
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 include "../connect.php";
-include "../cron_reminder.php";
+// include "../cron_reminder.php";
 
 // Set PHP timezone
 date_default_timezone_set('Africa/Lagos');
