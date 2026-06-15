@@ -17,7 +17,10 @@ if (empty($_COOKIE['username'])) {
 if (! empty($saloon)) {
     $del = mysqli_query($con, "DELETE FROM giftcard_history WHERE orderid='$saloon' AND status='processing'") or die('Could not connect: ' . mysqli_error($con));
 }
-
+function cleanCategory($value)
+    {
+        return strtolower(trim(preg_replace('/\s+/', '', $value)));
+    }
 // Get subtotal (cart items only)
 $subtotal  = 0;
 $sql_total = "SELECT SUM(totalprice) as total FROM refreshments WHERE orderid='$saloon'";
@@ -73,10 +76,7 @@ if (! empty($customerUniqueId)) {
     ";
 
     $discountResult = mysqli_query($con, $discountSQL);
-    function cleanCategory($value)
-    {
-        return strtolower(trim(preg_replace('/\s+/', '', $value)));
-    }
+    
 
     while ($discountRow = mysqli_fetch_assoc($discountResult)) {
         $category             = cleanCategory($discountRow['product_category']);
@@ -598,7 +598,7 @@ if (! empty($_SESSION['error'])) {
                                 $creditSQL = "SELECT credit_sales_eligibility FROM customers WHERE email = '$email'";
                                 $creditResult = mysqli_query($con, $creditSQL);
                                 $resultForCredit = mysqli_fetch_assoc($creditResult);
-                                if ($resultForCredit['credit_sales_eligibility'] == "true") {
+                                if ($resultForCredit && $resultForCredit['credit_sales_eligibility'] == "true") {
                                 ?>
                                     <!-- <button type="submit" id="credit-btn" name="take-as-credit" class="btn btn-lg btn-primary justify-self-center" style="font-weight: 600; font-size: 0.8rem; color: #FFC700;">
                                         Take as credit
