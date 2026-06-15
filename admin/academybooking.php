@@ -114,8 +114,8 @@ if (isset($_POST["set-date"])) {
       ?>
       <?php
     }
-    unset($_POST["set-date"]);
   }
+  unset($_POST["set-date"]);
 }
 ?>
 <!-- Invoice Example -->
