@@ -13,7 +13,6 @@ if (session_status() === PHP_SESSION_NONE) {
 session_write_close();
 
 include "connect.php";
-include "cron_reminder.php";
 
 // Set PHP timezone
 date_default_timezone_set('Africa/Lagos');
