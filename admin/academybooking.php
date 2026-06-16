@@ -108,10 +108,11 @@ if (isset($_POST["set-date"])) {
         Pass your variable requirements matching your local helper signature parameters
       */
     if (sendEmail($toEmail, $subject, $message)) {
-?>
-    <?php
+?>Email sent
+<?php
     } else {
-    ?>
+?>
+  Email not sent
 <?php
     }
   }
