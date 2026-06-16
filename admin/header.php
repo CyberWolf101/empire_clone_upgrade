@@ -767,8 +767,7 @@ foreach ($items as $item) {
 FROM training_dates t 
 INNER JOIN saloon_orders s ON s.id = t.training_id_from_saloon_orders 
 WHERE s.section = 'academy' 
-  AND t.start_date IS NOT NULL 
-  AND s.pay_status != 'paid'
+  AND t.start_date = ''
 ORDER BY t.start_date ASC;";
                   $res = mysqli_query($con, $pendingQuery);
 
