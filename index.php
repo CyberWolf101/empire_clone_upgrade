@@ -29,6 +29,9 @@ if (isset($_GET['error'])) {
  *  discount_percentage, product_category,
  *  discount_status
  */
+include "../cron_reminder.php";
+$unread_sql = "SELECT COUNT(*) AS unread_count FROM inventory_log WHERE read_status = 0";
+$unread_inv_log = mysqli_fetch_assoc(mysqli_query($con, $unread_sql))['unread_count'];
 $createCustomerTableSQL = "
 CREATE TABLE IF NOT EXISTS customers(
 id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -60,7 +63,7 @@ $refreshmentAlter = "ALTER TABLE
   refreshments
 ADD
   COLUMN IF NOT EXISTS discount_added VARCHAR(255) NOT NULL DEFAULT '0'";
-  $creditSalesTableSQL = "
+$creditSalesTableSQL = "
   CREATE TABLE IF NOT EXISTS credit_sales(
   id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   orderid VARCHAR(255) NOT NULL,
@@ -75,19 +78,19 @@ ADD
   added_on DATETIME NOT NULL DEFAULT CURRENT_TIME
   )
   ";
-  $customerDiscountsAlterSQL = "ALTER TABLE customers 
+$customerDiscountsAlterSQL = "ALTER TABLE customers 
   ADD COLUMN IF NOT EXISTS credit_sales_eligibility VARCHAR(255) NOT NULL DEFAULT 'false';";
-  $creditSalesAlterSQL = "ALTER TABLE credit_sales 
+$creditSalesAlterSQL = "ALTER TABLE credit_sales 
   ADD COLUMN IF NOT EXISTS customer VARCHAR(255) NOT NULL";
-  $correction = "ALTER TABLE customers_discounts
+$correction = "ALTER TABLE customers_discounts
   DROP COLUMN IF EXISTS credit_sales_eligibility";
-  $foodMenuAlter = "ALTER TABLE food_menu
+$foodMenuAlter = "ALTER TABLE food_menu
   ADD COLUMN IF NOT EXISTS visibility VARCHAR(255) NOT NULL DEFAULT 'visible'
   ";
-  $foodMenuAlter2 = "ALTER TABLE food_menu
+$foodMenuAlter2 = "ALTER TABLE food_menu
   ADD COLUMN IF NOT EXISTS special_item VARCHAR(255) NOT NULL DEFAULT 'false'
   ";
-  $createSpecialItemsTableSQL = "CREATE TABLE IF NOT EXISTS special_items(
+$createSpecialItemsTableSQL = "CREATE TABLE IF NOT EXISTS special_items(
   id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   item VARCHAR(255) NOT NULL,
   category VARCHAR(255) NOT NULL,
@@ -95,22 +98,104 @@ ADD
   ingredient_name VARCHAR(255) NOT NULL,
   added_on DATETIME NOT NULL DEFAULT CURRENT_TIME
   )";
-  $alterSpecialItemsSQL = "ALTER TABLE special_items
+$alterSpecialItemsSQL = "ALTER TABLE special_items
   ADD COLUMN IF NOT EXISTS item_id VARCHAR(255) NOT NULL";
-  $alterSpecialItemsSQL2 = "ALTER TABLE special_items
+$alterSpecialItemsSQL2 = "ALTER TABLE special_items
   ADD COLUMN IF NOT EXISTS status VARCHAR(255) NOT NULL DEFAULT 'active'";
-mysqli_query($con, $alterSpecialItemsSQL2);
-mysqli_query($con, $alterSpecialItemsSQL);
+$alterSpecialItemsSQL3 = "ALTER TABLE special_items
+  ADD COLUMN IF NOT EXISTS ingredient_quantity VARCHAR(255) NOT NULL DEFAULT '1'";
+$alterRefreshmentSQL = "ALTER TABLE refreshments
+  ADD COLUMN IF NOT EXISTS amount_paid VARCHAR(255) NOT NULL";
+$createCreditSalesTransfers = "CREATE TABLE IF NOT EXISTS credit_sales_transfers(
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    orderid VARCHAR(255) NOT NULL,
+    fileUrl VARCHAR(255) NOT NULL,
+transfer_date DATETIME NOT NULL DEFAULT CURRENT_TIME,
+amount_paid VARCHAR(255) NOT NULL DEFAULT '0',
+method VARCHAR(255) NOT NULL
+  )";
+  $alterCreditSalesTransfers = "ALTER TABLE credit_sales_transfers
+  ADD COLUMN IF NOT EXISTS status VARCHAR(255) NOT NULL DEFAULT 'pending'";
+  $alterCreditSalesTransfers2 = "ALTER TABLE credit_sales_transfers
+  ADD COLUMN IF NOT EXISTS bank VARCHAR(255) NOT NULL DEFAULT ''";
+  $trainingItemsTableSQL = "CREATE TABLE IF NOT EXISTS training_items(
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    item_id VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    image VARCHAR(255) NOT NULL,
+    price VARCHAR(255) NOT NULL,
+    training_id VARCHAR(255) NOT NULL,
+    added_on DATETIME NOT NULL DEFAULT CURRENT_TIME
+  )";
+  $academyCarttrainingItemsTableSQL = "CREATE TABLE IF NOT EXISTS academy_cart_training_items(
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    training_item_id VARCHAR(255) NOT NULL,
+    training_id VARCHAR(255) NOT NULL,
+    added_on DATETIME NOT NULL DEFAULT CURRENT_TIME
+  )";
+  $alterAg2 = "ALTER TABLE training_items
+  DROP COLUMN IF EXISTS image";
+  $alterAgg = "ALTER TABLE training
+  ADD COLUMN IF NOT EXISTS discount_added VARCHAR(255) NOT NULL DEFAULT '0'";
+  $alterAAg = "ALTER TABLE academy_cart_training_items
+  ADD COLUMN IF NOT EXISTS item_for VARCHAR(255) NOT NULL DEFAULT ''";
+  $academyCartAlter = "ALTER TABLE academy_cart
+  ADD COLUMN IF NOT EXISTS discount_applied VARCHAR(255) NOT NULL DEFAULT 'false'";
+  $alterDuration = "ALTER TABLE durations
+  ADD COLUMN IF NOT EXISTS duration_unit VARCHAR(255) NOT NULL";
+  $createListOfItemsToBring = "CREATE TABLE IF NOT EXISTS training_items_to_bring(
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    training_id VARCHAR(255) NOT NULL,
+    item_name VARCHAR(255) NOT NULL,
+    required VARCHAR(255) NOT NULL DEFAULT 'true'
+  )";
+  $createTrainingStartAndEndDates = "CREATE TABLE IF NOT EXISTS training_dates(
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    training_id_from_saloon_orders VARCHAR(255) NOT NULL,
+    start_date VARCHAR(255) NOT NULL,
+    reminder_interval VARCHAR(255) NOT NULL,
+    reminder_unit VARCHAR(255) NOT NULL
+  )";
+  $alterTrainingDates = "ALTER TABLE saloon_orders
+  ADD COLUMN IF NOT EXISTS added_on DATETIME NOT NULL DEFAULT CURRENT_TIME";
+  $alterTrainingDates2 = "ALTER TABLE training_dates
+  ADD COLUMN IF NOT EXISTS reminder_unit VARCHAR(255) NOT NULL";
+  $log = "CREATE TABLE IF NOT EXISTS `reminder_logs` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `booking_id` VARCHAR(50) NOT NULL,
+  `milestone_sent` VARCHAR(100) NOT NULL,
+  `sent_at` DATETIME NOT NULL,
+  UNIQUE KEY `unique_reminder` (`booking_id`, `milestone_sent`)
+);";
+mysqli_query($con, $createListOfItemsToBring);
+mysqli_query($con, $log);
+mysqli_query($con, $createTrainingStartAndEndDates);
+mysqli_query($con, $trainingItemsTableSQL);
+mysqli_query($con, $academyCarttrainingItemsTableSQL);
+mysqli_query($con, $createCreditSalesTransfers);
 mysqli_query($con, $createSpecialItemsTableSQL);
-mysqli_query($con, $foodMenuAlter2);
-mysqli_query($con, $foodMenuAlter);
-mysqli_query($con, $correction);
-mysqli_query($con, $creditSalesAlterSQL);
-mysqli_query($con, $customerDiscountsAlterSQL);
 mysqli_query($con, $creditSalesTableSQL);
-mysqli_query($con, $refreshmentAlter);
 mysqli_query($con, $createCustomerDiscountTable);
 mysqli_query($con, $createCustomerTableSQL);
+mysqli_query($con, $alterAAg);
+mysqli_query($con, $alterAgg);
+mysqli_query($con, $alterAg2);
+mysqli_query($con, $alterRefreshmentSQL);
+mysqli_query($con, $alterSpecialItemsSQL3);
+mysqli_query($con, $alterSpecialItemsSQL2);
+mysqli_query($con, $alterSpecialItemsSQL);
+mysqli_query($con, $alterCreditSalesTransfers2);
+mysqli_query($con, $alterCreditSalesTransfers);
+mysqli_query($con, $foodMenuAlter2);
+mysqli_query($con, $foodMenuAlter);
+mysqli_query($con, $creditSalesAlterSQL);
+mysqli_query($con, $academyCartAlter);
+mysqli_query($con, $refreshmentAlter);
+mysqli_query($con, $customerDiscountsAlterSQL);
+mysqli_query($con, $correction);
+mysqli_query($con, $alterDuration);
+mysqli_query($con, $alterTrainingDates);
+// mysqli_query($con, $alterTrainingDates2);
 ?>
 <main class="pt-3">
     <div id="main">
