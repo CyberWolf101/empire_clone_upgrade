@@ -758,15 +758,22 @@ foreach ($items as $item) {
                   // 💳 UNPAID/PENDING ACADEMY BOOKINGS PROCESSING ENGINE
                   // ==========================================================
 
-                  $pendingBookings = [];
-                  $pendingQuery = "SELECT t.start_date,s.id AS booking_id,s.name AS student_name,s.email AS student_email FROM training_dates t INNER JOIN saloon_orders s ON s.id = t.training_id_from_saloon_orders WHERE s.section = 'academy' AND t.start_date = '' ORDER BY t.start_date ASC;";
-                  $res = mysqli_query($con, $pendingQuery);
-                  if ($res) {
-                    while ($pending = mysqli_fetch_assoc($res)) {
-                      $pendingBookings[] = $pending;
-                    }
-                  }
+                  $realPending = [];
+
+// Use a LEFT JOIN to find saloon_orders that DO NOT have a matching entry in training_dates
+$pendingQuery = "SELECT s.* FROM saloon_orders s LEFT JOIN training_dates t ON s.id = t.training_id_from_saloon_orders WHERE s.section = 'academy' AND t.training_id_from_saloon_orders IS NULL";
+
+$res = mysqli_query($con, $pendingQuery);
+
+if ($res) {
+    while ($pending = mysqli_fetch_assoc($res)) {
+        $realPending[] = $pending;
+    }
+}
+
+// $realPending now contains all academy bookings where dates are not yet set
                   ?>
+
                   <!-- PENDING BOOKINGS -->
                   <a href="academybooking.php">
                     <div class="text-white p-3">
@@ -774,8 +781,8 @@ foreach ($items as $item) {
 
                         <div class='notification-count'>
                           <div class="ripple-container">
-                            <div class="circle-text"><?php echo count($pendingBookings) ?></div>
-                            <?php if (count($pendingBookings) > 0): ?>
+                            <div class="circle-text"><?php echo count($realPending) ?></div>
+                            <?php if (count($realPending) > 0): ?>
                               <div>
                                 <div class='ripple-circle'></div>
                                 <div class='ripple-circle'></div>
@@ -884,7 +891,6 @@ foreach ($items as $item) {
 
         <!-- Container Fluid-->
         <div class="container-fluid" id="container-wrapper">
-
           <style>
             .text-primary {
               color: #000 !important;
