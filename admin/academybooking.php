@@ -78,7 +78,7 @@ if (isset($_POST["set-date"])) {
 
     /* C. COMPOSE EMAIL CONTENT (HTML Format)
       */
-    $subject = "Important: Your Training Commencement Date & Checklists";
+    $subject = "Important: Your Training Commencement Date & Checklists - CHBLUXURYEMPIRE";
 
     $message = "
         <html>
