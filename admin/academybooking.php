@@ -184,14 +184,20 @@ if (isset($_POST["set-date"])) {
                 ?>
                   <span class="badge bg-warning text-white p-1">Unset</span>
                 <?php
-                }else{
-                  ?>
-                <?= $result["start_date"] ?>
-                  <?php
+                } else {
+                ?>
+                  <?= $result["start_date"] ?>
+                <?php
                 }
                 ?>
                 <br>
-                <button class="btn btn-danger p-1" data-bs-toggle="modal" data-bs-target="#setStartDateModal">Set Date</button>
+                <?php
+                if (in_array($row['status'], ["complete", "completed", "Completed"])) {
+                ?>
+                  <button class="btn btn-danger p-1" data-bs-toggle="modal" data-bs-target="#setStartDateModal">Set Date</button>
+                <?php
+                }
+                ?>
                 <!-- SET DATE -->
                 <form action="" method="post">
                   <div class="modal fade" id="setStartDateModal">
@@ -219,44 +225,50 @@ if (isset($_POST["set-date"])) {
               <!-- REMINDER INTERVAL -->
               <td>
                 <?php
-                if(!empty($row["reminder_interval"])){
-                  ?>
+                if (!empty($row["reminder_interval"])) {
+                ?>
                   <?= $row["reminder_interval"] ?>
-                <?php
-                $unitOutputs = [
-                  [
-                    "short_form" => "d",
-                    "full_form" => "Day(s)"
-                  ],
-                  [
-                    "short_form" => "w",
-                    "full_form" => "Weeks(s)"
-                  ],
-                  [
-                    "short_form" => "m",
-                    "full_form" => "Months(s)"
-                  ],
-                  [
-                    "short_form" => "y",
-                    "full_form" => "Year(s)"
-                  ]
-                ];
-                foreach ($unitOutputs as $output) {
-                  if ($row['reminder_unit'] == $output["short_form"]) {
-                ?>
-                    <?= $output["full_form"] ?>
-                <?php
-                  }
-                }
-                ?>
                   <?php
-                }else{
+                  $unitOutputs = [
+                    [
+                      "short_form" => "d",
+                      "full_form" => "Day(s)"
+                    ],
+                    [
+                      "short_form" => "w",
+                      "full_form" => "Weeks(s)"
+                    ],
+                    [
+                      "short_form" => "m",
+                      "full_form" => "Months(s)"
+                    ],
+                    [
+                      "short_form" => "y",
+                      "full_form" => "Year(s)"
+                    ]
+                  ];
+                  foreach ($unitOutputs as $output) {
+                    if ($row['reminder_unit'] == $output["short_form"]) {
                   ?>
-                  <span class="badge bg-warning text-white p-1">Unset</span>
+                      <?= $output["full_form"] ?>
                   <?php
+                    }
+                  }
+                  ?>
+                <?php
+                } else {
+                ?>
+                  <span class="badge bg-warning text-white p-1">Unset</span>
+                <?php
                 }
                 ?>
-                <button class="btn btn-danger p-1" data-bs-toggle="modal" data-bs-target="#setReminderModal">Set Reminder</button>
+                <?php
+                if (in_array($row['status'], ["complete", "completed", "Completed"])) {
+                ?>
+                  <button class="btn btn-danger p-1" data-bs-toggle="modal" data-bs-target="#setReminderModal">Set Reminder</button>
+                <?php
+                }
+                ?>
                 <form action="" method="post">
                   <div class="modal fade" id="setReminderModal">
                     <div class="modal-dialog">
