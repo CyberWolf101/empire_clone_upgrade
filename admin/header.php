@@ -759,18 +759,8 @@ foreach ($items as $item) {
                   // ==========================================================
 
                   $pendingBookings = [];
-                  $pendingQuery = "SELECT 
-    t.start_date,
-    s.id AS booking_id,
-    s.name AS student_name,
-    s.email AS student_email
-FROM training_dates t 
-INNER JOIN saloon_orders s ON s.id = t.training_id_from_saloon_orders 
-WHERE s.section = 'academy' 
-  AND t.start_date = ''
-ORDER BY t.start_date ASC;";
+                  $pendingQuery = "SELECT t.start_date,s.id AS booking_id,s.name AS student_name,s.email AS student_email FROM training_dates t INNER JOIN saloon_orders s ON s.id = t.training_id_from_saloon_orders WHERE s.section = 'academy' AND t.start_date = '' ORDER BY t.start_date ASC;";
                   $res = mysqli_query($con, $pendingQuery);
-
                   if ($res) {
                     while ($pending = mysqli_fetch_assoc($res)) {
                       $pendingBookings[] = $pending;
