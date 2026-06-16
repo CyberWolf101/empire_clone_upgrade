@@ -786,7 +786,7 @@ foreach ($items as $item) {
                         </div>
 
                       </div>
-                      <i class="fas fa-money-bill-wave"></i>
+                      <i class="fa fa-clock"></i>
                     </div>
                   </a>
                   <a href="deficientitems.php">
@@ -813,7 +813,7 @@ foreach ($items as $item) {
                         </div>
 
                       </div>
-                      <i class="fas fa-envelope"></i>
+                      <i class="fa fa-exclamation-triangle"></i>
                     </div>
                   </a>
                   <!-- PENDING TRANSFERS -->
