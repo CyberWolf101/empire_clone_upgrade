@@ -44,7 +44,7 @@ unique_id VARCHAR(255) NOT NULL DEFAULT (
       UPPER(SUBSTRING(MD5(UUID()), 1, 8))
     )
   ),
-  added_on DATETIME NOT NULL DEFAULT CURRENT_TIME,
+  added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   total_spent VARCHAR(255) NOT NULL DEFAULT '0',
   order_count VARCHAR(255) NOT NULL DEFAULT '0',
   first_order_date VARCHAR(255) NOT NULL
@@ -75,7 +75,7 @@ $creditSalesTableSQL = "
   totalprice VARCHAR(255) NOT NULL,
   status VARCHAR(255) NOT NULL DEFAULT 'pending',
   item_category VARCHAR(255) NOT NULL,
-  added_on DATETIME NOT NULL DEFAULT CURRENT_TIME
+  added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
   )
   ";
 $customerDiscountsAlterSQL = "ALTER TABLE customers 
@@ -96,7 +96,7 @@ $createSpecialItemsTableSQL = "CREATE TABLE IF NOT EXISTS special_items(
   category VARCHAR(255) NOT NULL,
   ingredient_id VARCHAR(255) NOT NULL,
   ingredient_name VARCHAR(255) NOT NULL,
-  added_on DATETIME NOT NULL DEFAULT CURRENT_TIME
+  added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
   )";
 $alterSpecialItemsSQL = "ALTER TABLE special_items
   ADD COLUMN IF NOT EXISTS item_id VARCHAR(255) NOT NULL";
@@ -110,7 +110,7 @@ $createCreditSalesTransfers = "CREATE TABLE IF NOT EXISTS credit_sales_transfers
     id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
     orderid VARCHAR(255) NOT NULL,
     fileUrl VARCHAR(255) NOT NULL,
-transfer_date DATETIME NOT NULL DEFAULT CURRENT_TIME,
+transfer_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 amount_paid VARCHAR(255) NOT NULL DEFAULT '0',
 method VARCHAR(255) NOT NULL
   )";
@@ -125,13 +125,13 @@ method VARCHAR(255) NOT NULL
     image VARCHAR(255) NOT NULL,
     price VARCHAR(255) NOT NULL,
     training_id VARCHAR(255) NOT NULL,
-    added_on DATETIME NOT NULL DEFAULT CURRENT_TIME
+    added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMPSTAMP
   )";
   $academyCarttrainingItemsTableSQL = "CREATE TABLE IF NOT EXISTS academy_cart_training_items(
     id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
     training_item_id VARCHAR(255) NOT NULL,
     training_id VARCHAR(255) NOT NULL,
-    added_on DATETIME NOT NULL DEFAULT CURRENT_TIME
+    added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
   )";
   $alterAg2 = "ALTER TABLE training_items
   DROP COLUMN IF EXISTS image";
@@ -157,7 +157,7 @@ method VARCHAR(255) NOT NULL
     reminder_unit VARCHAR(255) NOT NULL
   )";
   $alterTrainingDates = "ALTER TABLE saloon_orders
-  ADD COLUMN IF NOT EXISTS added_on DATETIME NOT NULL DEFAULT CURRENT_TIME";
+  ADD COLUMN IF NOT EXISTS added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP";
   $alterTrainingDates2 = "ALTER TABLE training_dates
   ADD COLUMN IF NOT EXISTS reminder_unit VARCHAR(255) NOT NULL";
   $log = "CREATE TABLE IF NOT EXISTS `reminder_logs` (
