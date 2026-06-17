@@ -216,15 +216,15 @@ $alterArray = [
         "query" => $alterSpecialItemsSQL
     ],
     [
-  "table" => "credit_sales_transfers",
-  "column" => "bank",
-  "query" => $alterCreditSalesTransfers2
-],
-[
-  "table" => "credit_sales_transfers",
-  "column" => "status",
-  "query" => $alterCreditSalesTransfers
-],
+        "table" => "credit_sales_transfers",
+        "column" => "bank",
+        "query" => $alterCreditSalesTransfers2
+    ],
+    [
+        "table" => "credit_sales_transfers",
+        "column" => "status",
+        "query" => $alterCreditSalesTransfers
+    ],
     [
         "table" => "food_menu",
         "column" => "visibility",
@@ -259,7 +259,7 @@ $alterArray = [
         "table" => "customer_discounts",
         "column" => "credit_sales_eligibility",
         // "query" => $correction
-        "query"=>""
+        "query" => ""
     ],
     [
         "table" => "durations",
@@ -275,13 +275,36 @@ $alterArray = [
 // if(!columnExists($con,'academy_cart_training_items','item_for')){
 //     mysqli_query($con, $alterAAg);
 // }
+function tableExists($conn, $table)
+{
+    $result = mysqli_query($conn, "SHOW TABLES LIKE '$table'");
+    return $result && mysqli_num_rows($result) > 0;
+}
 function columnExists($conn, $table, $column)
 {
-    $result = mysqli_query($conn, "SHOW COLUMNS FROM `$table` LIKE '$column'");
-    return mysqli_num_rows($result) > 0;
+    $table = mysqli_real_escape_string($conn, $table);
+    $column = mysqli_real_escape_string($conn, $column);
+
+    $result = mysqli_query(
+        $conn,
+        "SHOW COLUMNS FROM `$table` LIKE '$column'"
+    );
+
+    return $result && mysqli_num_rows($result) > 0;
 }
 foreach ($alterArray as $oneAlter) {
-    if (!columnExists($con, $oneAlter["table"], $oneAlter["column"])) {
+
+    if (empty($oneAlter["query"]))
+        continue;
+
+    $table = $oneAlter["table"];
+    $column = $oneAlter["column"];
+
+    // 🚨 prevent crash if table doesn't exist
+    if (!tableExists($con, $table))
+        continue;
+
+    if (!columnExists($con, $table, $column)) {
         mysqli_query($con, $oneAlter["query"]);
     }
 }
