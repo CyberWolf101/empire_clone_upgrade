@@ -13,7 +13,15 @@ $now = new DateTime();
 $today = $now->format("Y-m-d");
 
 // echo "<h3>Cron Engine Active - Current Server Time: " . $now->format("Y-m-d H:i:s") . "</h3>";
-
+// Create training date
+$createTrainingStartAndEndDates = "CREATE TABLE IF NOT EXISTS training_dates(
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    training_id_from_saloon_orders VARCHAR(255) NOT NULL,
+    start_date VARCHAR(255) NOT NULL,
+    reminder_interval VARCHAR(255) NOT NULL,
+    reminder_unit VARCHAR(255) NOT NULL
+  )";
+  mysqli_query($con, $createTrainingStartAndEndDates);
 // 2. Fetch all paid academy bookings
 $reminder_sql = "SELECT 
                     s.*,
