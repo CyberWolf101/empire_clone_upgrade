@@ -196,7 +196,8 @@ $alterArray = [
     [
         "table" => "training_items",
         "column" => "image",
-        "query" => $alterAg2
+        // "query" => $alterAg2
+        "query" => ""
     ],
     [
         "table" => "refreshments",
@@ -219,15 +220,15 @@ $alterArray = [
         "query" => $alterSpecialItemsSQL
     ],
     [
-        "table" => "credit_sales",
-        "column" => "bank",
-        "query" => $alterCreditSalesTransfers2
-    ],
-    [
-        "table" => "credit_sales",
-        "column" => "status",
-        "query" => $alterCreditSalesTransfers
-    ],
+  "table" => "credit_sales_transfers",
+  "column" => "bank",
+  "query" => $alterCreditSalesTransfers2
+],
+[
+  "table" => "credit_sales_transfers",
+  "column" => "status",
+  "query" => $alterCreditSalesTransfers
+],
     [
         "table" => "food_menu",
         "column" => "visibility",
@@ -299,7 +300,7 @@ foreach ($alterArray as $oneAlter) {
 // mysqli_query($con, $customerDiscountsAlterSQL);
 // mysqli_query($con, $correction);
 // mysqli_query($con, $alterDuration);
-mysqli_query($con, $alterTrainingDates);
+// mysqli_query($con, $alterTrainingDates);
 // mysqli_query($con, $alterTrainingDates2);
 include "cron_reminder.php";
 ?>
