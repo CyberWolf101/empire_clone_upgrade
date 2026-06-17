@@ -1,11 +1,7 @@
 <?php include "header.php";
 $unread_sql = "SELECT COUNT(*) AS unread_count FROM inventory_log WHERE read_status = 0";
 $unread_inv_log = mysqli_fetch_assoc(mysqli_query($con, $unread_sql))['unread_count'];
-function columnExists($conn, $table, $column)
-{
-    $result = mysqli_query($conn, "SHOW COLUMNS FROM `$table` LIKE '$column'");
-    return mysqli_num_rows($result) > 0;
-}
+
 $unread_sql = "SELECT COUNT(*) AS unread_count FROM inventory_log WHERE read_status = 0";
 $unread_inv_log = mysqli_fetch_assoc(mysqli_query($con, $unread_sql))['unread_count'];
 $createCustomerTableSQL = "
@@ -251,6 +247,11 @@ $alterArray = [
 // if(!columnExists($con,'academy_cart_training_items','item_for')){
 //     mysqli_query($con, $alterAAg);
 // }
+function columnExists($conn, $table, $column)
+{
+    $result = mysqli_query($conn, "SHOW COLUMNS FROM `$table` LIKE '$column'");
+    return mysqli_num_rows($result) > 0;
+}
 foreach ($alterArray as $oneAlter) {
     if (!columnExists($con, $oneAlter["table"], $oneAlter["column"])) {
         mysqli_query($con, $oneAlter["query"]);
