@@ -4,300 +4,300 @@ $unread_inv_log = mysqli_fetch_assoc(mysqli_query($con, $unread_sql))['unread_co
 
 $unread_sql = "SELECT COUNT(*) AS unread_count FROM inventory_log WHERE read_status = 0";
 $unread_inv_log = mysqli_fetch_assoc(mysqli_query($con, $unread_sql))['unread_count'];
-// $createCustomerTableSQL = "
-// CREATE TABLE IF NOT EXISTS customers(
-// id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-// name VARCHAR(255) NOT NULL,
-// email VARCHAR(255) NOT NULL,
-// phone VARCHAR(255) NOT NULL,
-// unique_id VARCHAR(255) NOT NULL DEFAULT (
-//     CONCAT(
-//       'CUSTOMER-',
-//       UPPER(SUBSTRING(MD5(UUID()), 1, 8))
-//     )
-//   ),
-//   added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-//   total_spent VARCHAR(255) NOT NULL DEFAULT '0',
-//   order_count VARCHAR(255) NOT NULL DEFAULT '0',
-//   first_order_date VARCHAR(255) NOT NULL
-// );
-// ";
-// $createCustomerDiscountTable = "
-// CREATE TABLE IF NOT EXISTS customers_discounts(
-// id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-// customer_unique_id VARCHAR(255) NOT NULL,
-// discount_percentage VARCHAR(255) NOT NULL,
-// product_category VARCHAR(255) NOT NULL,
-// discount_status VARCHAR(255) NOT NULL DEFAULT 'Inactive'
-// )
-// ";
-// $refreshmentAlter = "ALTER TABLE
-//   refreshments
-// ADD
-//   COLUMN discount_added VARCHAR(255) NOT NULL DEFAULT '0'";
-// $creditSalesTableSQL = "
-//   CREATE TABLE IF NOT EXISTS credit_sales(
-//   id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-//   orderid VARCHAR(255) NOT NULL,
-//   itemid VARCHAR(255) NOT NULL,
-//   item VARCHAR(255) NOT NULL,
-//   unitprice VARCHAR(255),
-//   amount_paid VARCHAR(255) NOT NULL DEFAULT '0',
-//   quantity VARCHAR(255) NOT NULL,
-//   totalprice VARCHAR(255) NOT NULL,
-//   status VARCHAR(255) NOT NULL DEFAULT 'pending',
-//   item_category VARCHAR(255) NOT NULL,
-//   added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-//   )
-//   ";
-// $customerDiscountsAlterSQL = "ALTER TABLE customers 
-//   ADD COLUMN credit_sales_eligibility VARCHAR(255) NOT NULL DEFAULT 'false';";
-// $creditSalesAlterSQL = "ALTER TABLE credit_sales 
-//   ADD COLUMN customer VARCHAR(255) NOT NULL";
-// $correction = "ALTER TABLE customers_discounts
-//   DROP COLUMN IF EXISTS credit_sales_eligibility";
-// $foodMenuAlter = "ALTER TABLE food_menu
-//   ADD COLUMN visibility VARCHAR(255) NOT NULL DEFAULT 'visible'
-//   ";
-// $foodMenuAlter2 = "ALTER TABLE food_menu
-//   ADD COLUMN special_item VARCHAR(255) NOT NULL DEFAULT 'false'
-//   ";
-// $createSpecialItemsTableSQL = "CREATE TABLE IF NOT EXISTS special_items(
-//   id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-//   item VARCHAR(255) NOT NULL,
-//   category VARCHAR(255) NOT NULL,
-//   ingredient_id VARCHAR(255) NOT NULL,
-//   ingredient_name VARCHAR(255) NOT NULL,
-//   added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-//   )";
-// $alterSpecialItemsSQL = "ALTER TABLE special_items
-//   ADD COLUMN item_id VARCHAR(255) NOT NULL";
-// $alterSpecialItemsSQL2 = "ALTER TABLE special_items
-//   ADD COLUMN status VARCHAR(255) NOT NULL DEFAULT 'active'";
-// $alterSpecialItemsSQL3 = "ALTER TABLE special_items
-//   ADD COLUMN ingredient_quantity VARCHAR(255) NOT NULL DEFAULT '1'";
-// $alterRefreshmentSQL = "ALTER TABLE refreshments
-//   ADD COLUMN amount_paid VARCHAR(255) NOT NULL";
-// $createCreditSalesTransfers = "CREATE TABLE IF NOT EXISTS credit_sales_transfers(
-//     id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-//     orderid VARCHAR(255) NOT NULL,
-//     fileUrl VARCHAR(255) NOT NULL,
-// transfer_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-// amount_paid VARCHAR(255) NOT NULL DEFAULT '0',
-// method VARCHAR(255) NOT NULL
-//   )";
-// $alterCreditSalesTransfers = "ALTER TABLE credit_sales_transfers
-//   ADD COLUMN status VARCHAR(255) NOT NULL DEFAULT 'pending'";
-// $alterCreditSalesTransfers2 = "ALTER TABLE credit_sales_transfers
-//   ADD COLUMN bank VARCHAR(255) NOT NULL DEFAULT ''";
-// $trainingItemsTableSQL = "CREATE TABLE IF NOT EXISTS training_items(
-//     id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-//     item_id VARCHAR(255) NOT NULL,
-//     name VARCHAR(255) NOT NULL,
-//     image VARCHAR(255) NOT NULL,
-//     price VARCHAR(255) NOT NULL,
-//     training_id VARCHAR(255) NOT NULL,
-//     added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-//   )";
-// $academyCarttrainingItemsTableSQL = "CREATE TABLE IF NOT EXISTS academy_cart_training_items(
-//     id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-//     training_item_id VARCHAR(255) NOT NULL,
-//     training_id VARCHAR(255) NOT NULL,
-//     added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-//   )";
-// $alterAg2 = "ALTER TABLE training_items
-//   DROP COLUMN IF EXISTS image";
-// $alterAgg = "ALTER TABLE training
-//   ADD COLUMN discount_added VARCHAR(255) NOT NULL DEFAULT '0'";
-// $alterAAg = "ALTER TABLE academy_cart_training_items
-//   ADD COLUMN item_for VARCHAR(255) NOT NULL DEFAULT ''";
-// $academyCartAlter = "ALTER TABLE academy_cart
-//   ADD COLUMN discount_applied VARCHAR(255) NOT NULL DEFAULT 'false'";
-// $alterDuration = "ALTER TABLE durations
-//   ADD COLUMN duration_unit VARCHAR(255) NOT NULL";
-// $createListOfItemsToBring = "CREATE TABLE IF NOT EXISTS training_items_to_bring(
-//     id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-//     training_id VARCHAR(255) NOT NULL,
-//     item_name VARCHAR(255) NOT NULL,
-//     required VARCHAR(255) NOT NULL DEFAULT 'true'
-//   )";
-// $createTrainingStartAndEndDates = "CREATE TABLE IF NOT EXISTS training_dates(
-//     id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-//     training_id_from_saloon_orders VARCHAR(255) NOT NULL,
-//     start_date VARCHAR(255) NOT NULL,
-//     reminder_interval VARCHAR(255) NOT NULL,
-//     reminder_unit VARCHAR(255) NOT NULL
-//   )";
-// $alterTrainingDates = "ALTER TABLE saloon_orders
-//   ADD COLUMN added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP";
-// $alterTrainingDates2 = "ALTER TABLE training_dates
-//   ADD COLUMN reminder_unit VARCHAR(255) NOT NULL";
-// $log = "CREATE TABLE IF NOT EXISTS `reminder_logs` (
-//   `id` INT AUTO_INCREMENT PRIMARY KEY,
-//   `booking_id` VARCHAR(50) NOT NULL,
-//   `milestone_sent` VARCHAR(100) NOT NULL,
-//   `sent_at` DATETIME NOT NULL,
-//   UNIQUE KEY `unique_reminder` (`booking_id`, `milestone_sent`)
-// );";
-// mysqli_query($con, $createListOfItemsToBring);
-// mysqli_query($con, $log);
-// mysqli_query($con, $createTrainingStartAndEndDates);
-// mysqli_query($con, $trainingItemsTableSQL);
-// mysqli_query($con, $academyCarttrainingItemsTableSQL);
-// mysqli_query($con, $createCreditSalesTransfers);
-// mysqli_query($con, $createSpecialItemsTableSQL);
-// mysqli_query($con, $creditSalesTableSQL);
-// mysqli_query($con, $createCustomerDiscountTable);
-// mysqli_query($con, $createCustomerTableSQL);
-// // Alters
-// $alterArray = [
-//     [
-//         "table" => "academy_cart_training_items",
-//         "column" => "item_for",
-//         "query" => $alterAAg
-//     ],
-//     [
-//         "table" => "training",
-//         "column" => "discount_added",
-//         "query" => $alterAgg
-//     ],
-//     [
-//         "table" => "training_items",
-//         "column" => "image",
-//         // "query" => $alterAg2
-//         "query" => ""
-//     ],
-//     [
-//         "table" => "refreshments",
-//         "column" => "amount_paid",
-//         "query" => $alterRefreshmentSQL
-//     ],
-//     [
-//         "table" => "special_items",
-//         "column" => "ingredient_quantity",
-//         "query" => $alterSpecialItemsSQL3
-//     ],
-//     [
-//         "table" => "special_items",
-//         "column" => "status",
-//         "query" => $alterSpecialItemsSQL2
-//     ],
-//     [
-//         "table" => "special_items",
-//         "column" => "item_id",
-//         "query" => $alterSpecialItemsSQL
-//     ],
-//     [
-//         "table" => "credit_sales_transfers",
-//         "column" => "bank",
-//         "query" => $alterCreditSalesTransfers2
-//     ],
-//     [
-//         "table" => "credit_sales_transfers",
-//         "column" => "status",
-//         "query" => $alterCreditSalesTransfers
-//     ],
-//     [
-//         "table" => "food_menu",
-//         "column" => "visibility",
-//         "query" => $foodMenuAlter
-//     ],
-//     [
-//         "table" => "food_menu",
-//         "column" => "special_item",
-//         "query" => $foodMenuAlter2
-//     ],
-//     [
-//         "table" => "credit_sales",
-//         "column" => "customer",
-//         "query" => $creditSalesAlterSQL
-//     ],
-//     [
-//         "table" => "academy_cart",
-//         "column" => "discount_applied",
-//         "query" => $academyCartAlter
-//     ],
-//     [
-//         "table" => "refreshments",
-//         "column" => "discount_added",
-//         "query" => $refreshmentAlter
-//     ],
-//     [
-//         "table" => "customers",
-//         "column" => "credit_sales_eligibility",
-//         "query" => $customerDiscountsAlterSQL
-//     ],
-//     [
-//         "table" => "customer_discounts",
-//         "column" => "credit_sales_eligibility",
-//         // "query" => $correction
-//         "query" => ""
-//     ],
-//     [
-//         "table" => "durations",
-//         "column" => "duration_unit",
-//         "query" => $alterDuration
-//     ],
-//     [
-//         "table" => "saloon_orders",
-//         "column" => "added_on",
-//         "query" => $alterTrainingDates
-//     ],
-// ];
-// // if(!columnExists($con,'academy_cart_training_items','item_for')){
-// //     mysqli_query($con, $alterAAg);
-// // }
-// function tableExists($conn, $table)
-// {
-//     $result = mysqli_query($conn, "SHOW TABLES LIKE '$table'");
-//     return $result && mysqli_num_rows($result) > 0;
+$createCustomerTableSQL = "
+CREATE TABLE IF NOT EXISTS customers(
+id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+name VARCHAR(255) NOT NULL,
+email VARCHAR(255) NOT NULL,
+phone VARCHAR(255) NOT NULL,
+unique_id VARCHAR(255) NOT NULL DEFAULT (
+    CONCAT(
+      'CUSTOMER-',
+      UPPER(SUBSTRING(MD5(UUID()), 1, 8))
+    )
+  ),
+  added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  total_spent VARCHAR(255) NOT NULL DEFAULT '0',
+  order_count VARCHAR(255) NOT NULL DEFAULT '0',
+  first_order_date VARCHAR(255) NOT NULL
+);
+";
+$createCustomerDiscountTable = "
+CREATE TABLE IF NOT EXISTS customers_discounts(
+id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+customer_unique_id VARCHAR(255) NOT NULL,
+discount_percentage VARCHAR(255) NOT NULL,
+product_category VARCHAR(255) NOT NULL,
+discount_status VARCHAR(255) NOT NULL DEFAULT 'Inactive'
+)
+";
+$refreshmentAlter = "ALTER TABLE
+  refreshments
+ADD
+  COLUMN discount_added VARCHAR(255) NOT NULL DEFAULT '0'";
+$creditSalesTableSQL = "
+  CREATE TABLE IF NOT EXISTS credit_sales(
+  id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  orderid VARCHAR(255) NOT NULL,
+  itemid VARCHAR(255) NOT NULL,
+  item VARCHAR(255) NOT NULL,
+  unitprice VARCHAR(255),
+  amount_paid VARCHAR(255) NOT NULL DEFAULT '0',
+  quantity VARCHAR(255) NOT NULL,
+  totalprice VARCHAR(255) NOT NULL,
+  status VARCHAR(255) NOT NULL DEFAULT 'pending',
+  item_category VARCHAR(255) NOT NULL,
+  added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )
+  ";
+$customerDiscountsAlterSQL = "ALTER TABLE customers 
+  ADD COLUMN credit_sales_eligibility VARCHAR(255) NOT NULL DEFAULT 'false';";
+$creditSalesAlterSQL = "ALTER TABLE credit_sales 
+  ADD COLUMN customer VARCHAR(255) NOT NULL";
+$correction = "ALTER TABLE customers_discounts
+  DROP COLUMN IF EXISTS credit_sales_eligibility";
+$foodMenuAlter = "ALTER TABLE food_menu
+  ADD COLUMN visibility VARCHAR(255) NOT NULL DEFAULT 'visible'
+  ";
+$foodMenuAlter2 = "ALTER TABLE food_menu
+  ADD COLUMN special_item VARCHAR(255) NOT NULL DEFAULT 'false'
+  ";
+$createSpecialItemsTableSQL = "CREATE TABLE IF NOT EXISTS special_items(
+  id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  item VARCHAR(255) NOT NULL,
+  category VARCHAR(255) NOT NULL,
+  ingredient_id VARCHAR(255) NOT NULL,
+  ingredient_name VARCHAR(255) NOT NULL,
+  added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )";
+$alterSpecialItemsSQL = "ALTER TABLE special_items
+  ADD COLUMN item_id VARCHAR(255) NOT NULL";
+$alterSpecialItemsSQL2 = "ALTER TABLE special_items
+  ADD COLUMN status VARCHAR(255) NOT NULL DEFAULT 'active'";
+$alterSpecialItemsSQL3 = "ALTER TABLE special_items
+  ADD COLUMN ingredient_quantity VARCHAR(255) NOT NULL DEFAULT '1'";
+$alterRefreshmentSQL = "ALTER TABLE refreshments
+  ADD COLUMN amount_paid VARCHAR(255) NOT NULL";
+$createCreditSalesTransfers = "CREATE TABLE IF NOT EXISTS credit_sales_transfers(
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    orderid VARCHAR(255) NOT NULL,
+    fileUrl VARCHAR(255) NOT NULL,
+transfer_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+amount_paid VARCHAR(255) NOT NULL DEFAULT '0',
+method VARCHAR(255) NOT NULL
+  )";
+$alterCreditSalesTransfers = "ALTER TABLE credit_sales_transfers
+  ADD COLUMN status VARCHAR(255) NOT NULL DEFAULT 'pending'";
+$alterCreditSalesTransfers2 = "ALTER TABLE credit_sales_transfers
+  ADD COLUMN bank VARCHAR(255) NOT NULL DEFAULT ''";
+$trainingItemsTableSQL = "CREATE TABLE IF NOT EXISTS training_items(
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    item_id VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    image VARCHAR(255) NOT NULL,
+    price VARCHAR(255) NOT NULL,
+    training_id VARCHAR(255) NOT NULL,
+    added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )";
+$academyCarttrainingItemsTableSQL = "CREATE TABLE IF NOT EXISTS academy_cart_training_items(
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    training_item_id VARCHAR(255) NOT NULL,
+    training_id VARCHAR(255) NOT NULL,
+    added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )";
+$alterAg2 = "ALTER TABLE training_items
+  DROP COLUMN IF EXISTS image";
+$alterAgg = "ALTER TABLE training
+  ADD COLUMN discount_added VARCHAR(255) NOT NULL DEFAULT '0'";
+$alterAAg = "ALTER TABLE academy_cart_training_items
+  ADD COLUMN item_for VARCHAR(255) NOT NULL DEFAULT ''";
+$academyCartAlter = "ALTER TABLE academy_cart
+  ADD COLUMN discount_applied VARCHAR(255) NOT NULL DEFAULT 'false'";
+$alterDuration = "ALTER TABLE durations
+  ADD COLUMN duration_unit VARCHAR(255) NOT NULL";
+$createListOfItemsToBring = "CREATE TABLE IF NOT EXISTS training_items_to_bring(
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    training_id VARCHAR(255) NOT NULL,
+    item_name VARCHAR(255) NOT NULL,
+    required VARCHAR(255) NOT NULL DEFAULT 'true'
+  )";
+$createTrainingStartAndEndDates = "CREATE TABLE IF NOT EXISTS training_dates(
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    training_id_from_saloon_orders VARCHAR(255) NOT NULL,
+    start_date VARCHAR(255) NOT NULL,
+    reminder_interval VARCHAR(255) NOT NULL,
+    reminder_unit VARCHAR(255) NOT NULL
+  )";
+$alterTrainingDates = "ALTER TABLE saloon_orders
+  ADD COLUMN added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP";
+$alterTrainingDates2 = "ALTER TABLE training_dates
+  ADD COLUMN reminder_unit VARCHAR(255) NOT NULL";
+$log = "CREATE TABLE IF NOT EXISTS `reminder_logs` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `booking_id` VARCHAR(50) NOT NULL,
+  `milestone_sent` VARCHAR(100) NOT NULL,
+  `sent_at` DATETIME NOT NULL,
+  UNIQUE KEY `unique_reminder` (`booking_id`, `milestone_sent`)
+);";
+mysqli_query($con, $createListOfItemsToBring);
+mysqli_query($con, $log);
+mysqli_query($con, $createTrainingStartAndEndDates);
+mysqli_query($con, $trainingItemsTableSQL);
+mysqli_query($con, $academyCarttrainingItemsTableSQL);
+mysqli_query($con, $createCreditSalesTransfers);
+mysqli_query($con, $createSpecialItemsTableSQL);
+mysqli_query($con, $creditSalesTableSQL);
+mysqli_query($con, $createCustomerDiscountTable);
+mysqli_query($con, $createCustomerTableSQL);
+// Alters
+$alterArray = [
+    [
+        "table" => "academy_cart_training_items",
+        "column" => "item_for",
+        "query" => $alterAAg
+    ],
+    [
+        "table" => "training",
+        "column" => "discount_added",
+        "query" => $alterAgg
+    ],
+    [
+        "table" => "training_items",
+        "column" => "image",
+        // "query" => $alterAg2
+        "query" => ""
+    ],
+    [
+        "table" => "refreshments",
+        "column" => "amount_paid",
+        "query" => $alterRefreshmentSQL
+    ],
+    [
+        "table" => "special_items",
+        "column" => "ingredient_quantity",
+        "query" => $alterSpecialItemsSQL3
+    ],
+    [
+        "table" => "special_items",
+        "column" => "status",
+        "query" => $alterSpecialItemsSQL2
+    ],
+    [
+        "table" => "special_items",
+        "column" => "item_id",
+        "query" => $alterSpecialItemsSQL
+    ],
+    [
+        "table" => "credit_sales_transfers",
+        "column" => "bank",
+        "query" => $alterCreditSalesTransfers2
+    ],
+    [
+        "table" => "credit_sales_transfers",
+        "column" => "status",
+        "query" => $alterCreditSalesTransfers
+    ],
+    [
+        "table" => "food_menu",
+        "column" => "visibility",
+        "query" => $foodMenuAlter
+    ],
+    [
+        "table" => "food_menu",
+        "column" => "special_item",
+        "query" => $foodMenuAlter2
+    ],
+    [
+        "table" => "credit_sales",
+        "column" => "customer",
+        "query" => $creditSalesAlterSQL
+    ],
+    [
+        "table" => "academy_cart",
+        "column" => "discount_applied",
+        "query" => $academyCartAlter
+    ],
+    [
+        "table" => "refreshments",
+        "column" => "discount_added",
+        "query" => $refreshmentAlter
+    ],
+    [
+        "table" => "customers",
+        "column" => "credit_sales_eligibility",
+        "query" => $customerDiscountsAlterSQL
+    ],
+    [
+        "table" => "customer_discounts",
+        "column" => "credit_sales_eligibility",
+        // "query" => $correction
+        "query" => ""
+    ],
+    [
+        "table" => "durations",
+        "column" => "duration_unit",
+        "query" => $alterDuration
+    ],
+    [
+        "table" => "saloon_orders",
+        "column" => "added_on",
+        "query" => $alterTrainingDates
+    ],
+];
+// if(!columnExists($con,'academy_cart_training_items','item_for')){
+//     mysqli_query($con, $alterAAg);
 // }
-// function columnExists($conn, $table, $column)
-// {
-//     $table = mysqli_real_escape_string($conn, $table);
-//     $column = mysqli_real_escape_string($conn, $column);
+function tableExists($conn, $table)
+{
+    $result = mysqli_query($conn, "SHOW TABLES LIKE '$table'");
+    return $result && mysqli_num_rows($result) > 0;
+}
+function columnExists($conn, $table, $column)
+{
+    $table = mysqli_real_escape_string($conn, $table);
+    $column = mysqli_real_escape_string($conn, $column);
 
-//     $result = mysqli_query(
-//         $conn,
-//         "SHOW COLUMNS FROM `$table` LIKE '$column'"
-//     );
+    $result = mysqli_query(
+        $conn,
+        "SHOW COLUMNS FROM `$table` LIKE '$column'"
+    );
 
-//     return $result && mysqli_num_rows($result) > 0;
-// }
-// foreach ($alterArray as $oneAlter) {
+    return $result && mysqli_num_rows($result) > 0;
+}
+foreach ($alterArray as $oneAlter) {
 
-//     if (empty($oneAlter["query"]))
-//         continue;
+    if (empty($oneAlter["query"]))
+        continue;
 
-//     $table = $oneAlter["table"];
-//     $column = $oneAlter["column"];
+    $table = $oneAlter["table"];
+    $column = $oneAlter["column"];
 
-//     // 🚨 prevent crash if table doesn't exist
-//     if (!tableExists($con, $table))
-//         continue;
+    // 🚨 prevent crash if table doesn't exist
+    if (!tableExists($con, $table))
+        continue;
 
-//     if (!columnExists($con, $table, $column)) {
-//         mysqli_query($con, $oneAlter["query"]);
-//     }
-// }
-// // mysqli_query($con, $alterAgg);
-// // mysqli_query($con, $alterAg2);
-// // mysqli_query($con, $alterRefreshmentSQL);
-// // mysqli_query($con, $alterSpecialItemsSQL3);
-// // mysqli_query($con, $alterSpecialItemsSQL2);
-// // mysqli_query($con, $alterSpecialItemsSQL);
-// // mysqli_query($con, $alterCreditSalesTransfers2);
-// // mysqli_query($con, $alterCreditSalesTransfers);
-// // mysqli_query($con, $foodMenuAlter2);
-// // mysqli_query($con, $foodMenuAlter);
-// // mysqli_query($con, $creditSalesAlterSQL);
-// // mysqli_query($con, $academyCartAlter);
-// // mysqli_query($con, $refreshmentAlter);
-// // mysqli_query($con, $customerDiscountsAlterSQL);
-// // mysqli_query($con, $correction);
-// // mysqli_query($con, $alterDuration);
-// // mysqli_query($con, $alterTrainingDates);
-// // mysqli_query($con, $alterTrainingDates2);
+    if (!columnExists($con, $table, $column)) {
+        mysqli_query($con, $oneAlter["query"]);
+    }
+}
+// mysqli_query($con, $alterAgg);
+// mysqli_query($con, $alterAg2);
+// mysqli_query($con, $alterRefreshmentSQL);
+// mysqli_query($con, $alterSpecialItemsSQL3);
+// mysqli_query($con, $alterSpecialItemsSQL2);
+// mysqli_query($con, $alterSpecialItemsSQL);
+// mysqli_query($con, $alterCreditSalesTransfers2);
+// mysqli_query($con, $alterCreditSalesTransfers);
+// mysqli_query($con, $foodMenuAlter2);
+// mysqli_query($con, $foodMenuAlter);
+// mysqli_query($con, $creditSalesAlterSQL);
+// mysqli_query($con, $academyCartAlter);
+// mysqli_query($con, $refreshmentAlter);
+// mysqli_query($con, $customerDiscountsAlterSQL);
+// mysqli_query($con, $correction);
+// mysqli_query($con, $alterDuration);
+// mysqli_query($con, $alterTrainingDates);
+// mysqli_query($con, $alterTrainingDates2);
 include "../cron_reminder.php";
 ?>
 
@@ -506,6 +506,117 @@ include "../cron_reminder.php";
     <?php include "latest_deductions.php"; ?>
 
 
-    <?php include "footer.php";
-    mysqli_multi_query($con, file_get_contents("../alter.sql"));
+    <?php
+    include "footer.php";
+    $newAlterArray = [
+        [
+            "table" => "staff",
+            "column" => "staff_code",
+            "query" => "ALTER TABLE
+  staff
+ADD
+  COLUMN staff_code VARCHAR(255) DEFAULT (
+    CONCAT(
+      'STAFF-',
+      UPPER(SUBSTRING(MD5(UUID()), 1, 8))
+    )
+  );"
+        ],
+        [
+            "table" => "staff",
+            "column" => "code_status",
+            "query" => "ALTER TABLE
+  staff
+ADD
+  COLUMN code_status VARCHAR(255) DEFAULT 'Inactive'"
+        ],
+        [
+            "table" => "event_orders",
+            "column" => "referral_code",
+            "query" => "ALTER TABLE
+  event_orders
+ADD
+  COLUMN referral_code VARCHAR(255) DEFAULT ''"
+        ],
+        [
+            "table" => "admin",
+            "column" => "staff_code",
+            "query" => "ALTER TABLE
+  admin
+ADD
+  COLUMN staff_code VARCHAR(255) DEFAULT (
+    CONCAT(
+      'ADMIN-',
+      UPPER(SUBSTRING(MD5(UUID()), 1, 8))
+    )
+  );"
+        ],
+        [
+            "table" => "admin",
+            "column" => "code_status",
+            "query" => "ALTER TABLE
+  admin
+ADD
+  COLUMN code_status VARCHAR(255) DEFAULT 'Inactive';"
+        ],
+        [
+            "table" => "bank_accounts",
+            "column" => "service_type",
+            "query" => "ALTER TABLE
+  bank_accounts
+ADD
+  COLUMN service_type VARCHAR(255) NOT NULL DEFAULT '';
+"
+        ],
+        [
+            "table" => "event_orders",
+            "column" => "referral_code",
+            "query" => "ALTER TABLE
+  event_orders
+ADD
+  COLUMN referral_code VARCHAR(255) NOT NULL DEFAULT '';
+"
+        ],
+        [
+            "table" => "food_categories",
+            "column" => "discount",
+            "query" => "ALTER TABLE
+  food_categories DROP COLUMN discount;
+"
+        ],
+        [
+            "table" => "refreshments",
+            "column" => "item_category",
+            "query" => "ALTER TABLE
+  refreshments
+ADD
+  COLUMN item_category VARCHAR(255) NOT NULL DEFAULT '';
+"
+        ],
+        [
+            "table" => "refreshments",
+            "column" => "discount_added",
+            "query" => "ALTER TABLE
+  refreshments
+ADD
+  COLUMN discount_added VARCHAR(255) NOT NULL DEFAULT '0';"
+        ]
+    ];
+    foreach ($newAlterArray as $NewOneAlter) {
+
+        if (empty($oneAlter["query"]))
+            continue;
+
+        $table = $oneAlter["table"];
+        $column = $oneAlter["column"];
+
+        // 🚨 prevent crash if table doesn't exist
+        if (!tableExists($con, $table))
+            continue;
+
+        if (!columnExists($con, $table, $column)) {
+            mysqli_query($con, $oneAlter["query"]);
+        }
+    }
+    // mysqli_multi_query($con, file_get_contents("../alter.sql"));
     ?>
