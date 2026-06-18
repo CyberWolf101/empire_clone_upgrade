@@ -329,17 +329,23 @@ ADD
   COLUMN referral_code VARCHAR(255) DEFAULT ''"
     ],
     [
-    "table" => "staff",
-    "column" => "staff_code",
-    "query" => "ALTER TABLE staff
+        "table" => "staff",
+        "column" => "staff_code",
+        "query" => "ALTER TABLE staff
                 ADD COLUMN staff_code VARCHAR(255) NULL"
-],
+    ],
     [
-    "table" => "admin",
-    "column" => "staff_code",
-    "query" => "ALTER TABLE admin
+        "table" => "admin",
+        "column" => "staff_code",
+        "query" => "ALTER TABLE admin
                 ADD COLUMN staff_code VARCHAR(255) NULL"
-],
+    ],
+    [
+        "table" => "admin",
+        "column" => "code_status",
+        "query" => "ALTER TABLE admin
+                ADD COLUMN code_status VARCHAR(255) NULL"
+    ],
     [
         "table" => "bank_accounts",
         "column" => "service_type",
@@ -358,7 +364,7 @@ ADD
   COLUMN referral_code VARCHAR(255) NOT NULL DEFAULT '';
 "
     ],
-    
+
     [
         "table" => "refreshments",
         "column" => "item_category",
