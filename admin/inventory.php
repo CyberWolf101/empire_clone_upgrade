@@ -41,11 +41,28 @@ if (!empty($_SESSION['error_message'])) {
                             <input type="text" class="form-control" name="name" placeholder="*Name" required /><br />
                             <input type="text" class="form-control" name="product-value" id="productName"
                                 placeholder="*Enter product value (eg bags,carton,boxes)" required /><br />
-                            <label id="perPackLabel">How many per pack?</label><input type="number" class="form-control"
-                                name="pack-quantity" required /><br />
-                            <label id="packsLabel">How many packs are available?</label><input type="number"
-                                class="form-control" name="packs" required /><br />
-                            <input type="number" class="form-control" name="pieces"
+                            <hr>
+                            <div style="display: flex;justify-content: space-between; align-items: center;">
+                                <label for="countable-yes" class="form-label">Item Countable?</label>
+                                <!-- <select class="form-control" name="countable" id="countable-select">
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </select> -->
+                                <div>
+                                    <input type="radio" class="" name="countable" id="countable-yes" value="true"
+                                        checked>
+                                    <label for="countable-yes" class="">Yes</label>
+                                    &nbsp;&nbsp;
+                                    <input type="radio" class="" name="countable" id="countable-no" value="false">
+                                    <label for="countable-no" class="">No</label>
+                                </div>
+                            </div>
+                            <hr>
+                            <label id="perPackLabel">How many per pack?</label><input id="number-per-pack" type="number"
+                                class="form-control" name="pack-quantity" required /><br />
+                            <label id="packsLabel">How many packs are available?</label><input id="number-of-packs"
+                                type="number" class="form-control" name="packs" required /><br />
+                            <input type="number" id="extra-pieces" class="form-control" name="pieces"
                                 placeholder="Any Extra Pieces?" /><br />
                             <p><select class="form-control" name="department" required>
                                     <option value="" selected>- Select Department -</option>
@@ -70,6 +87,27 @@ if (!empty($_SESSION['error_message'])) {
                 var productValue = $(this).val();
                 $('#perPackLabel').text('How many per ' + productValue + '?');
                 $('#packsLabel').text('How many ' + productValue + ' are available?');
+            });
+            $("input[name='countable']").on('change', function () {
+                if ($(this).val() === "false") {
+                    $('#number-per-pack').val('1');
+                    console.log($('#number-per-pack').val());
+                    $('#perPackLabel').hide();
+                    $('#number-per-pack').hide();
+                    // Extra pieces not needed if not countable
+                    $('#extra-pieces').val('0');
+                    console.log($('#extra-pieces').val());
+                    $('#extra-pieces').hide();
+                } else {
+                    $('#number-per-pack').val('1');
+                    console.log($('#number-per-pack').val());
+                    $('#perPackLabel').show();
+                    $('#number-per-pack').show();
+                    // Extra pieces needed if countable
+                    $('#extra-pieces').val('0');
+                    console.log($('#extra-pieces').val());
+                    $('#extra-pieces').hide();
+                }
             });
         });
     </script>

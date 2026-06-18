@@ -30,6 +30,7 @@
             <option value="cashier">Cashier</option>
             <option value="storekeeper">Store keeper</option>
             <option value="accountant">Accountant</option>
+            <option value="baker">Baker</option>
           </select>
         </p>
 
@@ -67,7 +68,7 @@
     const departmentSelect = document.getElementById("select2Multiple");
 
     function toggleDepartments() {
-      if (roleSelect.value === "subadmin") {
+      if (roleSelect.value === "subadmin" || roleSelect.value === "baker") {
         // Hide the entire department dropdown
         departmentWrapper.style.display = "none";
         // Clear selected values

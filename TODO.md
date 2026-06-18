@@ -1,6 +1,6 @@
 # BAKERS LOGS
 
-[] - add bakers role
+[x] - add bakers role
 [] - There has to be a way to specify items that can countable and not countable
 [] - The uncountable items will have a default value of 1 for How many per 1kg ( or any value they use)
 [] - No extra pieces for uncountable item deafut value will be zero.
@@ -11,3 +11,4 @@
 [] - Edit nav bar for bakers to see the what they need to see (their pages)
 [x] - Comment inventory logs sidebar
 [] - The bakers will enter qty of what they collected & what they collected it will deducted
+[] - Create new tables(bakers_guide)
