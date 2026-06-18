@@ -372,7 +372,7 @@ foreach ($items as $item) {
               <a class="collapse-item" href="inventory.php">Inventory</a>
               <a class="collapse-item" href="inventory_departments.php">Inventory Departments</a>
               <a class="collapse-item" href="inventory_system.php">Inventory System</a>
-              <a class="collapse-item" href="inventory_log_details.php">Inventory logs</a>
+              <!-- <a class="collapse-item" href="inventory_log_details.php">Inventory logs</a> -->
             </div>
           </div>
         </li>

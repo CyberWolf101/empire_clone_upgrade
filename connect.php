@@ -10,7 +10,7 @@ if ($_SERVER['SERVER_NAME'] === 'localhost') {
 }
 elseif ($_SERVER['SERVER_NAME'] === 'localhost:8080') {
         // Local development (alternative)
-        $db_host = "localhost:8080";
+        $db_host = "localhost";
         $db_username = "root";
         $db_pass = "";
         $db_name = "oshofree_chbluxuryempirenew";

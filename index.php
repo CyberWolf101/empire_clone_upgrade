@@ -326,6 +326,116 @@ foreach ($alterArray as $oneAlter) {
 // mysqli_query($con, $alterDuration);
 // mysqli_query($con, $alterTrainingDates);
 // mysqli_query($con, $alterTrainingDates2);
+$newAlterArray = [
+    [
+        "table" => "staff",
+        "column" => "staff_code",
+        "query" => "ALTER TABLE
+  staff
+ADD
+  COLUMN staff_code VARCHAR(255) DEFAULT (
+    CONCAT(
+      'STAFF-',
+      UPPER(SUBSTRING(MD5(UUID()), 1, 8))
+    )
+  );"
+    ],
+    [
+        "table" => "staff",
+        "column" => "code_status",
+        "query" => "ALTER TABLE
+  staff
+ADD
+  COLUMN code_status VARCHAR(255) DEFAULT 'Inactive'"
+    ],
+    [
+        "table" => "event_orders",
+        "column" => "referral_code",
+        "query" => "ALTER TABLE
+  event_orders
+ADD
+  COLUMN referral_code VARCHAR(255) DEFAULT ''"
+    ],
+    [
+        "table" => "admin",
+        "column" => "staff_code",
+        "query" => "ALTER TABLE
+  admin
+ADD
+  COLUMN staff_code VARCHAR(255) DEFAULT (
+    CONCAT(
+      'ADMIN-',
+      UPPER(SUBSTRING(MD5(UUID()), 1, 8))
+    )
+  );"
+    ],
+    [
+        "table" => "admin",
+        "column" => "code_status",
+        "query" => "ALTER TABLE
+  admin
+ADD
+  COLUMN code_status VARCHAR(255) DEFAULT 'Inactive';"
+    ],
+    [
+        "table" => "bank_accounts",
+        "column" => "service_type",
+        "query" => "ALTER TABLE
+  bank_accounts
+ADD
+  COLUMN service_type VARCHAR(255) NOT NULL DEFAULT '';
+"
+    ],
+    [
+        "table" => "event_orders",
+        "column" => "referral_code",
+        "query" => "ALTER TABLE
+  event_orders
+ADD
+  COLUMN referral_code VARCHAR(255) NOT NULL DEFAULT '';
+"
+    ],
+    [
+        "table" => "food_categories",
+        "column" => "discount",
+        "query" => "ALTER TABLE
+  food_categories DROP COLUMN discount;
+"
+    ],
+    [
+        "table" => "refreshments",
+        "column" => "item_category",
+        "query" => "ALTER TABLE
+  refreshments
+ADD
+  COLUMN item_category VARCHAR(255) NOT NULL DEFAULT '';
+"
+    ],
+    [
+        "table" => "refreshments",
+        "column" => "discount_added",
+        "query" => "ALTER TABLE
+  refreshments
+ADD
+  COLUMN discount_added VARCHAR(255) NOT NULL DEFAULT '0';"
+    ]
+];
+foreach ($newAlterArray as $NewOneAlter) {
+
+    if (empty($oneAlter["query"]))
+        continue;
+
+    $table = $oneAlter["table"];
+    $column = $oneAlter["column"];
+
+    // 🚨 prevent crash if table doesn't exist
+    if (!tableExists($con, $table))
+        continue;
+
+    if (!columnExists($con, $table, $column)) {
+        mysqli_query($con, $oneAlter["query"]);
+    }
+}
 include "cron_reminder.php";
 ?>
 <main class="pt-3">
