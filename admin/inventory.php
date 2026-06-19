@@ -82,13 +82,13 @@ if (!empty($_SESSION['error_message'])) {
     </div>
 
     <script>
-        $(document).ready(function () {
-            $('#productName').on('input', function () {
+        $(document).ready(function() {
+            $('#productName').on('input', function() {
                 var productValue = $(this).val();
                 $('#perPackLabel').text('How many per ' + productValue + '?');
                 $('#packsLabel').text('How many ' + productValue + ' are available?');
             });
-            $("input[name='countable']").on('change', function () {
+            $("input[name='countable']").on('change', function() {
                 if ($(this).val() === "false") {
                     $('#number-per-pack').val('1');
                     console.log($('#number-per-pack').val());
@@ -147,7 +147,7 @@ if (!empty($_SESSION['error_message'])) {
                             $department = $row['department'];
                             $disabled = $isAdmin ? '' : 'disabled';
                             // superadmin can reduce values, others cannot
-                        
+
                             $minPackQty = $isSuperAdmin ? 0 : $row['pack_quantity'];
                             $minPacks = $isSuperAdmin ? 0 : $row['packs'];
                             $minPieces = $isSuperAdmin ? 0 : $row['pieces'];
@@ -169,92 +169,170 @@ if (!empty($_SESSION['error_message'])) {
                                         </form>
                                     </td>
                                 </tr>";
-                            echo '
-    <div class="custom-modal" id="customModal' . $row['s'] . '">
-        <div class="custom-modal-dialog">
-            <div class="custom-modal-content">
-                <div class="custom-modal-header">
-                    <h6>Edit Item</h6>
-                    <button type="button" class="custom-modal-close" onclick="closeCustomModal(\'customModal' . $row['s'] . '\')">&times;</button>
-                </div>
-                <div class="custom-modal-body">
-                    <form id="form' . $row['s'] . '" name="form' . $row['s'] . '" action="" method="post" enctype="multipart/form-data"> 
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <p>
-                                    <input type="text" name="name" class="form-control" 
-                                        value="' . htmlspecialchars($row['productname']) . '" 
-                                        placeholder="Name" required>
-                                </p>
+                        ?>
+                            <div class="custom-modal" id="customModal<?= $row['s']; ?>">
+                                <div class="custom-modal-dialog">
+                                    <div class="custom-modal-content">
+                                        <div class="custom-modal-header">
+                                            <h6>Edit Item</h6>
+                                            <button type="button"
+                                                class="custom-modal-close"
+                                                onclick="closeCustomModal('customModal<?= $row['s']; ?>')">
+                                                &times;
+                                            </button>
+                                        </div>
 
-                                <p>
-                                    <label id="perPackLabel' . $row['s'] . '">
-                                        How many per ' . htmlspecialchars($row['product_value']) . '?
-                                    </label>
-                                    <input type="number" class="form-control" 
-                                        value="' . $row['pack_quantity'] . '" 
-                                        min="' . $minPackQty . '" name="pack-quantity" required>
-                                </p>
+                                        <div class="custom-modal-body">
+                                            <form id="form<?= $row['s']; ?>"
+                                                name="form<?= $row['s']; ?>"
+                                                action=""
+                                                method="post"
+                                                enctype="multipart/form-data">
 
-                                <!-- Packs -->
-                                <div class="mb-3 border border-2 p-3 rounded">
-                                    <p><strong>Currently Available:</strong> <span class="bold-num">' . $row['packs'] . '</span> ' . htmlspecialchars($row['product_value']) . '</p>
-                                    <label id="packsLabel' . $row['s'] . '">Enter new value</label>
-                                    <input type="number" min="0" 
-                                        class="form-control" name="packs" placeholder="Enter value">
-                                         <input type="hidden" name="packs_mode" value="add"> <!-- 👈 hidden mode -->
+                                                <div class="row mb-3">
+                                                    <div class="col-md-12">
 
-                                          ' . ($isAdmin ? '
-                                    <div class="mt-2">
-                                        <button type="button" class="btn btn-primary btn-pack-add">Add</button>
-                                        <button type="button" class="btn btn-outline-primary btn-pack-subtract">Subtract</button>
+                                                        <p>
+                                                            <input type="text"
+                                                                name="name"
+                                                                class="form-control"
+                                                                value="<?= htmlspecialchars($row['productname']); ?>"
+                                                                placeholder="Name"
+                                                                required>
+                                                        </p>
+
+                                                        <p>
+                                                            <?php if ($row['countable'] == "true"): ?>
+                                                                <label id="perPackLabel<?= $row['s']; ?>">
+                                                                    How many per <?= htmlspecialchars($row['product_value']); ?>?
+                                                                </label>
+                                                                <input type="number"
+                                                                class="form-control"
+                                                                value="<?= $row['pack_quantity']; ?>"
+                                                                min="<?= $minPackQty; ?>"
+                                                                name="pack-quantity"
+                                                                required>
+                                                            <?php endif; ?>
+                                                            <?php if ($row['countable'] == "false"): ?>
+                                                                <label id="perPackLabel<?= $row['s']; ?>">
+                                                                    How many per <?= htmlspecialchars($row['product_value']); ?>?
+                                                                </label>
+                                                                <input type="number"
+                                                                class="form-control"
+                                                                value="<?= $row['pack_quantity']; ?>"
+                                                                min="<?= $minPackQty; ?>"
+                                                                name="pack-quantity"
+                                                                required>
+                                                            <?php endif; ?>
+
+                                                            
+                                                        </p>
+
+                                                        <!-- Packs -->
+                                                        <div class="mb-3 border border-2 p-3 rounded">
+                                                            <p>
+                                                                <strong>Currently Available:</strong>
+                                                                <span class="bold-num"><?= $row['packs']; ?></span>
+                                                                <?= htmlspecialchars($row['product_value']); ?>
+                                                            </p>
+
+                                                            <label id="packsLabel<?= $row['s']; ?>">
+                                                                Enter new value
+                                                            </label>
+
+                                                            <input type="number"
+                                                                min="0"
+                                                                class="form-control"
+                                                                name="packs"
+                                                                placeholder="Enter value">
+
+                                                            <input type="hidden" name="packs_mode" value="add">
+
+                                                            <?php if ($isAdmin): ?>
+                                                                <div class="mt-2">
+                                                                    <button type="button" class="btn btn-primary btn-pack-add">
+                                                                        Add
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-outline-primary btn-pack-subtract">
+                                                                        Subtract
+                                                                    </button>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+
+                                                        <!-- Pieces -->
+                                                        <div class="mb-3 border border-2 p-3 rounded">
+                                                            <p>
+                                                                <strong>Currently Available:</strong>
+                                                                <span class="bold-num"><?= $row['pieces']; ?></span>
+                                                                pieces
+                                                            </p>
+
+                                                            <label>Enter new pieces</label>
+
+                                                            <input type="number"
+                                                                class="form-control"
+                                                                min="0"
+                                                                name="pieces"
+                                                                placeholder="Enter pieces">
+
+                                                            <input type="hidden" name="pieces_mode" value="add">
+
+                                                            <?php if ($isAdmin): ?>
+                                                                <div class="mt-2">
+                                                                    <button type="button" class="btn btn-primary btn-pieces-add">
+                                                                        Add
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-outline-primary btn-pieces-subtract">
+                                                                        Subtract
+                                                                    </button>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+
+                                                        <p>
+                                                            <select class="form-control" name="department" required>
+                                                                <option value="">- Select Department -</option>
+
+                                                                <?php
+                                                                $sqb = "SELECT s, name FROM chb_inventory_department";
+                                                                $sqb2 = mysqli_query($con, $sqb);
+
+                                                                while ($rows = mysqli_fetch_array($sqb2)) {
+                                                                    $selected = ($department == $rows['s']) ? "selected" : "";
+                                                                ?>
+                                                                    <option value="<?= $rows['s']; ?>" <?= $selected; ?>>
+                                                                        <?= htmlspecialchars($rows['name']); ?>
+                                                                    </option>
+                                                                <?php } ?>
+                                                            </select>
+                                                        </p>
+
+                                                        <p>
+                                                            <input type="hidden"
+                                                                name="id"
+                                                                class="form-control"
+                                                                value="<?= $row['product']; ?>"
+                                                                required>
+                                                        </p>
+
+                                                        <p>
+                                                            <input id="submit<?= $row['s']; ?>"
+                                                                name="update_store"
+                                                                class="btn btn-sm btn-primary shadow-sm w-100"
+                                                                type="submit"
+                                                                value="Update Details">
+                                                        </p>
+
+                                                    </div>
+                                                </div>
+
+                                            </form>
+                                        </div>
                                     </div>
-                                     ' : '') . '
                                 </div>
-
-                                <!-- Pieces -->
-                                <div class="mb-3 border border-2 p-3 rounded">
-                                    <p><strong>Currently Available:</strong> <span class="bold-num" > ' . $row['pieces'] . ' </span> pieces</p>
-                                    <label>Enter new pieces</label>
-                                    <input type="number" class="form-control" 
-                                        min="0" name="pieces" placeholder="Enter pieces">
-                                         <input type="hidden" name="pieces_mode" value="add"> <!-- 👈 hidden mode -->
-
-                                            ' . ($isAdmin ? '
-                                    <div class="mt-2">
-                                        <button type="button" class="btn btn-primary btn-pieces-add">Add</button>
-                                        <button type="button" class="btn btn-outline-primary btn-pieces-subtract">Subtract</button>
-                                    </div>
-                                      ' : '') . '
-                                </div>
-
-                                <p>
-                                    <select class="form-control" name="department" required>
-                                        <option value="" selected>- Select Department -</option>';
-                            $sqb = "SELECT s, name FROM chb_inventory_department";
-                            $sqb2 = mysqli_query($con, $sqb);
-                            while ($rows = mysqli_fetch_array($sqb2)) {
-                                $selected = ($department == $rows['s']) ? "selected" : "";
-                                echo "<option value=\"" . $rows['s'] . "\" $selected>" . htmlspecialchars($rows['name']) . "</option>";
-                            }
-                            echo '</select>
-                                </p>
-
-                                <p>
-                                    <input type="hidden" name="id" class="form-control" value="' . $row['product'] . '" required>
-                                </p>
-                                <p>
-                                    <input id="submit' . $row['s'] . '" name="update_store" 
-                                        class="btn btn-sm btn-primary shadow-sm w-100" 
-                                        type="submit" value="Update Details">
-                                </p>
                             </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>';
+                        <?php
 
                         }
                         ?>
@@ -276,6 +354,7 @@ if (!empty($_SESSION['error_message'])) {
             console.error('Modal not found: ' + modalId);
         }
     }
+
     function closeCustomModal(modalId) {
         const modal = document.getElementById(modalId);
         if (modal) {
@@ -285,7 +364,7 @@ if (!empty($_SESSION['error_message'])) {
             console.error('Modal not found: ' + modalId);
         }
     }
-    document.addEventListener('click', function (event) {
+    document.addEventListener('click', function(event) {
         const modal = event.target.closest('.custom-modal');
         if (modal && modal.style.display === 'block' && event.target.classList.contains('custom-modal')) {
             closeCustomModal(modal.id);
@@ -296,7 +375,7 @@ if (!empty($_SESSION['error_message'])) {
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         // function setupToggle(buttonAdd, buttonSubtract, inputField) {
         //     let mode = "add"; // default
 
@@ -326,25 +405,25 @@ if (!empty($_SESSION['error_message'])) {
             let mode = "add"; // default
 
             // Add mode
-            buttonAdd.addEventListener('click', function () {
+            buttonAdd.addEventListener('click', function() {
                 mode = "add";
                 buttonAdd.classList.add('btn-primary');
                 buttonAdd.classList.remove('btn-outline-primary');
                 buttonSubtract.classList.remove('btn-primary');
                 buttonSubtract.classList.add('btn-outline-primary');
                 inputField.dataset.mode = "add";
-                hiddenField.value = "add";  // 👈 update hidden input
+                hiddenField.value = "add"; // 👈 update hidden input
             });
 
             // Subtract mode
-            buttonSubtract.addEventListener('click', function () {
+            buttonSubtract.addEventListener('click', function() {
                 mode = "subtract";
                 buttonSubtract.classList.add('btn-primary');
                 buttonSubtract.classList.remove('btn-outline-primary');
                 buttonAdd.classList.remove('btn-primary');
                 buttonAdd.classList.add('btn-outline-primary');
                 inputField.dataset.mode = "subtract";
-                hiddenField.value = "subtract";  // 👈 update hidden input
+                hiddenField.value = "subtract"; // 👈 update hidden input
             });
         }
 

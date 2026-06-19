@@ -243,6 +243,11 @@ $alterArray = [
         "column" => "added_on",
         "query" => $alterTrainingDates
     ],
+    [
+        "table" => "chb_inventory",
+        "column" => "countable",
+        "query" => "ALTER TABLE chb_inventory ADD COLUMN countable VARCHAR(255) NOT NULL"
+    ],
 ];
 // if(!columnExists($con,'academy_cart_training_items','item_for')){
 //     mysqli_query($con, $alterAAg);
