@@ -1,5 +1,5 @@
-
 <?php
+// ...existing code...
 include "header.php";
 
 if (!isset($_GET['id'])) {
@@ -28,6 +28,12 @@ if (mysqli_num_rows($requestSql) == 0) {
 }
 
 $request = mysqli_fetch_assoc($requestSql);
+
+// normalize status and compute permissions
+$status_l = strtolower(trim((string)($request['status'] ?? '')));
+$isAdmin = isset($status) && ($status === "superadmin" || $status === "admin");
+$canCollect = $isAdmin || ($status_l === 'approved');
+
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -77,14 +83,31 @@ $request = mysqli_fetch_assoc($requestSql);
                 <strong>Status</strong><br>
 
                 <?php
-                if ($request['status'] == 'Collected') {
-                    echo '<span class="badge badge-success">Collected</span>';
-                } elseif ($request['status'] == 'Partially Collected') {
-                    echo '<span class="badge badge-info">Partially Collected</span>';
+                if (in_array($status_l, ['collected','completed'])) {
+                    echo '<span class="badge badge-success" style="text-transform:capitalize;">Collected</span>';
+                } elseif ($status_l === 'approved') {
+                    echo '<span class="badge badge-info" style="text-transform:capitalize;">Approved</span>';
+                } elseif ($status_l === 'rejected') {
+                    echo '<span class="badge badge-danger" style="text-transform:capitalize;">Rejected</span>';
                 } else {
-                    echo '<span class="badge badge-warning">Pending</span>';
+                    echo '<span class="badge badge-warning" style="text-transform:capitalize;">Pending</span>';
                 }
                 ?>
+
+                <?php
+                // show approval metadata when available
+                if (!empty($request['approved_by']) || !empty($request['approved_on'])) {
+                    echo '<div class="small text-muted mt-1">';
+                    if (!empty($request['approved_by'])) {
+                        echo 'Approved by: ' . htmlspecialchars($request['approved_by']) . '<br>';
+                    }
+                    if (!empty($request['approved_on'])) {
+                        echo 'On: ' . date("d M Y h:i A", strtotime($request['approved_on']));
+                    }
+                    echo '</div>';
+                }
+                ?>
+
             </div>
 
         </div>
@@ -106,6 +129,12 @@ $request = mysqli_fetch_assoc($requestSql);
         </div>
 
         <div class="card-body">
+
+            <?php if (!$canCollect && !$isAdmin): ?>
+                <div class="alert alert-warning">
+                    This request must be approved by an admin before collection can be processed.
+                </div>
+            <?php endif; ?>
 
             <div class="table-responsive">
 
@@ -141,6 +170,9 @@ $request = mysqli_fetch_assoc($requestSql);
                             $remaining =
                                 $item['quantity']
                                 - $item['collected_quantity'];
+
+                            // disable inputs if user cannot collect
+                            $input_attrs = $canCollect ? '' : 'disabled';
                         ?>
 
                             <tr>
@@ -171,7 +203,8 @@ $request = mysqli_fetch_assoc($requestSql);
                                                max="<?= $remaining; ?>"
                                                class="form-control"
                                                name="collect_qty[<?= $item['id']; ?>]"
-                                               placeholder="0">
+                                               placeholder="0"
+                                               <?= $input_attrs ?>>
 
                                     <?php } else { ?>
 
@@ -197,19 +230,30 @@ $request = mysqli_fetch_assoc($requestSql);
 
         <div class="card-footer text-right">
 
-            <?php if ($request['status'] != 'Collected') { ?>
+            <?php if (in_array($status_l, ['collected','completed'])): ?>
 
-                <button type="submit"
-                        class="btn btn-success">
-                    Process Collection
-                </button>
+                <button type="button" class="btn btn-secondary" disabled>Already Collected</button>
 
-            <?php } ?>
+            <?php else: ?>
 
-            <a href="bakersrequests.php"
-               class="btn btn-secondary">
-                Back
-            </a>
+                <?php if ($status_l === 'approved'): ?>
+                    <button type="submit" class="btn btn-success">Process Collection</button>
+                <?php else: ?>
+                    <button type="button" class="btn btn-secondary" disabled>Awaiting Approval</button>
+                <?php endif; ?>
+
+                <a href="bakersrequests.php" class="btn btn-secondary">Back</a>
+
+                <?php if ($isAdmin && !in_array($status_l, ['approved','rejected','collected','completed'])): ?>
+                    <a href="approve_request.php?id=<?= urlencode($request_id); ?>"
+                       onclick="return confirm('Approve this request?');"
+                       class="btn btn-success">Approve</a>
+                    <a href="approve_request.php?id=<?= urlencode($request_id); ?>&reject=1"
+                       onclick="return confirm('Reject this request?');"
+                       class="btn btn-danger">Reject</a>
+                <?php endif; ?>
+
+            <?php endif; ?>
 
         </div>
 

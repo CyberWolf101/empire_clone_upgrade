@@ -1,4 +1,5 @@
 <?php
+// ...existing code...
 include "header.php";
 ?>
 
@@ -36,7 +37,7 @@ include "header.php";
                         <th>Requested By</th>
                         <th>Date Requested</th>
                         <th>Status</th>
-                        <th width="120">Action</th>
+                        <th width="200">Action</th>
                     </tr>
                 </thead>
 
@@ -61,15 +62,15 @@ include "header.php";
                     <tr>
 
                         <td>
-                            <?= $row['request_code']; ?>
+                            <?= htmlspecialchars($row['request_code']); ?>
                         </td>
 
                         <td>
-                            <?= $row['guide_name']; ?>
+                            <?= htmlspecialchars($row['guide_name']); ?>
                         </td>
 
                         <td>
-                            <?= $row['requested_by']; ?>
+                            <?= htmlspecialchars($row['requested_by']); ?>
                         </td>
 
                         <td>
@@ -82,17 +83,15 @@ include "header.php";
                         <td>
 
                             <?php
-                            if($row['status']=="Collected")
-                            {
-                                echo '<span class="badge badge-success">Collected</span>';
-                            }
-                            elseif($row['status']=="Partially Collected")
-                            {
-                                echo '<span class="badge badge-info">Partially Collected</span>';
-                            }
-                            else
-                            {
-                                echo '<span class="badge badge-warning">Pending</span>';
+                            $s = strtolower($row['status']);
+                            if($s === "completed" || $s === "collected") {
+                                echo '<span class="badge badge-success" style="text-transform:capitalize;">Completed</span>';
+                            } elseif($s === "approved") {
+                                echo '<span class="badge badge-info" style="text-transform:capitalize;">Approved</span>';
+                            } elseif($s === "rejected") {
+                                echo '<span class="badge badge-danger" style="text-transform:capitalize;">Rejected</span>';
+                            } else {
+                                echo '<span class="badge badge-warning" style="text-transform:capitalize;">Pending</span>';
                             }
                             ?>
 
@@ -100,10 +99,47 @@ include "header.php";
 
                         <td>
 
-                            <a href="viewrequest.php?id=<?= $row['id']; ?>"
+                            <a href="viewrequest.php?id=<?= urlencode($row['id']); ?>"
                                class="btn btn-sm btn-primary">
                                 View
                             </a>
+
+                            <?php
+                            // $status is the current user's role variable from header.php
+                            $isAdmin = isset($status) && ($status === "superadmin" || $status === "admin");
+
+                            // Show Approve button only to admin and when not already approved/rejected/completed
+                            if ($isAdmin && !in_array($s, ['approved','rejected','completed'])) {
+                                ?>
+                                <a href="approve_request.php?id=<?= urlencode($row['id']); ?>"
+                                   onclick="return confirm('Approve this request?');"
+                                   class="btn btn-sm btn-success">
+                                    Approve
+                                </a>
+                                <a href="approve_request.php?id=<?= urlencode($row['id']); ?>&reject=1"
+                                   onclick="return confirm('Reject this request?');"
+                                   class="btn btn-sm btn-danger">
+                                    Reject
+                                </a>
+                                <?php
+                            }
+
+                            // Show Collect button only when approved (bakers) or admin can always collect
+                            if ($s === 'approved' || $isAdmin) {
+                                ?>
+                                <a href="collect_request.php?id=<?= urlencode($row['id']); ?>"
+                                   onclick="return confirm('Mark as collected?');"
+                                   class="btn btn-sm btn-primary">
+                                    Mark Collected
+                                </a>
+                                <?php
+                            } else {
+                                // not approved and not admin: show disabled indicator
+                                if (!$isAdmin) {
+                                    echo '<button class="btn btn-sm btn-secondary" disabled>Awaiting Approval</button>';
+                                }
+                            }
+                            ?>
 
                         </td>
 
@@ -122,4 +158,5 @@ include "header.php";
     </div>
 
 </div>
-```
+<?php include "footer.php"; ?>
+// ...existing code...

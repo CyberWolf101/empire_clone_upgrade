@@ -107,7 +107,9 @@ include "header.php";
     <!-- Content for the Bakers Guide page -->
     <div class="card">
       <div class="card-header font-weight-bold d-flex justify-content-between align-items-center" style="color: gold;">Bakers Guide
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGuideModal">Add Guide</button>
+        <?php if ($isAdmin): ?>
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGuideModal">Add Guide</button>
+        <?php endif; ?>
       </div>
       <div class="card-body">
 
@@ -146,11 +148,13 @@ include "header.php";
                 <td><?= htmlspecialchars($row['added_on']) ?></td>
                 <td>
                   <a class="btn btn-sm btn-primary" href="viewbakersguide.php?id=<?= $row['guide_id'] ?>">View</a>
-                  <a href="deletebakersguide.php?id=<?= $row['guide_id'] ?>"
+                  <?php if ($isAdmin): ?>
+                    <a href="deletebakersguide.php?id=<?= $row['guide_id'] ?>"
                     class="btn btn-danger btn-sm"
                     onclick="return confirm('Are you sure you want to delete this guide?')">
                     Delete
                   </a>
+                  <?php endif; ?>
                 </td>
               </tr>
             <?php

@@ -320,6 +320,24 @@ ADD collected_quantity DECIMAL(10,2) NOT NULL DEFAULT 0;",
         "column"=> "status",
         "query"=> "ALTER TABLE bakers_requests
 ADD status VARCHAR(50) NOT NULL DEFAULT 'Pending';",
+    ],
+    [
+        "table"=> "bakers_requests",
+        "column"=> "approved_on",
+        "query"=> "ALTER TABLE bakers_requests
+ADD approved_on DATETIME NULL;",
+    ],
+    [
+        "table"=> "bakers_requests",
+        "column"=> "approved_by",
+        "query"=> "ALTER TABLE bakers_requests
+ADD approved_by VARCHAR(255) NULL;",
+    ],
+    [
+        "table"=> "bakers_requests",
+        "column"=> "approval_notes",
+        "query"=> "ALTER TABLE bakers_requests
+ADD approval_notes TEXT NULL;",
     ]
 ];
 // if(!columnExists($con,'academy_cart_training_items','item_for')){
