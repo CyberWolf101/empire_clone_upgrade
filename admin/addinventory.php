@@ -7,6 +7,7 @@ if (isset($_POST['register'])) {
     $packs = (int) $_POST['packs'];
     $pieces = (int) $_POST['pieces'];
     $department = mysqli_real_escape_string($con, $_POST['department']);
+    $countable = mysqli_real_escape_string($con, $_POST['countable']);
     $date = date("Y-m-d H:i:s");
     $quantity = $packs * $packQ + $pieces;
 
@@ -17,8 +18,8 @@ if (isset($_POST['register'])) {
     $ran = $n + 1;
 
     // Insert into chb_inventory
-    $submit = mysqli_query($con, "INSERT INTO chb_inventory(product, productname, product_value, pack_quantity, packs, pieces, inventory, department, staff, date) 
-        VALUES ('$ran', '$pname', '$productvalue', '$packQ', '$packs', '$pieces', '$quantity', '$department', '$username', '$date')")
+    $submit = mysqli_query($con, "INSERT INTO chb_inventory(product, productname, product_value, pack_quantity, packs, pieces, inventory, department, staff, date, countable) 
+        VALUES ('$ran', '$pname', '$productvalue', '$packQ', '$packs', '$pieces', '$quantity', '$department', '$username', '$date', '$countable')")
         or die('Could not connect: ' . mysqli_error($con));
 
     // Insert into chb_inventory_history

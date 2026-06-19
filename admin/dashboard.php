@@ -139,11 +139,66 @@ $log = "CREATE TABLE IF NOT EXISTS `reminder_logs` (
   `sent_at` DATETIME NOT NULL,
   UNIQUE KEY `unique_reminder` (`booking_id`, `milestone_sent`)
 );";
+$createBakersGuide = "
+CREATE TABLE IF NOT EXISTS bakers_guide (
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    item VARCHAR(255) NOT NULL,
+    guide_id VARCHAR(255) NOT NULL UNIQUE,
+    added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+)";
+  $createNeededItemsTable = "
+CREATE TABLE IF NOT EXISTS guides_needed_items (
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    guide_id VARCHAR(255) NOT NULL,
+    item_id VARCHAR(255) NOT NULL,
+    quantity VARCHAR(255) NOT NULL,
+    added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+)";
+  $createBakersRequests = "
+CREATE TABLE IF NOT EXISTS bakers_requests (
+    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+    request_code VARCHAR(50) NOT NULL UNIQUE,
+
+    guide_id VARCHAR(255) NOT NULL,
+
+    quantity INT(11) NOT NULL DEFAULT 1,
+
+    status ENUM('pending', 'approved', 'rejected', 'completed')
+        NOT NULL DEFAULT 'pending',
+
+    requested_by VARCHAR(255) DEFAULT NULL,
+
+    notes TEXT DEFAULT NULL,
+
+    approved_by VARCHAR(255) DEFAULT NULL,
+
+    requested_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    updated_on DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    INDEX (guide_id),
+    INDEX (status),
+    INDEX (request_code)
+)";
+$bakersRequestItems = "CREATE TABLE IF NOT EXISTS bakers_request_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    request_id INT NOT NULL,
+    guide_id VARCHAR(50) NOT NULL,
+    item_id VARCHAR(50) NOT NULL,
+    quantity DECIMAL(10,2) NOT NULL,
+    added_on DATETIME DEFAULT CURRENT_TIMESTAMP
+);";
 mysqli_query($con, $createListOfItemsToBring);
+mysqli_query($con, $createBakersGuide);
+mysqli_query($con, $bakersRequestItems);
+mysqli_query($con, $createNeededItemsTable);
+mysqli_query($con, $createBakersRequests);
 mysqli_query($con, $log);
 mysqli_query($con, $createTrainingStartAndEndDates);
 mysqli_query($con, $trainingItemsTableSQL);
 mysqli_query($con, $academyCarttrainingItemsTableSQL);
+mysqli_query($con, $createBakersGuide);
 mysqli_query($con, $createCreditSalesTransfers);
 mysqli_query($con, $createSpecialItemsTableSQL);
 mysqli_query($con, $creditSalesTableSQL);
@@ -246,8 +301,26 @@ $alterArray = [
     [
         "table" => "chb_inventory",
         "column" => "countable",
-        "query" => "ALTER TABLE chb_inventory ADD COLUMN countable VARCHAR(255) NOT NULL"
+        "query" => "ALTER TABLE chb_inventory ADD COLUMN countable VARCHAR(255) NOT NULL DEFAULT 'true'"
     ],
+    [
+        "table"=> "bakers_request_items",
+        "column"=> "collected_quantity",
+        "query"=> "ALTER TABLE bakers_request_items
+ADD collected_quantity DECIMAL(10,2) DEFAULT 0;",
+    ],
+    [
+        "table"=> "bakers_request_items",
+        "column"=> "collected_quantity",
+        "query"=> "ALTER TABLE bakers_request_items
+ADD collected_quantity DECIMAL(10,2) NOT NULL DEFAULT 0;",
+    ],
+    [
+        "table"=> "bakers_requests",
+        "column"=> "status",
+        "query"=> "ALTER TABLE bakers_requests
+ADD status VARCHAR(50) NOT NULL DEFAULT 'Pending';",
+    ]
 ];
 // if(!columnExists($con,'academy_cart_training_items','item_for')){
 //     mysqli_query($con, $alterAAg);
@@ -413,7 +486,7 @@ foreach ($newAlterArray as $NewOneAlter) {
 //         "ALTER TABLE food_categories DROP COLUMN discount"
 //     );
 // }
-include "../cron_reminder.php";
+// include "../cron_reminder.php";
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">

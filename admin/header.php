@@ -378,15 +378,16 @@ foreach ($items as $item) {
         </li>
         <!-- BAKERS GUIDE -->
         <li class="nav-item">
-          <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseSaloon" aria-expanded="true"
+          <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseBakersGuide" aria-expanded="true"
             aria-controls="collapseBootstrap">
             <i class="fa fa-solid fa-bread-loaf"></i>
             <span>Bakers Guide</span>
           </a>
-          <div id="collapseSaloon" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+          <div id="collapseBakersGuide" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded">
               <h6 class="collapse-header">Bakers Guide</h6>
               <a class="collapse-item" href="bakersguide.php">All Guides</a>
+                <a class="collapse-item" href="bakersrequests.php">All Requests</a>
               <!-- <a class="collapse-item" href="addsubcategory.php">Add New Subcategory</a>
               <a class="collapse-item" href="services.php">All Services</a>
               <a class="collapse-item" href="storebookings.php">Walk-in Bookings</a>
@@ -487,15 +488,16 @@ BAKERS NAV
           <hr class="sidebar-divider my-0">
           <!-- BAKERS GUIDE -->
           <li class="nav-item">
-            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseSaloon" aria-expanded="true"
+            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseBakersGuide" aria-expanded="true"
               aria-controls="collapseBootstrap">
               <i class="fa fa-solid fa-bread-loaf"></i>
               <span>Bakers Guide</span>
             </a>
-            <div id="collapseSaloon" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+            <div id="collapseBakersGuide" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
               <div class="bg-white py-2 collapse-inner rounded">
                 <h6 class="collapse-header">Bakers Guide</h6>
                 <a class="collapse-item" href="bakersguide.php">All Guides</a>
+                <a class="collapse-item" href="bakersrequests.php">All Requests</a>
                 <!-- <a class="collapse-item" href="addsubcategory.php">Add New Subcategory</a>
               <a class="collapse-item" href="services.php">All Services</a>
               <a class="collapse-item" href="storebookings.php">Walk-in Bookings</a>

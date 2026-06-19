@@ -436,7 +436,7 @@ foreach ($newAlterArray as $NewOneAlter) {
         mysqli_query($con, $oneAlter["query"]);
     }
 }
-include "cron_reminder.php";
+// include "cron_reminder.php";
 ?>
 <main class="pt-3">
     <div id="main">
