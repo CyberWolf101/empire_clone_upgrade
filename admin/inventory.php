@@ -214,12 +214,12 @@ if (!empty($_SESSION['error_message'])) {
                                                                 required>
                                                             <?php endif; ?>
                                                             <?php if ($row['countable'] == "false"): ?>
-                                                                <label id="perPackLabel<?= $row['s']; ?>">
+                                                                <!-- UNCOUNTABLE  -->
+                                                                <!-- <label id="perPackLabel<?= $row['s']; ?>">
                                                                     How many per <?= htmlspecialchars($row['product_value']); ?>?
-                                                                </label>
-                                                                <input type="number"
-                                                                class="form-control"
-                                                                value="<?= $row['pack_quantity']; ?>"
+                                                                </label> -->
+                                                                <input type="hidden"
+                                                                value="1"
                                                                 min="<?= $minPackQty; ?>"
                                                                 name="pack-quantity"
                                                                 required>
