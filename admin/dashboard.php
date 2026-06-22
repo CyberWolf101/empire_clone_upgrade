@@ -338,7 +338,11 @@ ADD approved_by VARCHAR(255) NULL;",
         "column"=> "approval_notes",
         "query"=> "ALTER TABLE bakers_requests
 ADD approval_notes TEXT NULL;",
-    ]
+    ],
+    ["table"=> "chb_inventory",
+        "column"=> "inventory_deducted",
+        "query"=>"ALTER TABLE chb_inventory 
+ADD COLUMN inventory_deducted DECIMAL(10,2) NOT NULL DEFAULT 0.00;"]
 ];
 // if(!columnExists($con,'academy_cart_training_items','item_for')){
 //     mysqli_query($con, $alterAAg);

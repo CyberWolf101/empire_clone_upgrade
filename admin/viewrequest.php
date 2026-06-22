@@ -31,7 +31,7 @@ $request = mysqli_fetch_assoc($requestSql);
 
 // normalize status and compute permissions
 $status_l = strtolower(trim((string)($request['status'] ?? '')));
-$isAdmin = isset($status) && ($status === "superadmin" || $status === "admin");
+// $isAdmin = isset($status) && ($status === "superadmin" || $status === "admin");
 $canCollect = $isAdmin || ($status_l === 'approved');
 
 ?>
