@@ -90,8 +90,10 @@ include "header.php";
                                 echo '<span class="badge badge-info" style="text-transform:capitalize;">Approved</span>';
                             } elseif($s === "rejected") {
                                 echo '<span class="badge badge-danger" style="text-transform:capitalize;">Rejected</span>';
-                            } else {
-                                echo '<span class="badge badge-warning" style="text-transform:capitalize;">Pending</span>';
+                            } elseif($s === "partially collected") {
+                                echo '<span class="badge badge-primary" style="text-transform:capitalize;">Partially Collected</span>';
+                            }else{
+                                echo '<span class="badge badge-warning" style="text-transform:capitalize;">Pending</span> ';
                             }
                             ?>
 
@@ -109,7 +111,7 @@ include "header.php";
                             $isAdmin = isset($status) && ($status === "superadmin" || $status === "admin");
 
                             // Show Approve button only to admin and when not already approved/rejected/completed
-                            if ($isAdmin && !in_array($s, ['approved','rejected','completed'])) {
+                            if ($isAdmin && !in_array($s, ['approved','rejected','completed','collected','partially collected'])) {
                                 ?>
                                 <a href="approve_request.php?id=<?= urlencode($row['id']); ?>"
                                    onclick="return confirm('Approve this request?');"

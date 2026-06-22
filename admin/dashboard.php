@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS bakers_requests (
 
     quantity INT(11) NOT NULL DEFAULT 1,
 
-    status ENUM('pending', 'approved', 'rejected', 'completed')
+    status VARCHAR(255)
         NOT NULL DEFAULT 'pending',
 
     requested_by VARCHAR(255) DEFAULT NULL,

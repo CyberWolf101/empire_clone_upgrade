@@ -1,4 +1,5 @@
 <?php
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 session_start(); 
@@ -191,6 +192,13 @@ try {
     $status_clean = mysqli_real_escape_string($con, $status);
     
     // Only update when we have a non-empty, sanitized status
+    error_log("REQUEST {$request_id} STATUS BEFORE UPDATE = [" . $status_clean . "]");
+    mysqli_query(
+    $con,
+    "UPDATE bakers_requests
+     SET status = '$status_clean'
+     WHERE id = '$request_id'"
+);
     if ($status_clean !== '') {
         mysqli_query($con, "UPDATE bakers_requests SET status = '$status_clean' WHERE id = '$request_id'");
         if (mysqli_error($con)) {
