@@ -485,27 +485,27 @@ BAKERS NAV
               <i class="fas fa-fw fa-tachometer-alt"></i>
               <span>Dashboard</span></a>
           </li>
-          <hr class="sidebar-divider my-0">
+          <hr class="sidebar-divider my-3">
           <!-- BAKERS GUIDE -->
           <li class="nav-item">
-            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseBakersGuide" aria-expanded="true"
-              aria-controls="collapseBootstrap">
-              <i class="fa fa-solid fa-bread-loaf"></i>
-              <span>Bakers Guide</span>
-            </a>
-            <div id="collapseBakersGuide" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-              <div class="bg-white py-2 collapse-inner rounded">
-                <h6 class="collapse-header">Bakers Guide</h6>
-                <a class="collapse-item" href="bakersguide.php">All Guides</a>
-                <a class="collapse-item" href="bakersrequests.php">All Requests</a>
-                <!-- <a class="collapse-item" href="addsubcategory.php">Add New Subcategory</a>
+          <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseBakersGuide" aria-expanded="true"
+            aria-controls="collapseBootstrap">
+            <i class="fa fa-solid fa-bread-loaf"></i>
+            <span>Bakers Guide</span>
+          </a>
+          <div id="collapseBakersGuide" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+            <div class="bg-white py-2 collapse-inner rounded">
+              <h6 class="collapse-header">Bakers Guide</h6>
+              <a class="collapse-item" href="bakersguide.php">All Guides</a>
+              <a class="collapse-item" href="bakersrequests.php">All Requests</a>
+              <!-- <a class="collapse-item" href="addsubcategory.php">Add New Subcategory</a>
               <a class="collapse-item" href="services.php">All Services</a>
               <a class="collapse-item" href="storebookings.php">Walk-in Bookings</a>
               <a class="collapse-item" href="onlinebookings.php">Online Bookings</a>
               <a class="collapse-item" href="bookings.php">Start An Appointment</a> -->
-              </div>
             </div>
-          </li>
+          </div>
+        </li>
         <?php
         }
         ?>
@@ -820,7 +820,7 @@ BAKERS NAV
                 $pending_bakers_sql = "
     SELECT COUNT(*) AS cnt
     FROM bakers_requests
-    WHERE LOWER(TRIM(COALESCE(status,''))) NOT IN ('approved','rejected','collected','completed')
+    WHERE LOWER(TRIM(COALESCE(status,''))) NOT IN ('approved','rejected','collected','completed','partially collected')
 ";
                 $pending_bakers_count = 0;
                 $res = mysqli_query($con, $pending_bakers_sql);
