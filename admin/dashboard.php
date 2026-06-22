@@ -342,7 +342,13 @@ ADD approval_notes TEXT NULL;",
     ["table"=> "chb_inventory",
         "column"=> "inventory_deducted",
         "query"=>"ALTER TABLE chb_inventory 
-ADD COLUMN inventory_deducted DECIMAL(10,2) NOT NULL DEFAULT 0.00;"]
+ADD COLUMN inventory_deducted DECIMAL(10,2) NOT NULL DEFAULT 0.00;"],
+[
+    "table"=> "bakers_requests",
+    "column"=> "status",
+    "query"=> "ALTER TABLE bakers_requests 
+MODIFY COLUMN status ENUM('Pending', 'Approved', 'Partially Collected', 'Collected', 'Rejected') NOT NULL DEFAULT 'Pending';",
+]
 ];
 // if(!columnExists($con,'academy_cart_training_items','item_for')){
 //     mysqli_query($con, $alterAAg);

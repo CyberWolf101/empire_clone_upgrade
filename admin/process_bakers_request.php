@@ -4,25 +4,23 @@ ini_set('display_errors', 1);
 session_start(); 
 include "../connect.php";
 
-echo "<h1>🔍 Debugging Mode Activated</h1>";
-
-if (!isset($_POST['request_id'])) {
-    die("❌ Error: No request_id found in the POST request.");
+// 1. REINSTATE CRITICAL SAFEGUARDS (Prevents processing ID 0)
+if (!isset($_POST['request_id']) || empty($_POST['request_id'])) {
+    $_SESSION['error'] = "Invalid or missing Request ID.";
+    header("Location: bakersrequests.php");
+    exit;
 }
 
 $request_id = (int)$_POST['request_id'];
-echo "Target Request ID: " . $request_id . "<br>";
-
-echo "<h3>📦 Raw Form Data Received ($_POST):</h3>";
-echo "<pre>"; print_r($_POST); echo "</pre>";
 
 if (empty($_POST['collect_qty']) || !is_array($_POST['collect_qty'])) {
-    die("❌ Error: 'collect_qty' is missing, empty, or not an array. Your frontend is not passing the fields properly.");
+    $_SESSION['error'] = "No collection quantities provided.";
+    header("Location: viewrequest.php?id=" . $request_id);
+    exit;
 }
 
 $username = 'system';
 $code = $_SESSION['adminid'] ?? ($_COOKIE['adminID'] ?? null);
-echo "Logged Admin Code/Email: " . ($code ?? 'None found') . "<br>";
 
 if ($code) {
     $code_escaped = mysqli_real_escape_string($con, $code);
@@ -31,26 +29,21 @@ if ($code) {
         $username = $row['name'];
     }
 }
-echo "Resolved Action Username: " . $username . "<br><br>";
 
 mysqli_begin_transaction($con);
 
 try {
-    echo "<h3>🔄 Entering Processing Loop...</h3>";
-    $loop_count = 0;
+    $processed_items = 0;
 
     foreach ($_POST['collect_qty'] as $request_item_id => $collect_qty) {
         $request_item_id = (int)$request_item_id;
         $collect_qty = (float)$collect_qty;
 
-        echo "Checking Item Link ID: $request_item_id | Submitted Qty: $collect_qty <br>";
-
         if ($collect_qty <= 0) {
-            echo "⏭️ Skipped (Quantity is 0 or negative)<br>";
             continue;
         }
 
-        $loop_count++;
+        $processed_items++;
 
         // Fetch verification
         $itemSql = mysqli_query($con, "
@@ -62,11 +55,10 @@ try {
         ");
 
         if (!$itemSql || mysqli_num_rows($itemSql) == 0) {
-            throw new Exception("Database Row Lookup Failed: Request item link ID {$request_item_id} matched no active inventory products. Verify your table mapping keys.");
+            throw new Exception("Inventory lookup failed for item link ID {$request_item_id}.");
         }
 
         $item = mysqli_fetch_assoc($itemSql);
-        echo "Found Match: " . $item['productname'] . "<br>";
 
         $requestedQty = (float)$item['quantity'];
         $collectedQty = (float)$item['collected_quantity'];
@@ -78,11 +70,11 @@ try {
         $total_stock = ($packs * $pack_quantity) + $pieces;
 
         if ($collect_qty > $remainingQty) {
-            throw new Exception($item['productname'] . " - Exceeds request balance (Remaining: $remainingQty)");
+            throw new Exception($item['productname'] . " - Exceeds request balance.");
         }
 
         if ($collect_qty > $total_stock) {
-            throw new Exception($item['productname'] . " - Not enough total stock (In Stock: $total_stock)");
+            throw new Exception($item['productname'] . " - Insufficient stock.");
         }
 
         // Engine calculations
@@ -98,7 +90,7 @@ try {
         if ($remaining_to_deduct > 0) {
             $pack_units_available = $packs * $pack_quantity;
             if ($remaining_to_deduct > $pack_units_available) {
-                throw new Exception($item['productname'] . " - Insufficient packs in stock");
+                throw new Exception($item['productname'] . " - Insufficient packs in stock.");
             }
             $packs_needed = ceil($remaining_to_deduct / $pack_quantity);
             $packs -= $packs_needed;
@@ -110,21 +102,19 @@ try {
         $new_inventory = ($packs * $pack_quantity) + $pieces;
 
         // DB Operations
-        echo "💾 Writing updates to database...<br>";
-        
         mysqli_query($con, "
             UPDATE chb_inventory
             SET packs = $packs, pieces = $pieces, inventory = $new_inventory, inventory_deducted = inventory_deducted + $collect_qty
             WHERE product = '{$item['item_id']}'
         ");
-        if (mysqli_error($con)) throw new Exception("chb_inventory UPDATE SQL Error: " . mysqli_error($con));
+        if (mysqli_error($con)) throw new Exception("Inventory Update Error: " . mysqli_error($con));
 
         mysqli_query($con, "
             UPDATE bakers_request_items
             SET collected_quantity = collected_quantity + $collect_qty
             WHERE id = $request_item_id
         ");
-        if (mysqli_error($con)) throw new Exception("bakers_request_items UPDATE SQL Error: " . mysqli_error($con));
+        if (mysqli_error($con)) throw new Exception("Item Update Error: " . mysqli_error($con));
 
         $productName = mysqli_real_escape_string($con, $item['productname']);
         $username_escaped = mysqli_real_escape_string($con, $username);
@@ -135,40 +125,68 @@ try {
             VALUES
             ('{$item['item_id']}', '$productName', '$collect_qty', '$total_stock', '$username_escaped', '$username_escaped', 'Bakers Request Collection', NOW(), '$new_inventory')
         ");
-        if (mysqli_error($con)) throw new Exception("History INSERT SQL Error: " . mysqli_error($con));
-        
-        echo "✅ Item step complete.<br><br>";
+        if (mysqli_error($con)) throw new Exception("History Log Error: " . mysqli_error($con));
     }
 
-    if ($loop_count === 0) {
-        echo "⚠️ Note: The loop ran but no item fields had positive collection quantities entered.<br>";
-    }
-
-    // Status Engine Check
+    /*
+    ---------------------------------------------------
+    DETERMINE FINAL REQUEST STATUS Safely
+    ---------------------------------------------------
+    */
     $statusSql = mysqli_query($con, "SELECT quantity, collected_quantity FROM bakers_request_items WHERE request_id = '$request_id'");
-    $allCollected = true; $anyCollected = false;
+    
+    $allCollected = true; 
+    $anyCollected = false;
+    $hasRows = false;
 
     while ($row = mysqli_fetch_assoc($statusSql)) {
+        $hasRows = true;
         $qty = (float)$row['quantity'];
         $collected = (float)$row['collected_quantity'];
-        if ($collected > 0) $anyCollected = true;
-        if ($collected < $qty) $allCollected = false;
+        
+        if ($collected > 0) {
+            $anyCollected = true;
+        }
+        if ($collected < $qty) {
+            $allCollected = false;
+        }
     }
 
-    $status = $allCollected ? "Collected" : ($anyCollected ? "Partially Collected" : "Pending");
+    // Determine target string context value explicitly
+    if (!$hasRows) {
+        $status = "Approved"; 
+    } elseif ($allCollected) {
+        $status = "Collected";
+    } elseif ($anyCollected) {
+        $status = "Partially Collected";
+    } else {
+        $status = "Approved";
+    }
+
+    // Double safeguard: If the user didn't enter anything new to save, read the database's existing value to avoid risk of resets
+    if ($processed_items === 0) {
+         $checkCurrent = mysqli_query($con, "SELECT status FROM bakers_requests WHERE id = '$request_id'");
+         if ($currentRes = mysqli_fetch_assoc($checkCurrent)) {
+             $status = $currentRes['status'];
+         }
+    }
     
-    mysqli_query($con, "UPDATE bakers_requests SET status = '$status' WHERE id = '$request_id'");
-    if (mysqli_error($con)) throw new Exception("Main Request Status UPDATE SQL Error: " . mysqli_error($con));
+    // Explicit clean string treatment to prevent execution dropouts
+    $status_clean = mysqli_real_escape_string($con, trim($status));
+    
+    mysqli_query($con, "UPDATE bakers_requests SET status = '$status_clean' WHERE id = '$request_id'");
+    if (mysqli_error($con)) {
+        throw new Exception("Main Request Status Update Failed: " . mysqli_error($con));
+    }
 
     mysqli_commit($con);
-    echo "<h2>🎉 SUCCESS! Database Transaction Committed Permanently.</h2>";
+    $_SESSION['success'] = "Collection processed successfully! Status set to: " . $status_clean;
 
 } catch (Exception $e) {
     mysqli_rollback($con);
-    echo "<h2 style='color:red;'>❌ Transaction Failed & Rolled Back</h2>";
-    echo "<strong>Error Message:</strong> " . $e->getMessage();
+    $_SESSION['error'] = "Transaction Failed: " . $e->getMessage();
 }
 
-echo "<br><br><a href='viewrequest.php?id=$request_id'>&larr; Click here to return to View Request</a>";
+// 2. CLEAN REDIRECTS 
 header("Location: viewrequest.php?id=" . $request_id); 
 exit;

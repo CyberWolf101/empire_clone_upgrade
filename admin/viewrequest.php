@@ -1,5 +1,7 @@
 <?php
-// ...existing code...
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+// session_start(); // Handled by header.php if already active
 include "header.php";
 
 if (!isset($_GET['id'])) {
@@ -7,6 +9,11 @@ if (!isset($_GET['id'])) {
 }
 
 $request_id = (int)$_GET['id'];
+
+// Safe global boundary alignment check
+if (!isset($isAdmin)) {
+    $isAdmin = (isset($_SESSION['role']) && in_array(strtolower($_SESSION['role']), ['admin', 'superadmin']));
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -29,10 +36,9 @@ if (mysqli_num_rows($requestSql) == 0) {
 
 $request = mysqli_fetch_assoc($requestSql);
 
-// normalize status and compute permissions
+// Normalize status metrics safely
 $status_l = strtolower(trim((string)($request['status'] ?? '')));
-// $isAdmin = isset($status) && ($status === "superadmin" || $status === "admin");
-$canCollect = $isAdmin || ($status_l === 'approved');
+$canCollect = $isAdmin || ($status_l === 'approved' || $status_l === 'partially collected');
 
 ?>
 
@@ -42,49 +48,42 @@ $canCollect = $isAdmin || ($status_l === 'approved');
     </h1>
 
     <ol class="breadcrumb">
-        <li class="breadcrumb-item">
-            <a href="dashboard.php">Home</a>
-        </li>
-        <li class="breadcrumb-item">
-            <a href="bakersrequests.php">Bakers Requests</a>
-        </li>
-        <li class="breadcrumb-item active">
-            View Request
-        </li>
+        <li class="breadcrumb-item"><a href="dashboard.php">Home</a></li>
+        <li class="breadcrumb-item"><a href="bakersrequests.php">Bakers Requests</a></li>
+        <li class="breadcrumb-item active">View Request</li>
     </ol>
 </div>
 
+<?php if (isset($_SESSION['success'])): ?>
+    <div class="alert alert-success"><?= $_SESSION['success']; unset($_SESSION['success']); ?></div>
+<?php endif; ?>
+<?php if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-danger"><?= $_SESSION['error']; unset($_SESSION['error']); ?></div>
+<?php endif; ?>
+
 <div class="card shadow mb-4">
-
-    <div class="card-header">
-        <strong>Request Details</strong>
-    </div>
-
+    <div class="card-header"><strong>Request Details</strong></div>
     <div class="card-body">
-
         <div class="row">
-
             <div class="col-md-3">
                 <strong>Request Code</strong><br>
                 <?= htmlspecialchars($request['request_code']); ?>
             </div>
-
             <div class="col-md-3">
                 <strong>Guide</strong><br>
                 <?= htmlspecialchars($request['guide_name']); ?>
             </div>
-
             <div class="col-md-3">
                 <strong>Requested By</strong><br>
                 <?= htmlspecialchars($request['requested_by']); ?>
             </div>
-
             <div class="col-md-3">
                 <strong>Status</strong><br>
-
                 <?php
                 if (in_array($status_l, ['collected','completed'])) {
                     echo '<span class="badge badge-success" style="text-transform:capitalize;">Collected</span>';
+                } elseif ($status_l === 'partially collected') {
+                    echo '<span class="badge badge-primary" style="text-transform:capitalize;">Partially Collected</span>';
                 } elseif ($status_l === 'approved') {
                     echo '<span class="badge badge-info" style="text-transform:capitalize;">Approved</span>';
                 } elseif ($status_l === 'rejected') {
@@ -93,41 +92,16 @@ $canCollect = $isAdmin || ($status_l === 'approved');
                     echo '<span class="badge badge-warning" style="text-transform:capitalize;">Pending</span>';
                 }
                 ?>
-
-                <?php
-                // show approval metadata when available
-                if (!empty($request['approved_by']) || !empty($request['approved_on'])) {
-                    echo '<div class="small text-muted mt-1">';
-                    if (!empty($request['approved_by'])) {
-                        echo 'Approved by: ' . htmlspecialchars($request['approved_by']) . '<br>';
-                    }
-                    if (!empty($request['approved_on'])) {
-                        echo 'On: ' . date("d M Y h:i A", strtotime($request['approved_on']));
-                    }
-                    echo '</div>';
-                }
-                ?>
-
             </div>
-
         </div>
-
     </div>
-
 </div>
 
 <form method="POST" action="process_bakers_request.php">
-
-    <input type="hidden"
-           name="request_id"
-           value="<?= $request_id; ?>">
+    <input type="hidden" name="request_id" value="<?= $request_id; ?>">
 
     <div class="card shadow">
-
-        <div class="card-header">
-            <strong>Requested Ingredients</strong>
-        </div>
-
+        <div class="card-header"><strong>Requested Ingredients</strong></div>
         <div class="card-body">
 
             <?php if (!$canCollect && !$isAdmin): ?>
@@ -137,9 +111,7 @@ $canCollect = $isAdmin || ($status_l === 'approved');
             <?php endif; ?>
 
             <div class="table-responsive">
-
                 <table class="table table-bordered">
-
                     <thead>
                         <tr>
                             <th>Ingredient</th>
@@ -149,11 +121,8 @@ $canCollect = $isAdmin || ($status_l === 'approved');
                             <th>Collect Now</th>
                         </tr>
                     </thead>
-
                     <tbody>
-
                         <?php
-
                         $items = mysqli_query($con, "
                             SELECT
                                 bri.*,
@@ -165,38 +134,25 @@ $canCollect = $isAdmin || ($status_l === 'approved');
                             WHERE bri.request_id = '$request_id'
                         ");
 
+                        // TRACKER FLAG INITIALIZATION
+                        $hasRemainingItems = false; 
+
                         while ($item = mysqli_fetch_assoc($items)) {
+                            $remaining = $item['quantity'] - $item['collected_quantity'];
+                            
+                            if ($remaining > 0) {
+                                $hasRemainingItems = true; // Flips to true if any item needs stock filled
+                            }
 
-                            $remaining =
-                                $item['quantity']
-                                - $item['collected_quantity'];
-
-                            // disable inputs if user cannot collect
-                            $input_attrs = $canCollect ? '' : 'disabled';
+                            $input_attrs = ($canCollect || $isAdmin) ? '' : 'disabled';
                         ?>
-
                             <tr>
-
+                                <td><?= htmlspecialchars($item['productname']); ?></td>
+                                <td><?= $item['quantity']; ?></td>
+                                <td><?= $item['collected_quantity']; ?></td>
+                                <td><?= $item['stock_qty']; ?></td>
                                 <td>
-                                    <?= htmlspecialchars($item['productname']); ?>
-                                </td>
-
-                                <td>
-                                    <?= $item['quantity']; ?>
-                                </td>
-
-                                <td>
-                                    <?= $item['collected_quantity']; ?>
-                                </td>
-
-                                <td>
-                                    <?= $item['stock_qty']; ?>
-                                </td>
-
-                                <td>
-
                                     <?php if ($remaining > 0) { ?>
-
                                         <input type="number"
                                                step="0.01"
                                                min="0"
@@ -205,38 +161,23 @@ $canCollect = $isAdmin || ($status_l === 'approved');
                                                name="collect_qty[<?= $item['id']; ?>]"
                                                placeholder="0"
                                                <?= $input_attrs ?>>
-
                                     <?php } else { ?>
-
-                                        <span class="text-success">
-                                            Fully Collected
-                                        </span>
-
+                                        <span class="text-success">Fully Collected</span>
                                     <?php } ?>
-
                                 </td>
-
                             </tr>
-
                         <?php } ?>
-
                     </tbody>
-
                 </table>
-
             </div>
-
         </div>
 
         <div class="card-footer text-right">
-
-            <?php if (in_array($status_l, ['collected','completed'])): ?>
-
+            <?php if (in_array($status_l, ['collected','completed']) || !$hasRemainingItems): ?>
                 <button type="button" class="btn btn-secondary" disabled>Already Collected</button>
-
+                <a href="bakersrequests.php" class="btn btn-secondary">Back</a>
             <?php else: ?>
-
-                <?php if ($status_l === 'approved'): ?>
+                <?php if ($status_l === 'approved' || $status_l === 'partially collected' || $isAdmin): ?>
                     <button type="submit" class="btn btn-success">Process Collection</button>
                 <?php else: ?>
                     <button type="button" class="btn btn-secondary" disabled>Awaiting Approval</button>
@@ -244,7 +185,7 @@ $canCollect = $isAdmin || ($status_l === 'approved');
 
                 <a href="bakersrequests.php" class="btn btn-secondary">Back</a>
 
-                <?php if ($isAdmin && !in_array($status_l, ['approved','rejected','collected','completed'])): ?>
+                <?php if ($isAdmin && !in_array($status_l, ['approved','rejected','collected','completed', 'partially collected'])): ?>
                     <a href="approve_request.php?id=<?= urlencode($request_id); ?>"
                        onclick="return confirm('Approve this request?');"
                        class="btn btn-success">Approve</a>
@@ -252,13 +193,9 @@ $canCollect = $isAdmin || ($status_l === 'approved');
                        onclick="return confirm('Reject this request?');"
                        class="btn btn-danger">Reject</a>
                 <?php endif; ?>
-
             <?php endif; ?>
-
         </div>
-
     </div>
-
 </form>
 
 <?php include "footer.php"; ?>
