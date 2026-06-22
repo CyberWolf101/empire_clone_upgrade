@@ -154,15 +154,17 @@ try {
 
     // Determine target string context value explicitly
     if (!$hasRows) {
-        $status = "Approved"; 
-    } elseif ($allCollected) {
-        $status = "Collected";
-    } elseif ($anyCollected) {
-        $status = "Partially Collected";
-    } else {
-        $status = "Approved";
-    }
+    $status = "approved";
+} elseif ($allCollected) {
+    $status = "collected";
+} elseif ($anyCollected) {
+    $status = "partially collected";
+} else {
+    $status = "approved";
+}
 
+    // Double safeguard: If the user didn't enter anything new to save, read the database's existing value to avoid risk of resets
+// ...existing code...
     // Double safeguard: If the user didn't enter anything new to save, read the database's existing value to avoid risk of resets
     if ($processed_items === 0) {
          $checkCurrent = mysqli_query($con, "SELECT status FROM bakers_requests WHERE id = '$request_id'");
@@ -171,17 +173,34 @@ try {
          }
     }
     
-    // Explicit clean string treatment to prevent execution dropouts
-    $status_clean = mysqli_real_escape_string($con, trim($status));
-    
-    mysqli_query($con, "UPDATE bakers_requests SET status = '$status_clean' WHERE id = '$request_id'");
-    if (mysqli_error($con)) {
-        throw new Exception("Main Request Status Update Failed: " . mysqli_error($con));
-    }
+    // Ensure $status is never empty - fall back to a sensible default if needed
+    $status = isset($status) ? trim((string)$status) : '';
+    if ($status === '') {
+        // try to read current DB value again; if that's empty, use default
+        $checkCurrent = mysqli_query($con, "SELECT status FROM bakers_requests WHERE id = '$request_id' LIMIT 1");
+        if ($checkCurrent) {
+    $row = mysqli_fetch_assoc($checkCurrent);
 
+    if ($row && !empty($row['status'])) {
+        $status = $row['status'];
+    }
+}
+    }
+    
+    // Explicit clean string treatment to prevent execution dropouts
+    $status_clean = mysqli_real_escape_string($con, $status);
+    
+    // Only update when we have a non-empty, sanitized status
+    if ($status_clean !== '') {
+        mysqli_query($con, "UPDATE bakers_requests SET status = '$status_clean' WHERE id = '$request_id'");
+        if (mysqli_error($con)) {
+            throw new Exception("Main Request Status Update Failed: " . mysqli_error($con));
+        }
+    }
+    
     mysqli_commit($con);
     $_SESSION['success'] = "Collection processed successfully! Status set to: " . $status_clean;
-
+// ...existing code...
 } catch (Exception $e) {
     mysqli_rollback($con);
     $_SESSION['error'] = "Transaction Failed: " . $e->getMessage();

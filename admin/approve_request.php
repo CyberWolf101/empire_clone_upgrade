@@ -8,7 +8,7 @@ if (!isset($_GET['id'])) {
     exit();
 }
 
-$id = (int) $_GET['id'];
+$id = $_GET['id'];
 
 // Only admin/superadmin can approve/reject
 if (!isset($status) || ($status !== "superadmin" && $status !== "admin")) {
