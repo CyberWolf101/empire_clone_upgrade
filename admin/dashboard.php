@@ -1,4 +1,4 @@
-<?php include "header.php";
+<?php 
 $unread_sql = "SELECT COUNT(*) AS unread_count FROM inventory_log WHERE read_status = 0";
 $unread_inv_log = mysqli_fetch_assoc(mysqli_query($con, $unread_sql))['unread_count'];
 
@@ -515,6 +515,7 @@ foreach ($newAlterArray as $NewOneAlter) {
 //     );
 // }
 // include "../cron_reminder.php";
+include "header.php";
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
