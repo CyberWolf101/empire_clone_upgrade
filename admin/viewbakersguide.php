@@ -211,7 +211,7 @@ $name = isset($_GET["name"]) ? $_GET["name"] : "";
                     success: function(response) {
                         if(response.success) {
                             alert("Batch request logged successfully!");
-                            window.location.reload(); // Reload to show update notifications
+                            window.location.href = 'bakersguide.php'; // Reload to show update notifications
                         } else {
                             alert("Error: " + response.message);
                             $btn.prop('disabled', false).html('<i class="fas fa-paper-plane me-1"></i> Submit');

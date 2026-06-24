@@ -51,6 +51,6 @@ VALUES
         $_SESSION['error'] = "Database Parent Write Pipeline Interrupted.";
     }
     
-    header("Location: viewbakersguide.php?id=" . $guide_id);
+    header("Location: bakersguide.php");
     exit;
 }

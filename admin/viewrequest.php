@@ -186,7 +186,16 @@ if ($status_l === 'rejected') {
                                     <?php } ?>
                                 </td>
                                 <td>
-                                    <?php if (!in_array($item_status_l, ['rejected', 'partially rejected']) && $isAdmin && !$item['collected_quantity'] <= $item['quantity']) { ?>
+                                    <?php
+                                    // Calculate remaining quantity for this specific item row
+                                    $remaining = $item['quantity'] - $item['collected_quantity'];
+
+                                    // The button should only appear if:
+                                    // 1. The user is an admin
+                                    // 2. The item hasn't been rejected or partially rejected yet
+                                    // 3. There is actually quantity left to reject (remaining > 0)
+                                    if ($isAdmin && !in_array($item_status_l, ['rejected', 'partially rejected']) && $remaining > 0) {
+                                    ?>
                                         <button class="btn btn-danger btn-sm reject-ingredient-btn"
                                             type="button"
                                             data-item-id="<?= $item['id']; ?>">
