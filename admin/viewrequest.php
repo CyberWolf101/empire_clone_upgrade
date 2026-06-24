@@ -186,7 +186,7 @@ if ($status_l === 'rejected') {
                                     <?php } ?>
                                 </td>
                                 <td>
-                                    <?php if (!in_array($item_status_l, ['rejected', 'partially rejected']) && $isAdmin && !$item['collected_quantity'] >= $item['quantity']) { ?>
+                                    <?php if (!in_array($item_status_l, ['rejected', 'partially rejected']) && $isAdmin && !$item['collected_quantity'] <= $item['quantity']) { ?>
                                         <button class="btn btn-danger btn-sm reject-ingredient-btn"
                                             type="button"
                                             data-item-id="<?= $item['id']; ?>">
