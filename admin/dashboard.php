@@ -1,9 +1,5 @@
 <?php 
-$unread_sql = "SELECT COUNT(*) AS unread_count FROM inventory_log WHERE read_status = 0";
-$unread_inv_log = mysqli_fetch_assoc(mysqli_query($con, $unread_sql))['unread_count'];
 
-$unread_sql = "SELECT COUNT(*) AS unread_count FROM inventory_log WHERE read_status = 0";
-$unread_inv_log = mysqli_fetch_assoc(mysqli_query($con, $unread_sql))['unread_count'];
 $createCustomerTableSQL = "
 CREATE TABLE IF NOT EXISTS customers(
 id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -189,6 +185,12 @@ $bakersRequestItems = "CREATE TABLE IF NOT EXISTS bakers_request_items (
     quantity DECIMAL(10,2) NOT NULL,
     added_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );";
+include "header.php";
+$unread_sql = "SELECT COUNT(*) AS unread_count FROM inventory_log WHERE read_status = 0";
+$unread_inv_log = mysqli_fetch_assoc(mysqli_query($con, $unread_sql))['unread_count'];
+
+$unread_sql = "SELECT COUNT(*) AS unread_count FROM inventory_log WHERE read_status = 0";
+$unread_inv_log = mysqli_fetch_assoc(mysqli_query($con, $unread_sql))['unread_count'];
 mysqli_query($con, $createListOfItemsToBring);
 mysqli_query($con, $createBakersGuide);
 mysqli_query($con, $bakersRequestItems);
@@ -515,7 +517,7 @@ foreach ($newAlterArray as $NewOneAlter) {
 //     );
 // }
 // include "../cron_reminder.php";
-include "header.php";
+
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">

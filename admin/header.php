@@ -490,7 +490,7 @@ BAKERS NAV
           <li class="nav-item">
           <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseBakersGuide" aria-expanded="true"
             aria-controls="collapseBootstrap">
-            <i class="fa fa-solid fa-bread-loaf"></i>
+            <i class="fas fa-fw fa-id-card"></i>
             <span>Bakers Guide</span>
           </a>
           <div id="collapseBakersGuide" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
