@@ -40,6 +40,10 @@ $request = mysqli_fetch_assoc($requestSql);
 $status_l = strtolower(trim((string)($request['status'] ?? '')));
 $canCollect = $isAdmin || ($status_l === 'approved' || $status_l === 'partially collected');
 
+// CRITICAL FIX: If the global master tracking status is explicitly marked rejected, completely drop override capabilities
+if ($status_l === 'rejected') {
+    $canCollect = false;
+}
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -80,7 +84,7 @@ $canCollect = $isAdmin || ($status_l === 'approved' || $status_l === 'partially 
             <div class="col-md-3">
                 <strong>Status</strong><br>
                 <?php
-                if (in_array($status_l, ['collected','completed'])) {
+                if (in_array($status_l, ['collected', 'completed'])) {
                     echo '<span class="badge badge-success" style="text-transform:capitalize;">Collected</span>';
                 } elseif ($status_l === 'partially collected') {
                     echo '<span class="badge badge-primary" style="text-transform:capitalize;">Partially Collected</span>';
@@ -104,10 +108,16 @@ $canCollect = $isAdmin || ($status_l === 'approved' || $status_l === 'partially 
         <div class="card-header"><strong>Requested Ingredients</strong></div>
         <div class="card-body">
 
-            <?php if (!$canCollect && !$isAdmin): ?>
-                <div class="alert alert-warning">
+            <?php if (!$canCollect && !$isAdmin && $status_l !== 'rejected'): ?>
+                <!-- <div class="alert alert-warning">
                     This request must be approved by an admin before collection can be processed.
-                </div>
+                </div> -->
+            <?php endif; ?>
+
+            <?php if ($status_l === 'rejected'): ?>
+                <!-- <div class="alert alert-danger">
+                    This request item form pipeline has been completely marked as rejected. No processing actions can be run.
+                </div> -->
             <?php endif; ?>
 
             <div class="table-responsive">
@@ -118,7 +128,9 @@ $canCollect = $isAdmin || ($status_l === 'approved' || $status_l === 'partially 
                             <th>Requested Qty</th>
                             <th>Collected Qty</th>
                             <th>Available Stock</th>
+                            <th>Status</th>
                             <th>Collect Now</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -127,6 +139,7 @@ $canCollect = $isAdmin || ($status_l === 'approved' || $status_l === 'partially 
                             SELECT
                                 bri.*,
                                 ci.productname,
+                                bri.status as item_status,
                                 ci.inventory AS stock_qty
                             FROM bakers_request_items bri
                             LEFT JOIN chb_inventory ci
@@ -134,35 +147,47 @@ $canCollect = $isAdmin || ($status_l === 'approved' || $status_l === 'partially 
                             WHERE bri.request_id = '$request_id'
                         ");
 
-                        // TRACKER FLAG INITIALIZATION
-                        $hasRemainingItems = false; 
+                        $hasRemainingItems = false;
 
                         while ($item = mysqli_fetch_assoc($items)) {
                             $remaining = $item['quantity'] - $item['collected_quantity'];
-                            
+
                             if ($remaining > 0) {
-                                $hasRemainingItems = true; // Flips to true if any item needs stock filled
+                                $hasRemainingItems = true;
                             }
 
-                            $input_attrs = ($canCollect || $isAdmin) ? '' : 'disabled';
+                            // If master structure is rejected, lock text input nodes down tight
+                            $input_attrs = ($canCollect && $status_l !== 'rejected') ? '' : 'disabled';
                         ?>
                             <tr>
                                 <td><?= htmlspecialchars($item['productname']); ?></td>
                                 <td><?= $item['quantity']; ?></td>
                                 <td><?= $item['collected_quantity']; ?></td>
-                                <td><?= $item['stock_qty']; ?></td>
+                                <td class="<?= ($item['stock_qty'] < 1) ? 'text-danger' : 'text-success' ?>"><?= $item['stock_qty']; ?></td>
+                                <td><span class="badge bg-<?php echo $item['item_status'] == 'rejected' ? 'danger' : 'success' ?> text-white"><?= $item['item_status']; ?></span></td>
                                 <td>
                                     <?php if ($remaining > 0) { ?>
                                         <input type="number"
-                                               step="0.01"
-                                               min="0"
-                                               max="<?= $remaining; ?>"
-                                               class="form-control"
-                                               name="collect_qty[<?= $item['id']; ?>]"
-                                               placeholder="0"
-                                               <?= $input_attrs ?>>
+                                            step="0.01"
+                                            min="0"
+                                            max="<?= $remaining; ?>"
+                                            class="form-control"
+                                            name="collect_qty[<?= $item['id']; ?>]"
+                                            placeholder="0"
+                                            <?= $input_attrs ?>>
                                     <?php } else { ?>
                                         <span class="text-success">Fully Collected</span>
+                                    <?php } ?>
+                                </td>
+                                <td>
+                                    <?php if ($remaining > 0 && $canCollect && $item['item_status'] !== 'rejected') { ?>
+                                        <button class="btn btn-danger btn-sm reject-ingredient-btn"
+                                            type="button"
+                                            data-item-id="<?= $item['id']; ?>">
+                                            <i class="fas fa-times me-1"></i> <?php echo $item['collected_quantity'] > 0 ? "Reject remaining" : "Reject" ?>
+                                        </button>
+                                    <?php } else { ?>
+                                        <span class="text-muted small">-</span>
                                     <?php } ?>
                                 </td>
                             </tr>
@@ -173,8 +198,8 @@ $canCollect = $isAdmin || ($status_l === 'approved' || $status_l === 'partially 
         </div>
 
         <div class="card-footer text-right">
-            <?php if (in_array($status_l, ['collected','completed']) || !$hasRemainingItems): ?>
-                <button type="button" class="btn btn-secondary" disabled>Already Collected</button>
+            <?php if (in_array($status_l, ['collected', 'completed', 'rejected']) || !$hasRemainingItems): ?>
+                <button type="button" class="btn btn-secondary" disabled>No Actions Available</button>
                 <a href="bakersrequests.php" class="btn btn-secondary">Back</a>
             <?php else: ?>
                 <?php if ($request["approved_status"] === 'approved' && $isAdmin): ?>
@@ -185,17 +210,58 @@ $canCollect = $isAdmin || ($status_l === 'approved' || $status_l === 'partially 
 
                 <a href="bakersrequests.php" class="btn btn-secondary">Back</a>
 
-                <?php if ($isAdmin && !in_array($status_l, ['approved','rejected','collected','completed', 'partially collected'])): ?>
+                <?php if ($isAdmin && !in_array($status_l, ['approved', 'rejected', 'collected', 'completed', 'partially collected'])): ?>
                     <a href="approve_request.php?id=<?= urlencode($request_id); ?>"
-                       onclick="return confirm('Approve this request?');"
-                       class="btn btn-success">Approve</a>
+                        onclick="return confirm('Approve this request?');"
+                        class="btn btn-success">Approve</a>
                     <a href="approve_request.php?id=<?= urlencode($request_id); ?>&reject=1"
-                       onclick="return confirm('Reject this request?');"
-                       class="btn btn-danger">Reject</a>
+                        onclick="return confirm('Reject this request?');"
+                        class="btn btn-danger">Reject All</a>
                 <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
 </form>
+
+<script>
+    $(document).ready(function() {
+        $(".reject-ingredient-btn").on("click", function() {
+            let $btn = $(this);
+            let itemId = $btn.data("item-id");
+            let $currentRow = $btn.closest("tr");
+            let ingredientName = $currentRow.find("td:first").text().trim();
+
+            if (!confirm("Are you sure you want to reject '" + ingredientName + "' from this baker request?")) {
+                return;
+            }
+
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+
+            $.ajax({
+                url: 'reject_single_ingredient.php',
+                method: 'POST',
+                data: {
+                    bakers_item_id: itemId
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        alert("Ingredient successfully marked as rejected!");
+                        
+                        // Force full reload to cleanly recompute status badges and footer conditions
+                        window.location.reload();
+                    } else {
+                        alert("Error: " + response.message);
+                        $btn.prop('disabled', false).html('<i class="fas fa-times me-1"></i> Reject');
+                    }
+                },
+                error: function() {
+                    alert("An error occurred reaching the rejection handler script.");
+                    $btn.prop('disabled', false).html('<i class="fas fa-times me-1"></i> Reject');
+                }
+            });
+        });
+    });
+</script>
 
 <?php include "footer.php"; ?>

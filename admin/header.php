@@ -319,7 +319,7 @@ CREATE TABLE IF NOT EXISTS bakers_request_items (
   request_id INT NOT NULL,
   guide_id VARCHAR(50) NOT NULL,
   item_id VARCHAR(50) NOT NULL,
-  quantity DECIMAL(10,2) NOT NULL,
+  quantity VARCHAR(255) NOT NULL,
   added_on DATETIME DEFAULT CURRENT_TIMESTAMP
 );";
 
@@ -359,14 +359,15 @@ $alterArray = [
   ["table" => "durations", "column" => "duration_unit", "query" => $alterDuration],
   ["table" => "saloon_orders", "column" => "added_on", "query" => $alterTrainingDates],
   ["table" => "chb_inventory", "column" => "countable", "query" => "ALTER TABLE chb_inventory ADD COLUMN countable VARCHAR(255) NOT NULL DEFAULT 'true'"],
-  ["table" => "bakers_request_items", "column" => "collected_quantity", "query" => "ALTER TABLE bakers_request_items ADD collected_quantity DECIMAL(10,2) NOT NULL DEFAULT 0.00;"],
+  ["table" => "bakers_request_items", "column" => "collected_quantity", "query" => "ALTER TABLE bakers_request_items ADD collected_quantity VARCHAR(255) NOT NULL DEFAULT 0;"],
   ["table" => "bakers_requests", "column" => "status", "query" => "ALTER TABLE bakers_requests ADD status VARCHAR(50) NOT NULL DEFAULT 'Pending';"],
   ["table" => "bakers_requests", "column" => "approved_on", "query" => "ALTER TABLE bakers_requests ADD approved_on DATETIME NULL;"],
   ["table" => "bakers_requests", "column" => "approved_by", "query" => "ALTER TABLE bakers_requests ADD approved_by VARCHAR(255) NULL;"],
   ["table" => "bakers_requests", "column" => "approval_notes", "query" => "ALTER TABLE bakers_requests ADD approval_notes TEXT NULL;"],
-  ["table" => "chb_inventory", "column" => "inventory_deducted", "query" => "ALTER TABLE chb_inventory ADD COLUMN inventory_deducted DECIMAL(10,2) NOT NULL DEFAULT 0.00;"],
+  ["table" => "chb_inventory", "column" => "inventory_deducted", "query" => "ALTER TABLE chb_inventory ADD COLUMN inventory_deducted VARCHAR(255) NOT NULL DEFAULT 0;"],
   ["table" => "bakers_requests", "column" => "status", "query" => "ALTER TABLE bakers_requests MODIFY COLUMN status VARCHAR(50) NOT NULL DEFAULT 'Pending';"],
-  ["table" => "bakers_requests", "column" => "approved_status", "query" => "ALTER TABLE bakers_requests ADD COLUMN approved_status VARCHAR(255) NOT NULL DEFAULT 'Pending';"]
+  ["table" => "bakers_requests", "column" => "approved_status", "query" => "ALTER TABLE bakers_requests ADD COLUMN approved_status VARCHAR(255) NOT NULL DEFAULT 'Pending';"],
+  ["table" => "bakers_request_items", "column" => "status", "query" => "ALTER TABLE bakers_request_items ADD COLUMN status VARCHAR(255) NOT NULL DEFAULT 'pending';"],
 ];
 
 function tableExists($conn, $table) {

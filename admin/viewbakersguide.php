@@ -148,7 +148,7 @@ $name = isset($_GET["name"]) ? $_GET["name"] : "";
         $(document).ready(function() {
             // 1. LIVE BATCH CALCULATION LOGIC
             $("#standard_request").on("input", function() {
-                let batchMultiplier = parseFloat($(this).val()) || 0;
+                let batchMultiplier = $(this).val() || 0;
                 let isStandardEmpty = ($(this).val().trim() === "" || batchMultiplier <= 0);
 
                 if (isStandardEmpty) {
@@ -159,8 +159,8 @@ $name = isset($_GET["name"]) ? $_GET["name"] : "";
 
                     $("table tbody tr").each(function() {
                         let $currentRow = $(this);
-                        let baseQuantity = parseFloat($currentRow.find(".item_quantity").text().trim()) || 0;
-                        let totalRequiredQty = (baseQuantity * batchMultiplier).toFixed(2);
+                        let baseQuantity = $currentRow.find(".item_quantity").text().trim() || 0;
+                        let totalRequiredQty = (baseQuantity * batchMultiplier);
                         
                         $currentRow.find(".quick_request_qty").prop('disabled', true).val(totalRequiredQty);
                     });

@@ -5,7 +5,7 @@ include "../connect.php"; // Adjust file mapping path to match your layout envir
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $guide_id = $_POST['guide_id'];
     $item_id = mysqli_real_escape_string($con, $_POST['item_id']);
-    $request_qty = (float)$_POST['quick_request_qty'];
+    $request_qty = $_POST['quick_request_qty'];
     $requested_by = $_SESSION['adminname'] ?? 'System User'; // Adjust session key to your logged profile variable
 
     if ($request_qty <= 0) {

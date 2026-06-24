@@ -6,7 +6,7 @@ header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $guide_id = $_POST['guide_id'];
-    $batch_count = (float)$_POST['batch_count'];
+    $batch_count = $_POST['batch_count'];
     $items = isset($_POST['items']) ? $_POST['items'] : [];
     $requested_by = $_SESSION['adminname'] ?? 'System User'; // Matches your session profile key
 
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // 3. Loop through individual calculation rows to insert into the child subtable
         foreach ($items as $item) {
             $item_id = mysqli_real_escape_string($con, $item['item_id']);
-            $request_qty = (float)$item['quantity'];
+            $request_qty = $item['quantity'];
 
             if ($request_qty > 0) {
                 $item_query = "INSERT INTO bakers_request_items (

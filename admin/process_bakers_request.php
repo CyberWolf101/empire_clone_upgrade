@@ -38,7 +38,7 @@ try {
 
     foreach ($_POST['collect_qty'] as $request_item_id => $collect_qty) {
         $request_item_id = (int)$request_item_id;
-        $collect_qty = (float)$collect_qty;
+        $collect_qty = $collect_qty;
 
         if ($collect_qty <= 0) {
             continue;
@@ -61,13 +61,13 @@ try {
 
         $item = mysqli_fetch_assoc($itemSql);
 
-        $requestedQty = (float)$item['quantity'];
-        $collectedQty = (float)$item['collected_quantity'];
+        $requestedQty = $item['quantity'];
+        $collectedQty = $item['collected_quantity'];
         $remainingQty = $requestedQty - $collectedQty;
 
         $packs = (int)($item['packs'] ?? 0);
         $pack_quantity = (int)($item['pack_quantity'] ?? 1);
-        $pieces = (float)($item['pieces'] ?? 0); 
+        $pieces = ($item['pieces'] ?? 0); 
         $total_stock = ($packs * $pack_quantity) + $pieces;
 
         if ($collect_qty > $remainingQty) {
@@ -142,8 +142,8 @@ try {
 
     while ($row = mysqli_fetch_assoc($statusSql)) {
         $hasRows = true;
-        $qty = (float)$row['quantity'];
-        $collected = (float)$row['collected_quantity'];
+        $qty = $row['quantity'];
+        $collected = $row['collected_quantity'];
         
         if ($collected > 0) {
             $anyCollected = true;

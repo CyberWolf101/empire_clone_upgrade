@@ -18,4 +18,6 @@
 [x] - Requests action to be dropdwon
 [x] - Show guide name in the guide view
 [x] - Edit guide and add guide should be done by super admin
-[] - Standard request
+[x] - Standard request
+[x] - Individual reject(ingredient)
+[x] - Colors
