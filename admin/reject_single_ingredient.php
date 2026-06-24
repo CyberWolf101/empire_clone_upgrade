@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // 1. Fetch parent request details before execution to maintain traceability
-    $info_query = mysqli_query($con, "SELECT request_id FROM bakers_request_items WHERE id = '$bakers_item_id'");
+    $info_query = mysqli_query($con, "SELECT * FROM bakers_request_items WHERE id = '$bakers_item_id'");
     $item_info = mysqli_fetch_assoc($info_query);
 
     if (!$item_info) {
@@ -26,19 +26,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $parent_request_id = $item_info['request_id'];
 
-    // 2. Clear or delete the single item entry
-    // NOTE: If you prefer keeping the record and typing it as 'Rejected', swap to an UPDATE status query
-    $delete_query = "UPDATE bakers_request_items SET status = 'rejected' WHERE id = '$bakers_item_id'";
+    // 2. Safely isolate row modification rules
+    $status = 'rejected';
+    if ($item_info['collected_quantity'] > 0) {
+        $status = 'partially rejected';
+    }
+    $delete_query = "UPDATE bakers_request_items SET status = '$status' WHERE id = '$bakers_item_id'";
 
     if (mysqli_query($con, $delete_query)) {
         
-        // 3. Optional: Check if the master parent layout order has remaining sub-items
-        $check_remaining = mysqli_query($con, "SELECT COUNT(*) as total FROM bakers_request_items WHERE request_id = '$parent_request_id' AND status = 'rejected'");
-        $remaining_count = mysqli_fetch_assoc($check_remaining)['total'];
+        // 3. FIXED: Count items that are STILL active (NOT rejected or partially rejected)
+        $check_active = mysqli_query($con, "
+            SELECT COUNT(*) as total 
+            FROM bakers_request_items 
+            WHERE request_id = '$parent_request_id' 
+              AND status NOT IN ('rejected', 'partially rejected')
+        ");
+        $active_count = mysqli_fetch_assoc($check_active)['total'];
 
-        if ($remaining_count == 0) {
-            // Automatically close out or reject the parent tracking ticket if zero items remain
+        if ($active_count == 0) {
+            // Automatically close out or reject the parent tracking ticket ONLY if NO active items remain
             mysqli_query($con, "UPDATE bakers_requests SET status = 'rejected', approved_status = 'Rejected' WHERE id = '$parent_request_id'");
+        } else {
+            // Update the master order tracker state to 'partially rejected' safely
+            // But don't downgrade it if the order is already in mid-collection progress ('partially collected')
+            mysqli_query($con, "
+                UPDATE bakers_requests 
+                SET status = 'partially rejected' 
+                WHERE id = '$parent_request_id' 
+                  AND status != 'partially collected'
+            ");
         }
 
         echo json_encode(['success' => true]);

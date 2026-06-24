@@ -38,7 +38,9 @@ $request = mysqli_fetch_assoc($requestSql);
 
 // Normalize status metrics safely
 $status_l = strtolower(trim((string)($request['status'] ?? '')));
-$canCollect = $isAdmin || ($status_l === 'approved' || $status_l === 'partially collected');
+
+// Collection is valid for admin if the request is approved, partially collected, or partially rejected
+$canCollect = $isAdmin || in_array($status_l, ['approved', 'partially collected', 'partially rejected']);
 
 // CRITICAL FIX: If the global master tracking status is explicitly marked rejected, completely drop override capabilities
 if ($status_l === 'rejected') {
@@ -88,6 +90,8 @@ if ($status_l === 'rejected') {
                     echo '<span class="badge badge-success" style="text-transform:capitalize;">Collected</span>';
                 } elseif ($status_l === 'partially collected') {
                     echo '<span class="badge badge-primary" style="text-transform:capitalize;">Partially Collected</span>';
+                } elseif ($status_l === 'partially rejected') {
+                    echo '<span class="badge badge-warning" style="text-transform:capitalize;">Partially Rejected</span>';
                 } elseif ($status_l === 'approved') {
                     echo '<span class="badge badge-info" style="text-transform:capitalize;">Approved</span>';
                 } elseif ($status_l === 'rejected') {
@@ -107,18 +111,6 @@ if ($status_l === 'rejected') {
     <div class="card shadow">
         <div class="card-header"><strong>Requested Ingredients</strong></div>
         <div class="card-body">
-
-            <?php if (!$canCollect && !$isAdmin && $status_l !== 'rejected'): ?>
-                <!-- <div class="alert alert-warning">
-                    This request must be approved by an admin before collection can be processed.
-                </div> -->
-            <?php endif; ?>
-
-            <?php if ($status_l === 'rejected'): ?>
-                <!-- <div class="alert alert-danger">
-                    This request item form pipeline has been completely marked as rejected. No processing actions can be run.
-                </div> -->
-            <?php endif; ?>
 
             <div class="table-responsive">
                 <table class="table table-bordered">
@@ -150,23 +142,36 @@ if ($status_l === 'rejected') {
                         $hasRemainingItems = false;
 
                         while ($item = mysqli_fetch_assoc($items)) {
+                            $item_status_l = strtolower(trim((string)($item['item_status'] ?? '')));
                             $remaining = $item['quantity'] - $item['collected_quantity'];
 
-                            if ($remaining > 0) {
+                            // Only count remaining items if they aren't fully rejected
+                            if ($remaining > 0 && $item_status_l !== 'rejected') {
                                 $hasRemainingItems = true;
                             }
 
-                            // If master structure is rejected, lock text input nodes down tight
-                            $input_attrs = ($canCollect && $status_l !== 'rejected') ? '' : 'disabled';
+                            // FIX: Inputs stay operational if master allows it and this row is not rejected
+                            $input_attrs = ($canCollect && $status_l !== 'rejected' && $item_status_l !== 'rejected') ? '' : 'disabled';
                         ?>
                             <tr>
                                 <td><?= htmlspecialchars($item['productname']); ?></td>
                                 <td><?= $item['quantity']; ?></td>
                                 <td><?= $item['collected_quantity']; ?></td>
                                 <td class="<?= ($item['stock_qty'] < 1) ? 'text-danger' : 'text-success' ?>"><?= $item['stock_qty']; ?></td>
-                                <td><span class="badge bg-<?php echo $item['item_status'] == 'rejected' ? 'danger' : 'success' ?> text-white"><?= $item['item_status']; ?></span></td>
                                 <td>
-                                    <?php if ($remaining > 0) { ?>
+                                    <span class="badge bg-<?php echo $item_status_l == 'rejected' || $item_status_l == 'partially rejected' ? 'danger' : ($item_status_l == 'pending' ? 'warning' : 'success') ?> text-white">
+                                        <?= $item['item_status']; ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <?php if ($item_status_l === 'rejected') { ?>
+                                        <span class="text-danger small">Rejected</span>
+                                    <?php }elseif($item_status_l === 'partially rejected'){
+                                        ?>
+<span class="text-danger small">Partially Rejected</span>
+                                        <?php
+                                    }
+                                     elseif ($remaining > 0) { ?>
                                         <input type="number"
                                             step="0.01"
                                             min="0"
@@ -180,7 +185,7 @@ if ($status_l === 'rejected') {
                                     <?php } ?>
                                 </td>
                                 <td>
-                                    <?php if ($remaining > 0 && $canCollect && $item['item_status'] !== 'rejected') { ?>
+                                    <?php if (!in_array($item_status_l,['rejected','partially rejected']) && $isAdmin) { ?>
                                         <button class="btn btn-danger btn-sm reject-ingredient-btn"
                                             type="button"
                                             data-item-id="<?= $item['id']; ?>">
@@ -202,7 +207,7 @@ if ($status_l === 'rejected') {
                 <button type="button" class="btn btn-secondary" disabled>No Actions Available</button>
                 <a href="bakersrequests.php" class="btn btn-secondary">Back</a>
             <?php else: ?>
-                <?php if ($request["approved_status"] === 'approved' && $isAdmin): ?>
+                <?php if ($canCollect && $isAdmin): ?>
                     <button type="submit" class="btn btn-success">Process Collection</button>
                 <?php else: ?>
                     <button type="button" class="btn btn-secondary" disabled>Awaiting Approval</button>
@@ -210,7 +215,7 @@ if ($status_l === 'rejected') {
 
                 <a href="bakersrequests.php" class="btn btn-secondary">Back</a>
 
-                <?php if ($isAdmin && !in_array($status_l, ['approved', 'rejected', 'collected', 'completed', 'partially collected'])): ?>
+                <?php if ($isAdmin && !in_array($status_l, ['approved', 'rejected', 'collected', 'completed', 'partially collected', 'partially rejected'])): ?>
                     <a href="approve_request.php?id=<?= urlencode($request_id); ?>"
                         onclick="return confirm('Approve this request?');"
                         class="btn btn-success">Approve</a>
@@ -247,8 +252,6 @@ if ($status_l === 'rejected') {
                 success: function(response) {
                     if (response.success) {
                         alert("Ingredient successfully marked as rejected!");
-                        
-                        // Force full reload to cleanly recompute status badges and footer conditions
                         window.location.reload();
                     } else {
                         alert("Error: " + response.message);
