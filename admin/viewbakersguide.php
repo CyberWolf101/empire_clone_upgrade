@@ -27,7 +27,7 @@ $bakersGuideId = isset($_GET["id"]) ? $_GET["id"] : 0;
     <div class="col-lg-12">
 
         <div class="card shadow mb-4">
-
+<p><strong>GUide </strong></p>
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="m-0 font-weight-bold text-primary">Ingredients Needed</h6>
 

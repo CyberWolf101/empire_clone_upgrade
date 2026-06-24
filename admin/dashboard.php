@@ -1,17 +1,9 @@
-<?php 
+<?php include "header.php";
+$unread_sql = "SELECT COUNT(*) AS unread_count FROM inventory_log WHERE read_status = 0";
+$unread_inv_log = mysqli_fetch_assoc(mysqli_query($con, $unread_sql))['unread_count'];
 
-include "header.php";
-
-// if (
-//     tableExists($con, 'food_categories') &&
-//     columnExists($con, 'food_categories', 'discounts')
-// ) {
-//     mysqli_query(
-//         $con,
-//         "ALTER TABLE food_categories DROP COLUMN discount"
-//     );
-// }
-// include "../cron_reminder.php";
+$unread_sql = "SELECT COUNT(*) AS unread_count FROM inventory_log WHERE read_status = 0";
+$unread_inv_log = mysqli_fetch_assoc(mysqli_query($con, $unread_sql))['unread_count'];
 
 ?>
 

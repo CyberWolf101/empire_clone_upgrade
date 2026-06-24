@@ -15,7 +15,7 @@
 [x] - The bakers will enter qty of what they collected & what they collected it will deducted
 [] - Dropdown errors in your page
 [x] - Approval needed before marking as collected
-[] - Requests action to be dropdwon
+[x] - Requests action to be dropdwon
 [] - Show guide name in the guide view
 [] - Edit guide and add guide should be done by super admin
 [] - Standard request
