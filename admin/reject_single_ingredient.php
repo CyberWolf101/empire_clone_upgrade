@@ -35,26 +35,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (mysqli_query($con, $delete_query)) {
         
-        // 3. FIXED: Count items that are STILL active (NOT rejected or partially rejected)
-        $check_active = mysqli_query($con, "
-            SELECT COUNT(*) as total 
+        // 3. FETCH THE STATUS MATRICES FOR ALL SUB-ITEMS UNDER THIS REQUEST
+        $all_items_query = mysqli_query($con, "
+            SELECT 
+                quantity, 
+                collected_quantity, 
+                status 
             FROM bakers_request_items 
-            WHERE request_id = '$parent_request_id' 
-              AND status NOT IN ('rejected', 'partially rejected')
+            WHERE request_id = '$parent_request_id'
         ");
-        $active_count = mysqli_fetch_assoc($check_active)['total'];
 
-        if ($active_count == 0) {
-            // Automatically close out or reject the parent tracking ticket ONLY if NO active items remain
+        $total_items = 0;
+        $rejected_items_count = 0;
+        $fully_collected_items_count = 0;
+
+        while ($row = mysqli_fetch_assoc($all_items_query)) {
+            $total_items++;
+            $item_status_l = strtolower(trim((string)$row['status']));
+            
+            if (in_array($item_status_l, ['rejected', 'partially rejected'])) {
+                $rejected_items_count++;
+            } elseif ((float)$row['collected_quantity'] >= (float)$row['quantity']) {
+                $fully_collected_items_count++;
+            }
+        }
+
+        // 4. MASTER BOUNDARY UPDATE LOGIC
+        if ($rejected_items_count === $total_items) {
+            // Case A: Every single item in this order was completely rejected
             mysqli_query($con, "UPDATE bakers_requests SET status = 'rejected', approved_status = 'Rejected' WHERE id = '$parent_request_id'");
-        } else {
-            // Update the master order tracker state to 'partially rejected' safely
-            // But don't downgrade it if the order is already in mid-collection progress ('partially collected')
+        } 
+        elseif (($rejected_items_count + $fully_collected_items_count) === $total_items) {
+            // Case B: All items are "touched"—either rejected, partially rejected, or fully collected. No active items remain.
+            mysqli_query($con, "UPDATE bakers_requests SET status = 'collected', approved_status = 'Collected' WHERE id = '$parent_request_id'");
+        } 
+        else {
+            // Case C: There are still pending/approved items waiting for action in the table
+            // Set the master ticket to 'partially rejected', unless parts of it have already been collected
             mysqli_query($con, "
                 UPDATE bakers_requests 
                 SET status = 'partially rejected' 
                 WHERE id = '$parent_request_id' 
-                  AND status != 'partially collected'
+                  AND status != 'partially collected' 
+                  AND status != 'collected'
             ");
         }
 
