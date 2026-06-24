@@ -291,7 +291,7 @@ CREATE TABLE IF NOT EXISTS bakers_guide (
     guide_id VARCHAR(255) NOT NULL UNIQUE,
     added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 )";
-  $createNeededItemsTable = "
+$createNeededItemsTable = "
 CREATE TABLE IF NOT EXISTS guides_needed_items (
     id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
     guide_id VARCHAR(255) NOT NULL,
@@ -299,7 +299,7 @@ CREATE TABLE IF NOT EXISTS guides_needed_items (
     quantity VARCHAR(255) NOT NULL,
     added_on DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 )";
-  $createBakersRequests = "
+$createBakersRequests = "
 CREATE TABLE IF NOT EXISTS bakers_requests (
     id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
 
@@ -356,185 +356,187 @@ mysqli_query($con, $createCustomerDiscountTable);
 mysqli_query($con, $createCustomerTableSQL);
 // Alters
 $alterArray = [
-    [
-        "table" => "academy_cart_training_items",
-        "column" => "item_for",
-        "query" => $alterAAg
-    ],
-    [
-        "table" => "training",
-        "column" => "discount_added",
-        "query" => $alterAgg
-    ],
-    [
-        "table" => "training_items",
-        "column" => "image",
-        // "query" => $alterAg2
-        "query" => ""
-    ],
-    [
-        "table" => "refreshments",
-        "column" => "amount_paid",
-        "query" => $alterRefreshmentSQL
-    ],
-    [
-        "table" => "special_items",
-        "column" => "ingredient_quantity",
-        "query" => $alterSpecialItemsSQL3
-    ],
-    [
-        "table" => "special_items",
-        "column" => "status",
-        "query" => $alterSpecialItemsSQL2
-    ],
-    [
-        "table" => "special_items",
-        "column" => "item_id",
-        "query" => $alterSpecialItemsSQL
-    ],
-    [
-        "table" => "credit_sales_transfers",
-        "column" => "bank",
-        "query" => $alterCreditSalesTransfers2
-    ],
-    [
-        "table" => "credit_sales_transfers",
-        "column" => "status",
-        "query" => $alterCreditSalesTransfers
-    ],
-    [
-        "table" => "food_menu",
-        "column" => "visibility",
-        "query" => $foodMenuAlter
-    ],
-    [
-        "table" => "food_menu",
-        "column" => "special_item",
-        "query" => $foodMenuAlter2
-    ],
-    [
-        "table" => "credit_sales",
-        "column" => "customer",
-        "query" => $creditSalesAlterSQL
-    ],
-    [
-        "table" => "academy_cart",
-        "column" => "discount_applied",
-        "query" => $academyCartAlter
-    ],
-    [
-        "table" => "refreshments",
-        "column" => "discount_added",
-        "query" => $refreshmentAlter
-    ],
-    [
-        "table" => "customers",
-        "column" => "credit_sales_eligibility",
-        "query" => $customerDiscountsAlterSQL
-    ],
-    [
-        "table" => "customer_discounts",
-        "column" => "credit_sales_eligibility",
-        // "query" => $correction
-        "query" => ""
-    ],
-    [
-        "table" => "durations",
-        "column" => "duration_unit",
-        "query" => $alterDuration
-    ],
-    [
-        "table" => "saloon_orders",
-        "column" => "added_on",
-        "query" => $alterTrainingDates
-    ],
-    [
-        "table" => "chb_inventory",
-        "column" => "countable",
-        "query" => "ALTER TABLE chb_inventory ADD COLUMN countable VARCHAR(255) NOT NULL DEFAULT 'true'"
-    ],
-    [
-        "table"=> "bakers_request_items",
-        "column"=> "collected_quantity",
-        "query"=> "ALTER TABLE bakers_request_items
+  [
+    "table" => "academy_cart_training_items",
+    "column" => "item_for",
+    "query" => $alterAAg
+  ],
+  [
+    "table" => "training",
+    "column" => "discount_added",
+    "query" => $alterAgg
+  ],
+  [
+    "table" => "training_items",
+    "column" => "image",
+    // "query" => $alterAg2
+    "query" => ""
+  ],
+  [
+    "table" => "refreshments",
+    "column" => "amount_paid",
+    "query" => $alterRefreshmentSQL
+  ],
+  [
+    "table" => "special_items",
+    "column" => "ingredient_quantity",
+    "query" => $alterSpecialItemsSQL3
+  ],
+  [
+    "table" => "special_items",
+    "column" => "status",
+    "query" => $alterSpecialItemsSQL2
+  ],
+  [
+    "table" => "special_items",
+    "column" => "item_id",
+    "query" => $alterSpecialItemsSQL
+  ],
+  [
+    "table" => "credit_sales_transfers",
+    "column" => "bank",
+    "query" => $alterCreditSalesTransfers2
+  ],
+  [
+    "table" => "credit_sales_transfers",
+    "column" => "status",
+    "query" => $alterCreditSalesTransfers
+  ],
+  [
+    "table" => "food_menu",
+    "column" => "visibility",
+    "query" => $foodMenuAlter
+  ],
+  [
+    "table" => "food_menu",
+    "column" => "special_item",
+    "query" => $foodMenuAlter2
+  ],
+  [
+    "table" => "credit_sales",
+    "column" => "customer",
+    "query" => $creditSalesAlterSQL
+  ],
+  [
+    "table" => "academy_cart",
+    "column" => "discount_applied",
+    "query" => $academyCartAlter
+  ],
+  [
+    "table" => "refreshments",
+    "column" => "discount_added",
+    "query" => $refreshmentAlter
+  ],
+  [
+    "table" => "customers",
+    "column" => "credit_sales_eligibility",
+    "query" => $customerDiscountsAlterSQL
+  ],
+  [
+    "table" => "customer_discounts",
+    "column" => "credit_sales_eligibility",
+    // "query" => $correction
+    "query" => ""
+  ],
+  [
+    "table" => "durations",
+    "column" => "duration_unit",
+    "query" => $alterDuration
+  ],
+  [
+    "table" => "saloon_orders",
+    "column" => "added_on",
+    "query" => $alterTrainingDates
+  ],
+  [
+    "table" => "chb_inventory",
+    "column" => "countable",
+    "query" => "ALTER TABLE chb_inventory ADD COLUMN countable VARCHAR(255) NOT NULL DEFAULT 'true'"
+  ],
+  [
+    "table" => "bakers_request_items",
+    "column" => "collected_quantity",
+    "query" => "ALTER TABLE bakers_request_items
 ADD collected_quantity DECIMAL(10,2) DEFAULT 0;",
-    ],
-    [
-        "table"=> "bakers_request_items",
-        "column"=> "collected_quantity",
-        "query"=> "ALTER TABLE bakers_request_items
+  ],
+  [
+    "table" => "bakers_request_items",
+    "column" => "collected_quantity",
+    "query" => "ALTER TABLE bakers_request_items
 ADD collected_quantity DECIMAL(10,2) NOT NULL DEFAULT 0;",
-    ],
-    [
-        "table"=> "bakers_requests",
-        "column"=> "status",
-        "query"=> "ALTER TABLE bakers_requests
+  ],
+  [
+    "table" => "bakers_requests",
+    "column" => "status",
+    "query" => "ALTER TABLE bakers_requests
 ADD status VARCHAR(50) NOT NULL DEFAULT 'Pending';",
-    ],
-    [
-        "table"=> "bakers_requests",
-        "column"=> "approved_on",
-        "query"=> "ALTER TABLE bakers_requests
+  ],
+  [
+    "table" => "bakers_requests",
+    "column" => "approved_on",
+    "query" => "ALTER TABLE bakers_requests
 ADD approved_on DATETIME NULL;",
-    ],
-    [
-        "table"=> "bakers_requests",
-        "column"=> "approved_by",
-        "query"=> "ALTER TABLE bakers_requests
+  ],
+  [
+    "table" => "bakers_requests",
+    "column" => "approved_by",
+    "query" => "ALTER TABLE bakers_requests
 ADD approved_by VARCHAR(255) NULL;",
-    ],
-    [
-        "table"=> "bakers_requests",
-        "column"=> "approval_notes",
-        "query"=> "ALTER TABLE bakers_requests
+  ],
+  [
+    "table" => "bakers_requests",
+    "column" => "approval_notes",
+    "query" => "ALTER TABLE bakers_requests
 ADD approval_notes TEXT NULL;",
-    ],
-    ["table"=> "chb_inventory",
-        "column"=> "inventory_deducted",
-        "query"=>"ALTER TABLE chb_inventory 
-ADD COLUMN inventory_deducted DECIMAL(10,2) NOT NULL DEFAULT 0.00;"],
-[
-    "table"=> "bakers_requests",
-    "column"=> "status",
-    "query"=> "ALTER TABLE bakers_requests 
+  ],
+  [
+    "table" => "chb_inventory",
+    "column" => "inventory_deducted",
+    "query" => "ALTER TABLE chb_inventory 
+ADD COLUMN inventory_deducted DECIMAL(10,2) NOT NULL DEFAULT 0.00;"
+  ],
+  [
+    "table" => "bakers_requests",
+    "column" => "status",
+    "query" => "ALTER TABLE bakers_requests 
 MODIFY COLUMN status ENUM('Pending', 'Approved', 'Partially Collected', 'Collected', 'Rejected') NOT NULL DEFAULT 'Pending';",
-]
+  ]
 ];
 // if(!columnExists($con,'academy_cart_training_items','item_for')){
 //     mysqli_query($con, $alterAAg);
 // }
 function tableExists($conn, $table)
 {
-    $result = mysqli_query($conn, "SHOW TABLES LIKE '$table'");
-    return $result && mysqli_num_rows($result) > 0;
+  $result = mysqli_query($conn, "SHOW TABLES LIKE '$table'");
+  return $result && mysqli_num_rows($result) > 0;
 }
 function columnExists($conn, $table, $column)
 {
-    $table = mysqli_real_escape_string($conn, $table);
-    $column = mysqli_real_escape_string($conn, $column);
+  $table = mysqli_real_escape_string($conn, $table);
+  $column = mysqli_real_escape_string($conn, $column);
 
-    $result = mysqli_query(
-        $conn,
-        "SHOW COLUMNS FROM `$table` LIKE '$column'"
-    );
+  $result = mysqli_query(
+    $conn,
+    "SHOW COLUMNS FROM `$table` LIKE '$column'"
+  );
 
-    return $result && mysqli_num_rows($result) > 0;
+  return $result && mysqli_num_rows($result) > 0;
 }
 foreach ($alterArray as $oneAlter) {
 
-    if (empty($oneAlter["query"]))
-        continue;
+  if (empty($oneAlter["query"]))
+    continue;
 
-    $table = $oneAlter["table"];
-    $column = $oneAlter["column"];
+  $table = $oneAlter["table"];
+  $column = $oneAlter["column"];
 
-    // 🚨 prevent crash if table doesn't exist
-    if (!tableExists($con, $table))
-        continue;
+  // 🚨 prevent crash if table doesn't exist
+  if (!tableExists($con, $table))
+    continue;
 
-    if (!columnExists($con, $table, $column)) {
-        mysqli_query($con, $oneAlter["query"]);
-    }
+  if (!columnExists($con, $table, $column)) {
+    mysqli_query($con, $oneAlter["query"]);
+  }
 }
 // mysqli_query($con, $alterAgg);
 // mysqli_query($con, $alterAg2);
@@ -555,10 +557,10 @@ foreach ($alterArray as $oneAlter) {
 // mysqli_query($con, $alterTrainingDates);
 // mysqli_query($con, $alterTrainingDates2);
 $newAlterArray = [
-    [
-        "table" => "staff",
-        "column" => "staff_code",
-        "query" => "ALTER TABLE
+  [
+    "table" => "staff",
+    "column" => "staff_code",
+    "query" => "ALTER TABLE
   staff
 ADD
   COLUMN staff_code VARCHAR(255) DEFAULT (
@@ -567,93 +569,93 @@ ADD
       UPPER(SUBSTRING(MD5(UUID()), 1, 8))
     )
   );"
-    ],
-    [
-        "table" => "staff",
-        "column" => "code_status",
-        "query" => "ALTER TABLE
+  ],
+  [
+    "table" => "staff",
+    "column" => "code_status",
+    "query" => "ALTER TABLE
   staff
 ADD
   COLUMN code_status VARCHAR(255) DEFAULT 'Inactive'"
-    ],
-    [
-        "table" => "event_orders",
-        "column" => "referral_code",
-        "query" => "ALTER TABLE
+  ],
+  [
+    "table" => "event_orders",
+    "column" => "referral_code",
+    "query" => "ALTER TABLE
   event_orders
 ADD
   COLUMN referral_code VARCHAR(255) DEFAULT ''"
-    ],
-    [
-        "table" => "staff",
-        "column" => "staff_code",
-        "query" => "ALTER TABLE staff
+  ],
+  [
+    "table" => "staff",
+    "column" => "staff_code",
+    "query" => "ALTER TABLE staff
                 ADD COLUMN staff_code VARCHAR(255) NULL"
-    ],
-    [
-        "table" => "admin",
-        "column" => "staff_code",
-        "query" => "ALTER TABLE admin
+  ],
+  [
+    "table" => "admin",
+    "column" => "staff_code",
+    "query" => "ALTER TABLE admin
                 ADD COLUMN staff_code VARCHAR(255) NULL"
-    ],
-    [
-        "table" => "admin",
-        "column" => "code_status",
-        "query" => "ALTER TABLE admin
+  ],
+  [
+    "table" => "admin",
+    "column" => "code_status",
+    "query" => "ALTER TABLE admin
                 ADD COLUMN code_status VARCHAR(255) NULL"
-    ],
-    [
-        "table" => "bank_accounts",
-        "column" => "service_type",
-        "query" => "ALTER TABLE
+  ],
+  [
+    "table" => "bank_accounts",
+    "column" => "service_type",
+    "query" => "ALTER TABLE
   bank_accounts
 ADD
   COLUMN service_type VARCHAR(255) NOT NULL DEFAULT '';
 "
-    ],
-    [
-        "table" => "event_orders",
-        "column" => "referral_code",
-        "query" => "ALTER TABLE
+  ],
+  [
+    "table" => "event_orders",
+    "column" => "referral_code",
+    "query" => "ALTER TABLE
   event_orders
 ADD
   COLUMN referral_code VARCHAR(255) NOT NULL DEFAULT '';
 "
-    ],
+  ],
 
-    [
-        "table" => "refreshments",
-        "column" => "item_category",
-        "query" => "ALTER TABLE
+  [
+    "table" => "refreshments",
+    "column" => "item_category",
+    "query" => "ALTER TABLE
   refreshments
 ADD
   COLUMN item_category VARCHAR(255) NOT NULL DEFAULT '';
 "
-    ],
-    [
-        "table" => "refreshments",
-        "column" => "discount_added",
-        "query" => "ALTER TABLE
+  ],
+  [
+    "table" => "refreshments",
+    "column" => "discount_added",
+    "query" => "ALTER TABLE
   refreshments
 ADD
   COLUMN discount_added VARCHAR(255) NOT NULL DEFAULT '0';"
-    ]
+  ]
 ];
 foreach ($newAlterArray as $NewOneAlter) {
 
-    if (empty($NewOneAlter["query"]))
-        continue;
+  if (empty($NewOneAlter["query"]))
+    continue;
 
-    $table = $NewOneAlter["table"];
-    $column = $NewOneAlter["column"];
+  $table = $NewOneAlter["table"];
+  $column = $NewOneAlter["column"];
 
-    // 🚨 prevent crash if table doesn't exist
-    if (!tableExists($con, $table))
-        continue;
+  // 🚨 prevent crash if table doesn't exist
+  if (!tableExists($con, $table))
+    continue;
 
-    if (!columnExists($con, $table, $column)) {
-        mysqli_query($con, $NewOneAlter["query"]);
-    }
+  if (!columnExists($con, $table, $column)) {
+    mysqli_query($con, $NewOneAlter["query"]);
+  }
 }
 ?>
 
@@ -994,24 +996,24 @@ BAKERS NAV
           <hr class="sidebar-divider my-3">
           <!-- BAKERS GUIDE -->
           <li class="nav-item">
-          <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseBakersGuide" aria-expanded="true"
-            aria-controls="collapseBootstrap">
-            <i class="fas fa-fw fa-id-card"></i>
-            <span>Bakers Guide</span>
-          </a>
-          <div id="collapseBakersGuide" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-              <h6 class="collapse-header">Bakers Guide</h6>
-              <a class="collapse-item" href="bakersguide.php">All Guides</a>
-              <a class="collapse-item" href="bakersrequests.php">All Requests</a>
-              <!-- <a class="collapse-item" href="addsubcategory.php">Add New Subcategory</a>
+            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseBakersGuide" aria-expanded="true"
+              aria-controls="collapseBootstrap">
+              <i class="fas fa-fw fa-id-card"></i>
+              <span>Bakers Guide</span>
+            </a>
+            <div id="collapseBakersGuide" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
+              <div class="bg-white py-2 collapse-inner rounded">
+                <h6 class="collapse-header">Bakers Guide</h6>
+                <a class="collapse-item" href="bakersguide.php">All Guides</a>
+                <a class="collapse-item" href="bakersrequests.php">All Requests</a>
+                <!-- <a class="collapse-item" href="addsubcategory.php">Add New Subcategory</a>
               <a class="collapse-item" href="services.php">All Services</a>
               <a class="collapse-item" href="storebookings.php">Walk-in Bookings</a>
               <a class="collapse-item" href="onlinebookings.php">Online Bookings</a>
               <a class="collapse-item" href="bookings.php">Start An Appointment</a> -->
+              </div>
             </div>
-          </div>
-        </li>
+          </li>
         <?php
         }
         ?>
@@ -1314,14 +1316,23 @@ BAKERS NAV
             <div class="topbar-divider d-none d-sm-block"></div>
 
             <li class="nav-item dropdown no-arrow">
-              <div style="display: flex; justify-content: center; align-items: center;">
+              <div style="display: flex; justify-content: center; align-items: ;">
                 <div class="text-white">
                   <?php
                   //  echo $status
                   ?>
                 </div>
+
+                <!-- <li class="nav-item dropdown no-arrow mx-1">
+              <a class="nav-link" href="bakersrequests.php" id="pendingBakersDropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-bread-slice fa-fw" aria-hidden="true"></i>
+                <?php if ($pending_bakers_count > 0): ?>
+                  <span class="badge badge-danger badge-counter"><?= $pending_bakers_count; ?></span>
+                <?php endif; ?>
+              </a>
+            </li> -->
                 <?php
-// ...existing code...
+                // ...existing code...
                 // pending bakers requests (not yet accepted/approved/rejected/collected)
                 $pending_bakers_sql = "
     SELECT COUNT(*) AS cnt
@@ -1333,133 +1344,126 @@ BAKERS NAV
                 if ($res) {
                   $pending_bakers_count = (int) mysqli_fetch_assoc($res)['cnt'];
                 }
-                
+
                 ?>
-            <!-- <li class="nav-item dropdown no-arrow mx-1">
-              <a class="nav-link" href="bakersrequests.php" id="pendingBakersDropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                <i class="fas fa-bread-slice fa-fw" aria-hidden="true"></i>
-                <?php if ($pending_bakers_count > 0): ?>
-                  <span class="badge badge-danger badge-counter"><?= $pending_bakers_count; ?></span>
+                <a href="academybooking.php">
+                  <div class="text-white p-3">
+                    <div style="position: relative;">
+
+                      <div class='notification-count'>
+                        <div class="ripple-container">
+                          <div class="circle-text"><?php echo $pending_bakers_count ?></div>
+                          <?php if ($pending_bakers_count > 0): ?>
+                            <div>
+                              <div class='ripple-circle'></div>
+                              <div class='ripple-circle'></div>
+                              <div class='ripple-circle'></div>
+                            </div>
+                          <?php endif; ?>
+                        </div>
+                      </div>
+
+                    </div>
+                    <i class="fas fa-bread-slice fa-fw"></i>
+                  </div>
+                </a>
+                <?php if ($status === 'superadmin' || $status === 'cashier'): ?>
+                  <?php
+                  // ==========================================================
+                  // 💳 UNPAID/PENDING ACADEMY BOOKINGS PROCESSING ENGINE
+                  // ==========================================================
+
+                  $realPending = [];
+
+                  // Use a LEFT JOIN to find saloon_orders that DO NOT have a matching entry in training_dates
+                  $pendingQuery = "SELECT s.* FROM saloon_orders s LEFT JOIN training_dates t ON s.id = t.training_id_from_saloon_orders WHERE s.section = 'academy' AND t.training_id_from_saloon_orders IS NULL";
+
+                  $res = mysqli_query($con, $pendingQuery);
+
+                  if ($res) {
+                    while ($pending = mysqli_fetch_assoc($res)) {
+                      $realPending[] = $pending;
+                    }
+                  }
+
+                  // $realPending now contains all academy bookings where dates are not yet set
+                  ?>
+
+                  <!-- PENDING BOOKINGS -->
+                  <a href="academybooking.php">
+                    <div class="text-white p-3">
+                      <div style="position: relative;">
+
+                        <div class='notification-count'>
+                          <div class="ripple-container">
+                            <div class="circle-text"><?php echo count($realPending) ?></div>
+                            <?php if (count($realPending) > 0): ?>
+                              <div>
+                                <div class='ripple-circle'></div>
+                                <div class='ripple-circle'></div>
+                                <div class='ripple-circle'></div>
+                              </div>
+                            <?php endif; ?>
+                          </div>
+                        </div>
+
+                      </div>
+                      <i class="fa fa-clock"></i>
+                    </div>
+                  </a>
+                  <a href="deficientitems.php">
+                    <div class="text-white p-3">
+                      <div style="position: relative;">
+
+                        <div class='notification-count'>
+                          <div class="ripple-container">
+                            <div class="circle-text bg-danger"><?php echo count($items2["out-of-stock"]) ?></div>
+                            <div>
+                              <div class='ripple-circle border-danger'></div>
+                              <div class='ripple-circle border-danger'></div>
+                              <div class='ripple-circle border-danger'></div>
+                            </div>
+                          </div>
+                          <div class="ripple-container ripple-container-down">
+                            <div class="circle-text bg-warning"><?php echo count($items2["low-in-stock"]) ?></div>
+                            <div>
+                              <div class='ripple-circle border-warning'></div>
+                              <div class='ripple-circle border-warning'></div>
+                              <div class='ripple-circle border-warning'></div>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+                      <i class="fa fa-exclamation-triangle"></i>
+                    </div>
+                  </a>
+                  <!-- PENDING TRANSFERS -->
+                  <a href="pendingtransfers.php">
+                    <div class="text-white p-3">
+                      <div style="position: relative;">
+
+                        <div class='notification-count'>
+                          <div class="ripple-container">
+                            <div class="circle-text"><?php echo $pending_transfers ?></div>
+                            <?php if ($pending_transfers > 0): ?>
+                              <div>
+                                <div class='ripple-circle'></div>
+                                <div class='ripple-circle'></div>
+                                <div class='ripple-circle'></div>
+                              </div>
+                            <?php endif; ?>
+                          </div>
+                        </div>
+
+                      </div>
+                      <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                  </a>
+
                 <?php endif; ?>
-              </a>
-            </li> -->
-            <li class="nav-item dropdown no-arrow mx-1">
-              <a class="nav-link" href="bakersrequests.php" id="pendingBakersDropdown" role="button" aria-haspopup="true" aria-expanded="false" title="Pending bakers requests">
-                <div style="position: relative; width: 28px; height: 28px; display: inline-block;">
-                  <i class="fas fa-bread-slice fa-fw" aria-hidden="true" style="font-size:18px; line-height:28px;"></i>
 
-                  <div class="notification-count" style="top:-6px; right:-6px;">
-                    <div class="ripple-container" style="width:18px;height:18px;">
-                      <div class="circle-text" style="background:#FFC700; color:#000; font-size:9px;"><?= $pending_bakers_count; ?></div>
-                      <?php if ($pending_bakers_count > 0): ?>
-                        <div>
-                          <div class="ripple-circle"></div>
-                          <div class="ripple-circle"></div>
-                          <div class="ripple-circle"></div>
-                        </div>
-                      <?php endif; ?>
-                    </div>
-                  </div>
-                </div>
-              </a>
-            </li>
-            <?php if ($status === 'superadmin' || $status === 'cashier'): ?>
-              <?php
-              // ==========================================================
-              // 💳 UNPAID/PENDING ACADEMY BOOKINGS PROCESSING ENGINE
-              // ==========================================================
-
-              $realPending = [];
-
-              // Use a LEFT JOIN to find saloon_orders that DO NOT have a matching entry in training_dates
-              $pendingQuery = "SELECT s.* FROM saloon_orders s LEFT JOIN training_dates t ON s.id = t.training_id_from_saloon_orders WHERE s.section = 'academy' AND t.training_id_from_saloon_orders IS NULL";
-
-              $res = mysqli_query($con, $pendingQuery);
-
-              if ($res) {
-                while ($pending = mysqli_fetch_assoc($res)) {
-                  $realPending[] = $pending;
-                }
-              }
-
-              // $realPending now contains all academy bookings where dates are not yet set
-              ?>
-
-              <!-- PENDING BOOKINGS -->
-              <a href="academybooking.php">
-                <div class="text-white p-3">
-                  <div style="position: relative;">
-
-                    <div class='notification-count'>
-                      <div class="ripple-container">
-                        <div class="circle-text"><?php echo count($realPending) ?></div>
-                        <?php if (count($realPending) > 0): ?>
-                          <div>
-                            <div class='ripple-circle'></div>
-                            <div class='ripple-circle'></div>
-                            <div class='ripple-circle'></div>
-                          </div>
-                        <?php endif; ?>
-                      </div>
-                    </div>
-
-                  </div>
-                  <i class="fa fa-clock"></i>
-                </div>
-              </a>
-              <a href="deficientitems.php">
-                <div class="text-white p-3">
-                  <div style="position: relative;">
-
-                    <div class='notification-count'>
-                      <div class="ripple-container">
-                        <div class="circle-text bg-danger"><?php echo count($items2["out-of-stock"]) ?></div>
-                        <div>
-                          <div class='ripple-circle border-danger'></div>
-                          <div class='ripple-circle border-danger'></div>
-                          <div class='ripple-circle border-danger'></div>
-                        </div>
-                      </div>
-                      <div class="ripple-container ripple-container-down">
-                        <div class="circle-text bg-warning"><?php echo count($items2["low-in-stock"]) ?></div>
-                        <div>
-                          <div class='ripple-circle border-warning'></div>
-                          <div class='ripple-circle border-warning'></div>
-                          <div class='ripple-circle border-warning'></div>
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
-                  <i class="fa fa-exclamation-triangle"></i>
-                </div>
-              </a>
-              <!-- PENDING TRANSFERS -->
-              <a href="pendingtransfers.php">
-                <div class="text-white p-3">
-                  <div style="position: relative;">
-
-                    <div class='notification-count'>
-                      <div class="ripple-container">
-                        <div class="circle-text"><?php echo $pending_transfers ?></div>
-                        <?php if ($pending_transfers > 0): ?>
-                          <div>
-                            <div class='ripple-circle'></div>
-                            <div class='ripple-circle'></div>
-                            <div class='ripple-circle'></div>
-                          </div>
-                        <?php endif; ?>
-                      </div>
-                    </div>
-
-                  </div>
-                  <i class="fas fa-money-bill-wave"></i>
-                </div>
-              </a>
-
-            <?php endif; ?>
-
-            <!-- <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown"
+                <!-- <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown"
                   aria-haspopup="true" aria-expanded="false">
                   <img class="img-profile rounded-circle" src="img/boy.png" style="max-width: 60px">
                   <span class="ml-2 d-none d-lg-inline text-white small"><?php echo $name; ?></span>
@@ -1472,7 +1476,7 @@ BAKERS NAV
                   Logout
                 </a>
               </div> -->
-            <!-- Profile + Dropdown -->
+                <!-- Profile + Dropdown -->
             <li class="nav-item dropdown no-arrow">
               <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown"
                 aria-haspopup="true" aria-expanded="false">
