@@ -40,7 +40,7 @@ $request = mysqli_fetch_assoc($requestSql);
 $status_l = strtolower(trim((string)($request['status'] ?? '')));
 
 // Collection is valid for admin if the request is approved, partially collected, or partially rejected
-$canCollect = $isAdmin || in_array($status_l, ['approved', 'partially collected', 'partially rejected']);
+$canCollect = $isAdmin && in_array($status_l, ['approved', 'partially collected', 'partially rejected']);
 
 // CRITICAL FIX: If the global master tracking status is explicitly marked rejected, completely drop override capabilities
 if ($status_l === 'rejected') {
@@ -61,10 +61,12 @@ if ($status_l === 'rejected') {
 </div>
 
 <?php if (isset($_SESSION['success'])): ?>
-    <div class="alert alert-success"><?= $_SESSION['success']; unset($_SESSION['success']); ?></div>
+    <div class="alert alert-success"><?= $_SESSION['success'];
+                                        unset($_SESSION['success']); ?></div>
 <?php endif; ?>
 <?php if (isset($_SESSION['error'])): ?>
-    <div class="alert alert-danger"><?= $_SESSION['error']; unset($_SESSION['error']); ?></div>
+    <div class="alert alert-danger"><?= $_SESSION['error'];
+                                    unset($_SESSION['error']); ?></div>
 <?php endif; ?>
 
 <div class="card shadow mb-4">
@@ -166,12 +168,11 @@ if ($status_l === 'rejected') {
                                 <td>
                                     <?php if ($item_status_l === 'rejected') { ?>
                                         <span class="text-danger small">Rejected</span>
-                                    <?php }elseif($item_status_l === 'partially rejected'){
-                                        ?>
-<span class="text-danger small">Partially Rejected</span>
-                                        <?php
-                                    }
-                                     elseif ($remaining > 0) { ?>
+                                    <?php } elseif ($item_status_l === 'partially rejected') {
+                                    ?>
+                                        <span class="text-danger small">Partially Rejected</span>
+                                    <?php
+                                    } elseif ($remaining > 0) { ?>
                                         <input type="number"
                                             step="0.01"
                                             min="0"
@@ -185,7 +186,7 @@ if ($status_l === 'rejected') {
                                     <?php } ?>
                                 </td>
                                 <td>
-                                    <?php if (!in_array($item_status_l,['rejected','partially rejected']) && $isAdmin) { ?>
+                                    <?php if (!in_array($item_status_l, ['rejected', 'partially rejected']) && $isAdmin && !$item['collected_quantity'] >= $item['quantity']) { ?>
                                         <button class="btn btn-danger btn-sm reject-ingredient-btn"
                                             type="button"
                                             data-item-id="<?= $item['id']; ?>">
