@@ -147,7 +147,7 @@ include "header.php";
                 <!-- <td><?= htmlspecialchars($row['item_id']) ?></td> -->
                 <td><?= htmlspecialchars($row['added_on']) ?></td>
                 <td>
-                  <a class="btn btn-sm btn-primary" href="viewbakersguide.php?id=<?= $row['guide_id'] ?>">View</a>
+                  <a class="btn btn-sm btn-primary" href="viewbakersguide.php?id=<?= $row['guide_id'] ?>&name=<?= $row["item"] ?>">View</a>
                   <?php if ($isAdmin): ?>
                     <a href="deletebakersguide.php?id=<?= $row['guide_id'] ?>"
                     class="btn btn-danger btn-sm"

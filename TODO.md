@@ -16,6 +16,6 @@
 [] - Dropdown errors in your page
 [x] - Approval needed before marking as collected
 [x] - Requests action to be dropdwon
-[] - Show guide name in the guide view
-[] - Edit guide and add guide should be done by super admin
+[x] - Show guide name in the guide view
+[x] - Edit guide and add guide should be done by super admin
 [] - Standard request

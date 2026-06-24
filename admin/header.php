@@ -1105,7 +1105,7 @@ BAKERS NAV
             <div class="topbar-divider d-none d-sm-block"></div>
 
             <li class="nav-item dropdown no-arrow">
-              <div style="display: flex; justify-content: center; align-items: ;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div class="text-white">
                   <?php
                   //  echo $status
@@ -1136,7 +1136,7 @@ BAKERS NAV
 
                 ?>
                 <a href="bakersrequests.php">
-                  <div class="text-white p-3">
+                  <div class="text-white p-2 pt-4">
                     <div style="position: relative;">
 
                       <div class='notification-count'>
@@ -1180,7 +1180,7 @@ BAKERS NAV
 
                   <!-- PENDING BOOKINGS -->
                   <a href="academybooking.php">
-                    <div class="text-white p-3">
+                    <div class="text-white p-2 pt-4">
                       <div style="position: relative;">
 
                         <div class='notification-count'>
@@ -1201,7 +1201,7 @@ BAKERS NAV
                     </div>
                   </a>
                   <a href="deficientitems.php">
-                    <div class="text-white p-3">
+                    <div class="text-white p-2 pt-4">
                       <div style="position: relative;">
 
                         <div class='notification-count'>
@@ -1229,7 +1229,7 @@ BAKERS NAV
                   </a>
                   <!-- PENDING TRANSFERS -->
                   <a href="pendingtransfers.php">
-                    <div class="text-white p-3">
+                    <div class="text-white p-2 pt-4">
                       <div style="position: relative;">
 
                         <div class='notification-count'>
