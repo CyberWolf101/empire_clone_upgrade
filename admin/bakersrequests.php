@@ -45,9 +45,10 @@ include "header.php";
 
                     <?php
 
-                    $sql = mysqli_query($con,"
+                    $sql = mysqli_query($con, "
                         SELECT
                             br.*,
+                            br.approved_status,
                             bg.item AS guide_name
                         FROM bakers_requests br
                         LEFT JOIN bakers_guide bg
@@ -55,97 +56,99 @@ include "header.php";
                         ORDER BY br.id DESC
                     ");
 
-                    while($row = mysqli_fetch_assoc($sql))
-                    {
+                    while ($row = mysqli_fetch_assoc($sql)) {
                     ?>
 
-                    <tr>
+                        <tr>
 
-                        <td>
-                            <?= htmlspecialchars($row['request_code']); ?>
-                        </td>
+                            <td>
+                                <?= htmlspecialchars($row['request_code']); ?>
+                            </td>
 
-                        <td>
-                            <?= htmlspecialchars($row['guide_name']); ?>
-                        </td>
+                            <td>
+                                <?= htmlspecialchars($row['guide_name']); ?>
+                            </td>
 
-                        <td>
-                            <?= htmlspecialchars($row['requested_by']); ?>
-                        </td>
+                            <td>
+                                <?= htmlspecialchars($row['requested_by']); ?>
+                            </td>
 
-                        <td>
-                            <?= date(
-                                "d M Y h:i A",
-                                strtotime($row['requested_on'])
-                            ); ?>
-                        </td>
+                            <td>
+                                <?= date(
+                                    "d M Y h:i A",
+                                    strtotime($row['requested_on'])
+                                ); ?>
+                            </td>
 
-                        <td>
+                            <td>
 
-                            <?php
-                            $s = strtolower($row['status']);
-                            if($s === "completed" || $s === "collected") {
-                                echo '<span class="badge badge-success" style="text-transform:capitalize;">Completed</span>';
-                            } elseif($s === "approved") {
-                                echo '<span class="badge badge-info" style="text-transform:capitalize;">Approved</span>';
-                            } elseif($s === "rejected") {
-                                echo '<span class="badge badge-danger" style="text-transform:capitalize;">Rejected</span>';
-                            } elseif($s === "partially collected") {
-                                echo '<span class="badge badge-primary" style="text-transform:capitalize;">Partially Collected</span>';
-                            }else{
-                                echo '<span class="badge badge-warning" style="text-transform:capitalize;">Pending</span> ';
-                            }
-                            ?>
-
-                        </td>
-
-                        <td>
-
-                            <a href="viewrequest.php?id=<?= urlencode($row['id']); ?>"
-                               class="btn btn-sm btn-primary">
-                                View
-                            </a>
-
-                            <?php
-                            // $status is the current user's role variable from header.php
-                            $isAdmin = isset($status) && ($status === "superadmin" || $status === "admin");
-
-                            // Show Approve button only to admin and when not already approved/rejected/completed
-                            if ($isAdmin && !in_array($s, ['approved','rejected','completed','collected','partially collected'])) {
-                                ?>
-                                <a href="approve_request.php?id=<?= urlencode($row['id']); ?>"
-                                   onclick="return confirm('Approve this request?');"
-                                   class="btn btn-sm btn-success">
-                                    Approve
-                                </a>
-                                <a href="approve_request.php?id=<?= urlencode($row['id']); ?>&reject=1"
-                                   onclick="return confirm('Reject this request?');"
-                                   class="btn btn-sm btn-danger">
-                                    Reject
-                                </a>
                                 <?php
-                            }
-
-                            // Show Collect button only when approved (bakers) or admin can always collect
-                            if ($s === 'approved' || $isAdmin) {
-                                ?>
-                                <a href="collect_request.php?id=<?= urlencode($row['id']); ?>"
-                                   onclick="return confirm('Mark as collected?');"
-                                   class="btn btn-sm btn-primary">
-                                    Mark Collected
-                                </a>
-                                <?php
-                            } else {
-                                // not approved and not admin: show disabled indicator
-                                if (!$isAdmin) {
-                                    echo '<button class="btn btn-sm btn-secondary" disabled>Awaiting Approval</button>';
+                                $s = strtolower($row['status']);
+                                if ($s === "completed" || $s === "collected") {
+                                    echo '<span class="badge badge-success" style="text-transform:capitalize;">Completed</span>';
+                                } elseif ($s === "approved") {
+                                    echo '<span class="badge badge-info" style="text-transform:capitalize;">Approved</span>';
+                                } elseif ($s === "rejected") {
+                                    echo '<span class="badge badge-danger" style="text-transform:capitalize;">Rejected</span>';
+                                } elseif ($s === "partially collected") {
+                                    echo '<span class="badge badge-primary" style="text-transform:capitalize;">Partially Collected</span>';
+                                } else {
+                                    echo '<span class="badge badge-warning" style="text-transform:capitalize;">Pending</span> ';
                                 }
-                            }
-                            ?>
+                                ?>
 
-                        </td>
+                            </td>
 
-                    </tr>
+                            <td>
+
+                                <div class="dropdown">
+                                    <button class="dropdown-toggle btn btn-primary" data-bs-toggle="dropdown" class="btn btn-primary">Actions</button>
+                                    <div class="dropdown-menu">
+                                        <a href="viewrequest.php?id=<?= urlencode($row['id']); ?>"
+                                            class="dropdown-item">
+                                            View
+                                        </a>
+                                        <?php
+                                        // $status is the current user's role variable from header.php
+                                        $isAdmin = isset($status) && ($status === "superadmin" || $status === "admin");
+
+                                        // Show Approve button only to admin and when not already approved/rejected/completed
+                                        if ($isAdmin && $row["approved_status"] != 'approved') {
+                                        ?>
+                                            <a href="approve_request.php?id=<?= urlencode($row['id']); ?>"
+                                                onclick="return confirm('Approve this request?');"
+                                                class="dropdown-item text-success">
+                                                Approve
+                                            </a>
+                                            <a href="approve_request.php?id=<?= urlencode($row['id']); ?>&reject=1"
+                                                onclick="return confirm('Reject this request?');"
+                                                class="dropdown-item text-danger">
+                                                Reject
+                                            </a>
+                                        <?php
+                                        }
+
+                                        // Show Collect button only when approved (bakers) or admin can always collect
+                                        if ($row["approved_status"] === 'approved' && $isAdmin && $s != 'completed') {
+                                        ?>
+                                            <a href="collect_request.php?id=<?= urlencode($row['id']); ?>"
+                                                onclick="return confirm('Mark as collected?');"
+                                                class="dropdown-item">
+                                                Mark Collected
+                                            </a>
+                                        <?php
+                                        } else {
+                                            // not approved and not admin: show disabled indicator
+                                            if (!$isAdmin) {
+                                                echo '<a class="dropdown-item" disabled>Awaiting Approval</a>';
+                                            }
+                                        }
+                                        ?>
+                                    </div>
+                                </div>
+                            </td>
+
+                        </tr>
 
                     <?php
                     }

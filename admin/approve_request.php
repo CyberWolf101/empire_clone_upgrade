@@ -23,7 +23,7 @@ $actor = mysqli_real_escape_string($con, $username ?? '');
 $now = date("Y-m-d H:i:s");
 
 // Update request: set status and approval metadata (if columns exist)
-$update_sql = "UPDATE bakers_requests SET status='".mysqli_real_escape_string($con,$action_status)."', approved_by='$actor', approved_on='$now' WHERE id='$id'";
+$update_sql = "UPDATE bakers_requests SET status='".mysqli_real_escape_string($con,$action_status)."', approved_by='$actor', approved_on='$now', approved_status='approved' WHERE id='$id'";
 mysqli_query($con, $update_sql);
 
 // Success message and redirect

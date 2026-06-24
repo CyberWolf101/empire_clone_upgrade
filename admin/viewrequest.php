@@ -177,7 +177,7 @@ $canCollect = $isAdmin || ($status_l === 'approved' || $status_l === 'partially 
                 <button type="button" class="btn btn-secondary" disabled>Already Collected</button>
                 <a href="bakersrequests.php" class="btn btn-secondary">Back</a>
             <?php else: ?>
-                <?php if ($status_l === 'approved' || $status_l === 'partially collected' || $isAdmin): ?>
+                <?php if ($request["approved_status"] === 'approved' && $isAdmin): ?>
                     <button type="submit" class="btn btn-success">Process Collection</button>
                 <?php else: ?>
                     <button type="button" class="btn btn-secondary" disabled>Awaiting Approval</button>

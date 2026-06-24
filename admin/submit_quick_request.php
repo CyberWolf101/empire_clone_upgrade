@@ -23,13 +23,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     request_code,
     guide_id,
     requested_by,
-    status
+    status,
+    approved_status
 )
 VALUES
 (
     '$request_code',
     '$guide_id',
     '$requested_by',
+    'pending',
     'pending'
 )";
     
