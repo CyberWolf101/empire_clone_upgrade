@@ -375,7 +375,7 @@ $unread_inv_log = mysqli_fetch_assoc(mysqli_query($con, $unread_sql))['unread_co
                         <div class="swiper-wrapper">
 
                             <?php
-                            $sql = "SELECT all* from reviews ORDER BY s DESC";
+                            $sql = "SELECT * from reviews ORDER BY s DESC";
                             $sql2 = mysqli_query($con, $sql);
                             while ($row = mysqli_fetch_array($sql2)) {
                                 $imageURL = 'reviews/' . $row["file_name"];
