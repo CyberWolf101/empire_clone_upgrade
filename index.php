@@ -1,7 +1,4 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
 include "header.php";
 // Helper function to check if a menu link is enabled
 function isMenuLinkEnabled($con, $name)

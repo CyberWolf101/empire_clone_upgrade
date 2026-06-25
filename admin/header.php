@@ -1124,11 +1124,7 @@ BAKERS NAV
                 <?php
                 // ...existing code...
                 // pending bakers requests (not yet accepted/approved/rejected/collected)
-                $pending_bakers_sql = "
-    SELECT COUNT(*) AS cnt
-    FROM bakers_requests
-    WHERE LOWER(TRIM(COALESCE(status,''))) NOT IN ('approved','rejected','collected','completed','partially collected')
-";
+                $pending_bakers_sql = "SELECT COUNT(*) AS cnt FROM bakers_requests WHERE LOWER(TRIM(COALESCE(status,''))) NOT IN ('approved','rejected','collected','completed','partially collected')";
                 $pending_bakers_count = 0;
                 $res = mysqli_query($con, $pending_bakers_sql);
                 if ($res) {
@@ -1202,7 +1198,7 @@ BAKERS NAV
                     </div>
                   </a> -->
                   <a href="deficientitems.php">
-                    <div class="text-white p-2 pt-4">
+                    <div class="text-white p-2 pt-4 pe-3">
                       <div style="position: relative;">
 
                         <div class='notification-count'>
