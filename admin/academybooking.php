@@ -195,7 +195,7 @@ if (isset($_POST["set-date"])) {
                 <?php
                 if (in_array($row['status'], ["complete", "completed", "Completed"])) {
                 ?>
-                  <button class="btn btn-danger p-1" data-bs-toggle="modal" data-bs-target="#setStartDateModal">Set Date</button>
+                  <button class="btn btn-danger p-1" data-bs-toggle="modal" data-bs-target="#setStartDateModal">Set</button>
                 <?php
                 }
                 ?>
@@ -266,7 +266,7 @@ if (isset($_POST["set-date"])) {
                 <?php
                 if (in_array($row['status'], ["complete", "completed", "Completed"])) {
                 ?>
-                  <button class="btn btn-danger p-1" data-bs-toggle="modal" data-bs-target="#setReminderModal">Set Reminder</button>
+                  <button class="btn btn-danger p-1" data-bs-toggle="modal" data-bs-target="#setReminderModal">Set</button>
                 <?php
                 }
                 ?>

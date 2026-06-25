@@ -1180,7 +1180,7 @@ BAKERS NAV
                   ?>
 
                   <!-- PENDING BOOKINGS -->
-                  <a href="academybooking.php">
+                  <!-- <a href="academybooking.php">
                     <div class="text-white p-2 pt-4">
                       <div style="position: relative;">
 
@@ -1200,7 +1200,7 @@ BAKERS NAV
                       </div>
                       <i class="fa fa-clock"></i>
                     </div>
-                  </a>
+                  </a> -->
                   <a href="deficientitems.php">
                     <div class="text-white p-2 pt-4">
                       <div style="position: relative;">

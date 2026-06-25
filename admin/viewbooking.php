@@ -133,7 +133,56 @@ if (isset($_GET['order'])) {
                     </table>
                 </div>
             <?php } ?>
+            <?php
+            if ($section == 'academy') {
 
+            ?>
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-warning">Services Cart</h6>
+                </div>
+                <div class="table-responsive p-3">
+                    <table class="table align-items-center table-flush text-primary">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Service</th>
+                                <th>Duration</th>
+                                <th>Price</th>
+                                <!-- <th>Staff</th> -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $sql = "SELECT a.* FROM saloon_orders s LEFT JOIN academy_cart a ON s.id = a.id WHERE s.section = 'academy' AND s.id = '$saloon'";
+                            $sql2 = mysqli_query($con, $sql);
+                            while ($academyRow = mysqli_fetch_assoc($sql2)) {
+                            ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($academyRow['trainingname']) ?></td>
+                                    <td><?= htmlspecialchars($academyRow['durationname']) ?></td>
+                                    <td>&#8358;<?= number_format($academyRow['price'], 2) ?></td>
+                                    <!-- <td><?= htmlspecialchars($academyRow['staffname']) ?></td> -->
+                                </tr>
+                            <?php
+                                // $sql = "SELECT * FROM appointments WHERE id='$saloon' ORDER BY s ASC";
+                                // $sql2 = mysqli_query($con, $sql);
+                                // while ($row = mysqli_fetch_array($sql2)) {
+                                //     echo "
+                                //         <tr>
+                                //             <td>" . htmlspecialchars($row['servicename']) . "</td>
+                                //             <td>" . htmlspecialchars($row['start_time']) . " - " . htmlspecialchars($row['end_time']) . "</td>
+                                //             <td>&#8358;" . number_format($row['price'], 2) . "</td>
+                                //             <td>" . htmlspecialchars($row['staffname']) . "</td>
+                                //         </tr>";
+                                // }
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php
+
+            }
+            ?>
             <?php
             $bot = "SELECT * FROM refreshments WHERE orderid='$saloon'";
             $bot2 = mysqli_query($con, $bot);

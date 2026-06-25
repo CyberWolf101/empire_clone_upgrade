@@ -1,6 +1,5 @@
 <?php include "header.php";
-$username = "Makinde Ayooluwa";
-if($username!=""){echo header("location:cart.php");} 
+// if($username!=""){echo header("location:cart.php");} 
 ?>
 
 <div style="margin-top:100px; color:#FFFFFF;">

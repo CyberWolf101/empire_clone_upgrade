@@ -143,7 +143,9 @@ if (isset($_POST['update_store'])) {
                         <div class="modal-dialog">
                           <div class="modal-content">
                             <div class="modal-header">
-                              <h6 style="color:black;">Add Purchasable Training Items</h6>
+                              <h4><?= $training['name'] ?></h4>
+                              <br>
+                              <h6 style="color:gold;">Add Purchasable Training Items</h6>
                             </div>
                             <div class="modal-body">
                               <div id="add-training-item-message" class="w-100"></div>
@@ -203,7 +205,7 @@ if (isset($_POST['update_store'])) {
                                                       <p class="px-1">&#8358;${item.price}</p>
                                                     </div>
                                                     <div class="d-flex justify-content-end">
-                                                      <button class="btn btn-sm bg-danger btn-close" type="button" onclick='deleteCurrentItem("${item.item_id}")'><i class="bi bi-trash"></i></button>
+                                                      <button class="btn btn-sm bg-danger btn-close" type="button" onclick='deleteCurrentItem("${item.item_id}")'><i class="fa fa-trash text-white"></i></button>
                                                     </div>
                                                   </div>
                                                 `;
@@ -226,7 +228,7 @@ if (isset($_POST['update_store'])) {
                                 </div>
                                 <div class="d-flex justify-content-between p-3">
                                   <button id="add_bring" class="btn btn-sm btn-warning shadow-sm w-100" style="margin-right: 10px;" type="button">Add Item</button>
-                                  <input id="save_bring_changes" class="btn btn-sm btn-success shadow-sm w-100" type="button" value="Save Bring Changes">
+                                  <input id="save_bring_changes" class="btn btn-sm btn-success shadow-sm w-100" type="button" value="Save Changes">
                                 </div>
 
                                 <div class="w-100 mb-3 d-grid">
@@ -290,7 +292,7 @@ if (isset($_POST['update_store'])) {
                                                       <p class="p-1 font-weight-bold" style="color: #333;">${item.name}</p>
                                                     </div>
                                                     <div class="d-flex justify-content-end">
-                                                      <button class="btn btn-sm bg-danger btn-close" type="button" onclick='deleteCurrentBringItem("${item.name}")'><i class="bi bi-trash"></i></button>
+                                                      <button class="btn btn-sm bg-danger btn-close" type="button" onclick='deleteCurrentBringItem("${item.name}")'><i class="fa fa-trash text-white"></i></button>
                                                     </div>
                                                   </div>
                                                 `;
@@ -341,7 +343,7 @@ if (isset($_POST['update_store'])) {
                                         <p class="px-1">&#8358;${item.price}</p>
                                       </div>
                                       <div class="d-flex justify-content-end">
-                                      <button class="btn btn-sm bg-danger btn-close" onclick='deleteI(${index})'><i class="bi bi-trash"></i></button>
+                                      <button class="btn btn-sm bg-danger btn-close" onclick='deleteI(${index})'><i class="fa fa-trash text-white"></i></button>
                                       </div>
                                     </div>
                                   `;
@@ -369,7 +371,7 @@ if (isset($_POST['update_store'])) {
                                           <p class="px-1">&#8358;${item.price}</p>
                                         </div>
                                         <div class="d-flex justify-content-end">
-                                        <button class="btn btn-sm bg-danger btn-close" onclick='deleteI(${index})'><i class="bi bi-trash"></i></button>
+                                        <button class="btn btn-sm bg-danger btn-close" onclick='deleteI(${index})'><i class="fa fa-trash text-white"></i></button>
                                         </div>
                                       </div>
                                     `;
@@ -430,7 +432,7 @@ if (isset($_POST['update_store'])) {
                                         <p class="p-1 font-weight-bold" style="color: #e67e22;">${item.name}</p>
                                       </div>
                                       <div class="d-flex justify-content-end">
-                                        <button type="button" class="btn btn-sm bg-danger btn-close" onclick='deleteBringItem(${index})'><i class="bi bi-trash"></i></button>
+                                        <button type="button" class="btn btn-sm bg-danger btn-close" onclick='deleteBringItem(${index})'><i class="fa fa-trash text-white"></i></button>
                                       </div>
                                     </div>
                                   `;
