@@ -133,7 +133,7 @@ include "header.php";
                                         }
 
                                         // Show Collect button only when approved (bakers) or admin can always collect
-                                        if ($row["approved_status"] === 'approved' && $isAdmin && $s != 'collected') {
+                                        if ($row["approved_status"] === 'approved' && $isAdmin && (!in_array($s, ['collected','completed']))) {
                                         ?>
                                             <a href="collect_request.php?id=<?= urlencode($row['id']); ?>"
                                                 onclick="return confirm('Mark as collected?');"

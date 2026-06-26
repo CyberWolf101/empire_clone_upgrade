@@ -144,15 +144,16 @@ if ($status_l === 'rejected') {
                         $hasRemainingItems = false;
 
                         while ($item = mysqli_fetch_assoc($items)) {
+                            // FIXED: Explicit tracking referencing the clean alias 'item_status' 
                             $item_status_l = strtolower(trim((string)($item['item_status'] ?? '')));
-                            $remaining = $item['quantity'] - $item['collected_quantity'];
+                            $remaining = (float)$item['quantity'] - (float)$item['collected_quantity'];
 
                             // Only count remaining items if they aren't fully rejected
                             if ($remaining > 0 && $item_status_l !== 'rejected') {
                                 $hasRemainingItems = true;
                             }
 
-                            // FIX: Inputs stay operational if master allows it and this row is not rejected
+                            // Inputs stay operational if master allows it and this row is not rejected
                             $input_attrs = ($canCollect && $status_l !== 'rejected' && $item_status_l !== 'rejected') ? '' : 'disabled';
                         ?>
                             <tr>
@@ -162,17 +163,15 @@ if ($status_l === 'rejected') {
                                 <td class="<?= ($item['stock_qty'] < 1) ? 'text-danger' : 'text-success' ?>"><?= $item['stock_qty']; ?></td>
                                 <td>
                                     <span class="badge bg-<?php echo $item_status_l == 'rejected' || $item_status_l == 'partially rejected' ? 'danger' : ($item_status_l == 'pending' ? 'warning' : 'success') ?> text-white">
-                                        <?= $item['item_status']; ?>
+                                        <?= htmlspecialchars($item['item_status']); ?>
                                     </span>
                                 </td>
                                 <td>
                                     <?php if ($item_status_l === 'rejected') { ?>
                                         <span class="text-danger small">Rejected</span>
-                                    <?php } elseif ($item_status_l === 'partially rejected') {
-                                    ?>
+                                    <?php } elseif ($item_status_l === 'partially rejected') { ?>
                                         <span class="text-danger small">Partially Rejected</span>
-                                    <?php
-                                    } elseif ($remaining > 0) { ?>
+                                    <?php } elseif ($remaining > 0) { ?>
                                         <input type="number"
                                             step="0.01"
                                             min="0"
@@ -187,23 +186,34 @@ if ($status_l === 'rejected') {
                                 </td>
                                 <td>
                                     <?php
-                                    // Calculate remaining quantity for this specific item row
-                                    $remaining = $item['quantity'] - $item['collected_quantity'];
-
-                                    // The button should only appear if:
-                                    // 1. The user is an admin
-                                    // 2. The item hasn't been rejected or partially rejected yet
-                                    // 3. There is actually quantity left to reject (remaining > 0)
-                                    if ($isAdmin && !in_array($item_status_l, ['rejected', 'partially rejected']) && $remaining > 0) {
+                                    // FOOLPROOF OVERRIDE GUARD: Hide if master request status OR sub-item status is collected/completed, or nothing is remaining
+                                    if (
+                                        $status_l !== 'collected' && 
+                                        $status_l !== 'completed' &&
+                                        $item_status_l !== 'collected' &&
+                                        $item_status_l !== 'completed' &&
+                                        $item_status_l !== 'fully collected' &&
+                                        $remaining > 0
+                                    ) {
+                                        // Render rejection interface only for admins on active items
+                                        if ($isAdmin && !in_array($item_status_l, ['rejected', 'partially rejected'])) {
                                     ?>
-                                        <button class="btn btn-danger btn-sm reject-ingredient-btn"
-                                            type="button"
-                                            data-item-id="<?= $item['id']; ?>">
-                                            <i class="fas fa-times me-1"></i> <?php echo $item['collected_quantity'] > 0 ? "Reject remaining" : "Reject" ?>
-                                        </button>
-                                    <?php } else { ?>
-                                        <span class="text-muted small">-</span>
-                                    <?php } ?>
+                                            <button class="btn btn-danger btn-sm reject-ingredient-btn"
+                                                type="button"
+                                                data-item-id="<?= $item['id']; ?>">
+                                                <i class="fas fa-times me-1"></i>
+                                                <?= (float)$item['collected_quantity'] > 0 ? "Reject remaining" : "Reject" ?>
+                                            </button>
+                                        <?php
+                                        } else {
+                                            // Fallback for explicit pre-rejected states
+                                        ?>
+                                            <span class="text-muted small">-</span>
+                                    <?php
+                                        }
+                                    }
+                                    // If conditions aren't met, prints absolutely nothing here
+                                    ?>
                                 </td>
                             </tr>
                         <?php } ?>
@@ -240,7 +250,10 @@ if ($status_l === 'rejected') {
 
 <script>
     $(document).ready(function() {
-        $(".reject-ingredient-btn").on("click", function() {
+        // Consolidated into a single clean event listener structure
+        $(document).on("click", ".reject-ingredient-btn", function(e) {
+            e.preventDefault();
+            
             let $btn = $(this);
             let itemId = $btn.data("item-id");
             let $currentRow = $btn.closest("tr");
@@ -250,7 +263,7 @@ if ($status_l === 'rejected') {
                 return;
             }
 
-            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Processing...');
 
             $.ajax({
                 url: 'reject_single_ingredient.php',
@@ -261,15 +274,16 @@ if ($status_l === 'rejected') {
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {
-                        alert("Ingredient successfully marked as rejected!");
+                        alert("Ingredient status updated successfully.");
                         window.location.reload();
                     } else {
                         alert("Error: " + response.message);
                         $btn.prop('disabled', false).html('<i class="fas fa-times me-1"></i> Reject');
                     }
                 },
-                error: function() {
-                    alert("An error occurred reaching the rejection handler script.");
+                error: function(xhr, status, error) {
+                    alert("A server error occurred. Please check your console logs.");
+                    console.error(xhr.responseText);
                     $btn.prop('disabled', false).html('<i class="fas fa-times me-1"></i> Reject');
                 }
             });
