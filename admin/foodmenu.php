@@ -60,7 +60,7 @@ $items_json = json_encode($items);
               <th>Price</th>
               <th>Type</th>
               <th>In-Stock</th>
-              <th>Visibility</th>
+              <!-- <th>Visibility</th> -->
               <th></th>
               <th></th>
               <th></th>
@@ -132,7 +132,7 @@ $items_json = json_encode($items);
         <td>${item.price}</td>
         <td>${item.type}</td>
         <td>${item.special_item == "true" ? "-" : item.quantity}</td>
-        <td>${item.visibility}</td>
+        <!--<td>${item.visibility}</td>-->
         <td>${item.special_item == "true" ? "<span class='badge bg-danger'>special item</span>" : ""}</td>
         <td>
           <a href='editfood.php?category=${item.s}' class='btn btn-sm btn-primary'>
