@@ -22,9 +22,9 @@ mysqli_query($con, "SET time_zone = '+01:00'") or die("Cannot set timezone: " . 
 
 
 
-// Turn on error reporting
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// // Turn on error reporting
+// error_reporting(E_ALL);
+// ini_set('display_errors', 1);
 
 // echo "Step 1: Script started<br>";
 

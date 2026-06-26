@@ -49,7 +49,8 @@ include "header.php";
                         SELECT
                             br.*,
                             br.approved_status,
-                            bg.item AS guide_name
+                            bg.item AS guide_name,
+                            br.id AS request_id
                         FROM bakers_requests br
                         LEFT JOIN bakers_guide bg
                             ON bg.guide_id = br.guide_id
@@ -105,7 +106,8 @@ include "header.php";
                                     <button class="dropdown-toggle btn btn-primary" data-bs-toggle="dropdown" class="btn btn-primary">Actions</button>
                                     <div class="dropdown-menu">
                                         <a href="viewrequest.php?id=<?= urlencode($row['id']); ?>"
-                                            class="dropdown-item">
+                                            class="dropdown-item text-primary">
+                                            <i class="fa fa-eye"></i>
                                             View
                                         </a>
                                         <?php
@@ -118,11 +120,13 @@ include "header.php";
                                             <a href="approve_request.php?id=<?= urlencode($row['id']); ?>"
                                                 onclick="return confirm('Approve this request?');"
                                                 class="dropdown-item text-success">
+                                                <i class="fa fa-thumbs-up"></i>
                                                 Approve
                                             </a>
                                             <a href="approve_request.php?id=<?= urlencode($row['id']); ?>&reject=1"
                                                 onclick="return confirm('Reject this request?');"
                                                 class="dropdown-item text-danger">
+                                                <i class="fa fa-flag"></i>
                                                 Reject
                                             </a>
                                         <?php
@@ -133,7 +137,8 @@ include "header.php";
                                         ?>
                                             <a href="collect_request.php?id=<?= urlencode($row['id']); ?>"
                                                 onclick="return confirm('Mark as collected?');"
-                                                class="dropdown-item">
+                                                class="dropdown-item text-success">
+                                                <i class="fa fa-check"></i>
                                                 Mark Collected
                                             </a>
                                         <?php
@@ -144,6 +149,7 @@ include "header.php";
                                             }
                                         }
                                         ?>
+                                        <a href="delete-bakers-request.php?id=<?= $row['request_id'] ?>" class="dropdown-item text-danger"> <i class="fa fa-trash text-danger"></i> Delete</a>
                                     </div>
                                 </div>
                             </td>

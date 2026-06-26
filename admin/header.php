@@ -14,9 +14,9 @@ if (session_status() === PHP_SESSION_NONE) {
 session_write_close();
 
 // ENABLE ERROR REPORTING
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+// error_reporting(E_ALL);
+// ini_set('display_errors', 1);
+// mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 include "../connect.php";
 // include "../cron_reminder.php";
@@ -1421,7 +1421,7 @@ BAKERS NAV
             .ripple-container-down .ripple-circle,
             .ripple-container-down .circle-text {
               top: 100%;
-              left: 60%;
+              left: 40%;
             }
 
 
