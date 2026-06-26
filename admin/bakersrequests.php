@@ -2,7 +2,6 @@
 // ...existing code...
 include "header.php";
 ?>
-
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h3 mb-0 text-gray-800">Bakers Requests</h1>
 
@@ -125,9 +124,9 @@ include "header.php";
                                             </a>
                                             <a href="approve_request.php?id=<?= urlencode($row['id']); ?>&reject=1"
                                                 onclick="return confirm('Reject this request?');"
-                                                class="dropdown-item text-danger">
+                                                class="dropdown-item text-danger <?php echo $row['status'] == 'rejected' ? 'disabled' : '' ?>">
                                                 <i class="fa fa-flag"></i>
-                                                Reject
+                                                <?php echo $row['status'] == 'rejected' ? 'Rejected' : 'Reject' ?>
                                             </a>
                                         <?php
                                         }
