@@ -4,7 +4,7 @@ include "../process.form.php";
 
 $errors = [];
 $success = false;
-$amount = (float)$total_all;
+$amount = $_GET['amount_payable'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_transfer'])) {
     $bank_account_id = intval($_POST['bank_account_id'] ?? 0);

@@ -1,6 +1,6 @@
 <?php
 include "header.php";
-// include "../mailer.php";
+include "../mailer.php";
 ?>
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
   <h1 class="h3 mb-0 text-gray-800">Academy Bookings</h1>
@@ -107,16 +107,10 @@ if (isset($_POST["set-date"])) {
     /* D. CALL YOUR EXISTING sendEmail FUNCTION
         Pass your variable requirements matching your local helper signature parameters
       */
-    if (sendEmail($toEmail, $subject, $message)) {
-?>Email sent
-<?php
-    } else {
-?>
-  Email not sent
-<?php
-    }
-  }
+        sendEmail($toEmail, $subject, $message);
+
   unset($_POST["set-date"]);
+  }
 }
 ?>
 <!-- Invoice Example -->
@@ -142,7 +136,46 @@ if (isset($_POST["set-date"])) {
         </thead>
         <tbody>
           <?php
-          $sql = "SELECT s.*, (a.training) as real_training_id,(SELECT c.unique_id FROM customers c WHERE c.name = s.name) as customer_id,(SELECT td.reminder_interval FROM training_dates td WHERE td.training_id_from_saloon_orders = s.id) as reminder_interval,(SELECT td.reminder_unit FROM training_dates td WHERE td.training_id_from_saloon_orders = s.id) as reminder_unit FROM saloon_orders s LEFT JOIN academy_cart a ON s.id = a.id where s.section='academy' ORDER BY s.s DESC";
+          $sql = "SELECT
+    s.*,
+
+    (
+        SELECT SUM(ti.price)
+        FROM academy_cart ac
+        JOIN academy_cart_training_items act
+            ON act.item_for = ac.id
+        JOIN training_items ti
+            ON ti.item_id = act.training_item_id
+        WHERE ac.id = s.id
+    ) AS training_items_total,
+
+    a.training AS real_training_id,
+
+    (
+        SELECT c.unique_id
+        FROM customers c
+        WHERE c.name = s.name
+    ) AS customer_id,
+
+    (
+        SELECT td.reminder_interval
+        FROM training_dates td
+        WHERE td.training_id_from_saloon_orders = s.id
+    ) AS reminder_interval,
+
+    (
+        SELECT td.reminder_unit
+        FROM training_dates td
+        WHERE td.training_id_from_saloon_orders = s.id
+    ) AS reminder_unit
+
+FROM saloon_orders s
+LEFT JOIN academy_cart a
+    ON s.id = a.id
+
+WHERE s.section='academy'
+
+ORDER BY s.s DESC;";
           $sql2 = mysqli_query($con, $sql);
           $i = 1;
           while ($row = mysqli_fetch_array($sql2)) {
