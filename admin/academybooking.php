@@ -138,43 +138,50 @@ if (isset($_POST["set-date"])) {
           <?php
           $sql = "SELECT
     s.*,
-
-    (
-        SELECT SUM(ti.price)
-        FROM academy_cart ac
-        JOIN academy_cart_training_items act
-            ON act.item_for = ac.id
-        JOIN training_items ti
-            ON ti.item_id = act.training_item_id
-        WHERE ac.id = s.id
-    ) AS training_items_total,
-
     a.training AS real_training_id,
+    a.discount_applied,
+    t.discount_added,
+    a.price AS tuition_price,
+
+    COALESCE(items.training_items_total, 0) AS training_items_total,
 
     (
         SELECT c.unique_id
         FROM customers c
         WHERE c.name = s.name
+        LIMIT 1
     ) AS customer_id,
 
     (
         SELECT td.reminder_interval
         FROM training_dates td
         WHERE td.training_id_from_saloon_orders = s.id
+        LIMIT 1
     ) AS reminder_interval,
 
     (
         SELECT td.reminder_unit
         FROM training_dates td
         WHERE td.training_id_from_saloon_orders = s.id
+        LIMIT 1
     ) AS reminder_unit
 
 FROM saloon_orders s
-LEFT JOIN academy_cart a
-    ON s.id = a.id
-
-WHERE s.section='academy'
-
+LEFT JOIN academy_cart a 
+    ON a.id = s.id
+LEFT JOIN training t 
+    ON t.id = a.training
+LEFT JOIN (
+    SELECT 
+        act.item_for,
+        SUM(ti.price) AS training_items_total
+    FROM academy_cart_training_items act
+    JOIN training_items ti 
+        ON ti.item_id = act.training_item_id
+    GROUP BY act.item_for
+) items 
+    ON items.item_for = a.id
+WHERE s.section = 'academy'
 ORDER BY s.s DESC;";
           $sql2 = mysqli_query($con, $sql);
           $i = 1;
@@ -206,7 +213,23 @@ ORDER BY s.s DESC;";
               <!-- <td><?= $i++ ?></td> -->
               <td><?= $row['id'] ?></td>
               <td><?= $row['name'] ?></td>
-              <td>&#8358;<?= $row['total_amount'] ?></td>
+              <?php
+              $tuition = (float) $row['tuition_price'];
+              $addons = (float) $row['training_items_total'];
+
+              $subtotal = $tuition + $addons;
+
+              $discountPercent = ($row['discount_applied'] === 'true') ? $row['discount_added'] : 0;
+
+              $discountAmount = $tuition * ($discountPercent / 100);
+
+              //$grandTotal = $discountAmount;
+              $grandTotal = $subtotal - $discountAmount;
+              ?>
+
+              <td>
+                &#8358;<?= number_format($grandTotal, 2) ?>
+              </td>
               <td><span class='badge <?= $statusbg ?>' style='text-transform:capitalize;'><?= $pay_status ?></span></td>
               <td>
                 <?php
