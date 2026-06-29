@@ -179,6 +179,7 @@ if ($status_l === 'rejected') {
                                             class="form-control"
                                             name="collect_qty[<?= $item['id']; ?>]"
                                             placeholder="0"
+                                            value="<?= $remaining ?>"
                                             <?= $input_attrs ?>>
                                     <?php } else { ?>
                                         <span class="text-success">Fully Collected</span>

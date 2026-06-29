@@ -41,6 +41,11 @@ if (function_exists('columnExists') && columnExists($con, 'bakers_requests', 'co
 }
 
 $_SESSION['success_message'] = "Request marked as collected.";
+if(isset($_GET['utm_source'])){
+    header("Location: {$_GET['utm_source']}");
+}else{
 header("Location: viewrequest.php?id={$id}");
+}
+
 exit();
 ?>

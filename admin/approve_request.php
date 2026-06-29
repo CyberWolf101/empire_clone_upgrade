@@ -60,7 +60,10 @@ if (mysqli_query($con, $update_sql)) {
 } else {
     $_SESSION['error_message'] = "Database Transaction Error: Master state update interrupted.";
 }
-
+if(isset($_GET['utm_source'])){
+    header("Location: {$_GET['utm_source']}");
+}else{
 header("Location: viewrequest.php?id={$id}");
+}
 exit();
 ?>

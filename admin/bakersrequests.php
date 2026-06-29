@@ -116,13 +116,13 @@ include "header.php";
                                         // Show Approve button only to admin and when not already approved/rejected/completed
                                         if ($isAdmin && $row["approved_status"] != 'approved') {
                                         ?>
-                                            <a href="approve_request.php?id=<?= urlencode($row['id']); ?>"
+                                            <a href="approve_request.php?id=<?= urlencode($row['id']); ?>&utm_source=bakersrequests.php"
                                                 onclick="return confirm('Approve this request?');"
                                                 class="dropdown-item text-success">
                                                 <i class="fa fa-thumbs-up"></i>
                                                 Approve
                                             </a>
-                                            <a href="approve_request.php?id=<?= urlencode($row['id']); ?>&reject=1"
+                                            <a href="approve_request.php?id=<?= urlencode($row['id']); ?>&reject=1&utm_source=bakersrequests.php"
                                                 onclick="return confirm('Reject this request?');"
                                                 class="dropdown-item text-danger <?php echo $row['status'] == 'rejected' ? 'disabled' : '' ?>">
                                                 <i class="fa fa-flag"></i>
@@ -134,7 +134,7 @@ include "header.php";
                                         // Show Collect button only when approved (bakers) or admin can always collect
                                         if ($row["approved_status"] === 'approved' && $isAdmin && (!in_array($s, ['collected','completed']))) {
                                         ?>
-                                            <a href="collect_request.php?id=<?= urlencode($row['id']); ?>"
+                                            <a href="collect_request.php?id=<?= urlencode($row['id']); ?>&utm_source=bakersrequests.php"
                                                 onclick="return confirm('Mark as collected?');"
                                                 class="dropdown-item text-success">
                                                 <i class="fa fa-check"></i>
@@ -148,7 +148,7 @@ include "header.php";
                                             }
                                         }
                                         ?>
-                                        <a href="delete-bakers-request.php?id=<?= $row['request_id'] ?>" class="dropdown-item text-danger"> <i class="fa fa-trash text-danger"></i> Delete</a>
+                                        <a href="delete-bakers-request.php?id=<?= $row['request_id'] ?>&utm_source=bakersrequests.php" class="dropdown-item text-danger"> <i class="fa fa-trash text-danger"></i> Delete</a>
                                     </div>
                                 </div>
                             </td>
