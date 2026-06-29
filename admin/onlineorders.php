@@ -182,7 +182,7 @@ WHERE (
 
           $i = ($page - 1) * $limit + 1; // Adjust SN for pagination
           while ($row = mysqli_fetch_assoc($resultset)) {
-            $status = isset($row['status']) && $row['status'] !== '' ? $row['status'] : 'pending';
+            $status = isset($row['status']) && $row['status'] !== '' ? $row['status'] : '';
 
             // Color
             if ($status == "no") {
@@ -199,7 +199,7 @@ WHERE (
             }
             $hasPaid = $row['pay_status'] == 'paid' ? true : false;
             $completeHidden = !$hasPaid ? 'hidden' : '';
-            $completeDisabled = ($status == "processed" || $status == "completed" || $completeHidden || ($row["amount_paid"] < $row["total_amount"])) ? 'disabled' : '';
+            $completeDisabled = ($status == "processed" || $status == "completed" || !$hasPaid) ? 'disabled' : '';
             $completeText = ($status == "processed" || $status == "completed") ? 'Completed' : 'Complete';
             $id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
             $date = $has_date && !empty($row['date']) ? date('d/m/Y', strtotime($row['date'])) : '-';

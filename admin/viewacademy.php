@@ -40,12 +40,22 @@ $email = $order['email'];
 $date = $order['date'];
 $stats = $order['status'];
 
+?>
+<?php
+$stats = strtolower($order['status']);
+
 if ($stats == "no") {
     $bg = "badge-warning";
     $statsText = "booking";
+} elseif ($stats == "pending") {
+    $bg = "badge-warning";
+    $statsText = "pending";
 } elseif ($stats == "processing") {
     $bg = "badge-primary";
     $statsText = "processing";
+} elseif ($stats == "processed") {
+    $bg = "badge-info";
+    $statsText = "processed";
 } elseif ($stats == "cancelled") {
     $bg = "badge-danger";
     $statsText = "cancelled";
@@ -54,7 +64,6 @@ if ($stats == "no") {
     $statsText = "completed";
 }
 ?>
-
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h1 class="h5 mb-0 text-gray-800">Academy ID #<?= $saloon ?></h1>
 </div>
@@ -166,6 +175,18 @@ $grand_total = $subtotal - $discount_amount;
             <hr>
             GRAND TOTAL: ₦<?= number_format($grand_total, 2) ?>
         </div>
+        <?php if (!in_array($stats, ["completed", "cancelled"])) { ?>
+    <form action="" method="get"
+          onsubmit="return confirm('Are you sure you want to mark this training as completed?');">
+
+        <input type="hidden" name="categoryid" value="<?= $saloon ?>">
+
+        <button type="submit" class="btn btn-sm btn-danger mt-3">
+            Mark as Completed
+        </button>
+
+    </form>
+<?php } ?>
     </div>
 </div>
 
