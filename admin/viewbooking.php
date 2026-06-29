@@ -32,8 +32,8 @@ if (isset($_GET['order'])) {
         $customername = $row["name"];
         $customerphone = $row["phone"];
         $date = $row["date"];
-        $subtotal = (float) $row["total_amount"];
-        $shipping_fee = (float) ($row["shipping_fee"] ?? 0);
+        $subtotal =  $row["total_amount"];
+        $shipping_fee =  ($row["shipping_fee"] ?? 0);
         $shipping_type = $row["shipping_type"] ?? 'pickup';
         $place_details = $row["place_details"] ?? '';
         $method = $row["method"];
@@ -136,53 +136,156 @@ if (isset($_GET['order'])) {
             <?php
             if ($section == 'academy') {
 
+                // 1. Tuition total
+                $cartQuery = mysqli_query($con, "
+    SELECT a.price, a.discount_applied, t.discount_added
+    FROM academy_cart a
+    LEFT JOIN training t ON t.id = a.training
+    WHERE a.id = '$saloon'
+");
+
+                $tuition_total = 0;
+                $discount_percent = 0;
+
+                while ($row = mysqli_fetch_assoc($cartQuery)) {
+                    $tuition_total += $row['price'];
+
+                    if ($row['discount_applied'] == "true") {
+                        $discount_percent = $row['discount_added'];
+                    }
+                }
+
+                // 2. Training items total
+                $itemQuery = mysqli_query($con, "
+    SELECT SUM(t.price) AS item_total
+    FROM academy_cart_training_items a
+    JOIN training_items t ON t.item_id = a.training_item_id
+    WHERE a.item_for = '$saloon'
+");
+
+                $itemRow = mysqli_fetch_assoc($itemQuery);
+                $items_total = ($itemRow['item_total'] ?? 0);
+
+                // 3. Subtotal
+                $subtotal = $tuition_total + $items_total;
+
+                // 4. Discount
+                $discount_amount = ($discount_percent > 0)
+                    ? ($tuition_total * $discount_percent / 100)
+                    : 0;
+
+                // 5. Grand total
+                $grand_total = $subtotal - $discount_amount;
             ?>
+
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-warning">Services Cart</h6>
+                    <h6 class="m-0 font-weight-bold text-warning">Academy Invoice Breakdown</h6>
                 </div>
+
+                <div class="table-responsive p-3">
+                    <table class="table table-bordered text-primary">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Description</th>
+                                <th>Amount (₦)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            <tr>
+                                <td>Training Tuition Total</td>
+                                <td>₦<?= number_format($tuition_total, 2) ?></td>
+                            </tr>
+
+                            <tr>
+                                <td>Training Items Total</td>
+                                <td>₦<?= number_format($items_total, 2) ?></td>
+                            </tr>
+
+                            <tr>
+                                <td><strong>Subtotal</strong></td>
+                                <td><strong>₦<?= number_format($subtotal, 2) ?></strong></td>
+                            </tr>
+
+                            <tr>
+                                <td>Discount (<?= $discount_percent ?>%)</td>
+                                <td>-₦<?= number_format($discount_amount, 2) ?></td>
+                            </tr>
+
+                            <tr style="font-size:18px;">
+                                <td><strong>GRAND TOTAL</strong></td>
+                                <td><strong>₦<?= number_format($grand_total, 2) ?></strong></td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Optional: keep your training list below -->
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">Training Breakdown</h6>
+                </div>
+
                 <div class="table-responsive p-3">
                     <table class="table align-items-center table-flush text-primary">
                         <thead class="thead-light">
                             <tr>
-                                <th>Service</th>
+                                <th>Training</th>
                                 <th>Duration</th>
                                 <th>Price</th>
-                                <!-- <th>Staff</th> -->
                             </tr>
                         </thead>
                         <tbody>
                             <?php
-                            $sql = "SELECT a.* FROM saloon_orders s LEFT JOIN academy_cart a ON s.id = a.id WHERE s.section = 'academy' AND s.id = '$saloon'";
-                            $sql2 = mysqli_query($con, $sql);
-                            while ($academyRow = mysqli_fetch_assoc($sql2)) {
+                            $sql = "SELECT a.* FROM academy_cart a WHERE a.id='$saloon'";
+                            $res = mysqli_query($con, $sql);
+
+                            while ($r = mysqli_fetch_assoc($res)) {
                             ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($academyRow['trainingname']) ?></td>
-                                    <td><?= htmlspecialchars($academyRow['durationname']) ?></td>
-                                    <td>&#8358;<?= number_format($academyRow['price'], 2) ?></td>
-                                    <!-- <td><?= htmlspecialchars($academyRow['staffname']) ?></td> -->
+                                    <td><?= htmlspecialchars($r['trainingname']) ?></td>
+                                    <td><?= htmlspecialchars($r['durationname']) ?></td>
+                                    <td>₦<?= number_format($r['price'], 2) ?></td>
                                 </tr>
-                            <?php
-                                // $sql = "SELECT * FROM appointments WHERE id='$saloon' ORDER BY s ASC";
-                                // $sql2 = mysqli_query($con, $sql);
-                                // while ($row = mysqli_fetch_array($sql2)) {
-                                //     echo "
-                                //         <tr>
-                                //             <td>" . htmlspecialchars($row['servicename']) . "</td>
-                                //             <td>" . htmlspecialchars($row['start_time']) . " - " . htmlspecialchars($row['end_time']) . "</td>
-                                //             <td>&#8358;" . number_format($row['price'], 2) . "</td>
-                                //             <td>" . htmlspecialchars($row['staffname']) . "</td>
-                                //         </tr>";
-                                // }
-                            }
-                            ?>
+                            <?php } ?>
                         </tbody>
                     </table>
                 </div>
-            <?php
 
-            }
-            ?>
+                <!-- Items breakdown -->
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">Training Items</h6>
+                </div>
+
+                <div class="table-responsive p-3">
+                    <table class="table align-items-center table-flush text-primary">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Item</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $q = mysqli_query($con, "
+                SELECT t.name, t.price
+                FROM academy_cart_training_items a
+                JOIN training_items t ON t.item_id = a.training_item_id
+                WHERE a.item_for = '$saloon'
+            ");
+
+                            while ($i = mysqli_fetch_assoc($q)) {
+                            ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($i['name']) ?></td>
+                                    <td>₦<?= number_format($i['price'], 2) ?></td>
+                                </tr>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
+
+            <?php } ?>
             <?php
             $bot = "SELECT * FROM refreshments WHERE orderid='$saloon'";
             $bot2 = mysqli_query($con, $bot);
@@ -230,16 +333,22 @@ if (isset($_GET['order'])) {
 
             <br>
             <center>
-                <h4 class="font-weight-bold">GRAND TOTAL: &#8358;<?php echo number_format($total_all, 2); ?></h4>
-                <?php if ($status == "processed") { ?>
-                    <p>
-                    <form action='' method='get'
-                        onsubmit='return confirm("Are you sure you want to mark this order as completed?");'>
-                        <input type='text' name='categoryid' value='<?php echo htmlspecialchars($saloon); ?>' required hidden>
-                        <input type='submit' name='delete' value='Mark As Completed' class='btn btn-sm btn-primary'>
-                    </form>
-                    </p>
-                <?php } ?>
+                <?php
+                if ($section != "academy") {
+                ?>
+                    <h4 class="font-weight-bold">GRAND TOTAL: &#8358;<?php echo number_format($total_all, 2); ?></h4>
+                    <?php if ($status == "processed") { ?>
+                        <p>
+                        <form action='' method='get'
+                            onsubmit='return confirm("Are you sure you want to mark this order as completed?");'>
+                            <input type='text' name='categoryid' value='<?php echo htmlspecialchars($saloon); ?>' required hidden>
+                            <input type='submit' name='delete' value='Mark As Completed' class='btn btn-sm btn-primary'>
+                        </form>
+                        </p>
+                    <?php } ?>
+                <?php
+                }
+                ?>
             </center>
         </div>
     </div>
