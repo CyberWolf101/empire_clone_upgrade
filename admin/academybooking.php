@@ -107,9 +107,9 @@ if (isset($_POST["set-date"])) {
     /* D. CALL YOUR EXISTING sendEmail FUNCTION
         Pass your variable requirements matching your local helper signature parameters
       */
-        sendEmail($toEmail, $subject, $message);
+    sendEmail($toEmail, $subject, $message);
 
-  unset($_POST["set-date"]);
+    unset($_POST["set-date"]);
   }
 }
 ?>
