@@ -9,7 +9,7 @@ sendEmail("tobiolaleye39@gmail.com","Test","
                 </p>
                 <h5 style='color:#FFC700;'>UPCOMING CLASS REMINDER</h5>
                 <p style='color:;'>Hello CyberWolf,</p>
-                <p style='color:;'>This is a war/unfriendly reminder that your session for <strong>The training</strong> is scheduled for <strong>Today</strong>.</p>
+                <p style='color:;'>This is an unfriendly reminder that your session for <strong>The training</strong> is scheduled for <strong>Today</strong>.</p>
                 <br><br>
-                <p style='text-align:center;'><a href='http://chbluxuryempire.com' style='color:#FFC700; text-decoration:none;'>CHBLUXURYEMPIRE</a></p>
+                <p style='text-align:center;'><a href='http://chbluxuryempire.com' style='color:#FFC700; text-decoration:none;'>CHBLUXURYEMPIRE TEST EMAIL</a></p>
             </div>");

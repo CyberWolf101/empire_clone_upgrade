@@ -387,7 +387,8 @@ ORDER BY s.s DESC;";
                     Action
                   </button>
                   <div class="dropdown-menu">
-                    <a href='viewacademy.php?order=<?= $row['id'] ?>' class="dropdown-item">View booking</a>
+                    <a href='viewacademy.php?order=<?= $row['id'] ?>' class="dropdown-item text-primary"><i class="fa fa-eye mx-2"></i>View</a>
+                    <a href='deleteacademy.php?order=<?= $row['id'] ?>' class="dropdown-item text-danger"><i class="fa fa-trash mx-2"></i>Delete</a>
                   </div>
                 </div>
               </td>
