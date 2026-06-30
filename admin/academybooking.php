@@ -107,8 +107,8 @@ if (isset($_POST["set-date"])) {
     /* D. CALL YOUR EXISTING sendEmail FUNCTION
         Pass your variable requirements matching your local helper signature parameters
       */
-    sendEmail($toEmail, $subject, $message);
-
+    
+sendEmail($toEmail, $subject, $message);
     unset($_POST["set-date"]);
   }
 }
@@ -271,7 +271,7 @@ ORDER BY s.s DESC;";
                           <input type="hidden" name="customer_name" value="<?= $row["customer_id"] ?>">
                         </div>
                         <div class="modal-footer">
-                          <button class="btn btn-secondary" data-bs-close="modal">Cancel</button>
+                          <button class="btn btn-secondary" type="button" data-bs-close="modal">Cancel</button>
                           <button class="btn btn-danger" name="set-date" type="submit">Set Date</button>
                         </div>
                       </div>

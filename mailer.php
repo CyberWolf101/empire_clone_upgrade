@@ -42,10 +42,12 @@ function sendEmail($to, $subject, $message, $from = 'no-reply@example.com')
         $mail->isHTML(true);
 
         $mail->send();
+        
         return true; // ✔️ FIXED: Crucial return status flag added back
         
     } catch (Exception $e) {
         error_log("Mailer Error: " . $mail->ErrorInfo);
+        
         return false; 
     }
 }
