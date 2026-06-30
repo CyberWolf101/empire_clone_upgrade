@@ -1162,7 +1162,7 @@ BAKERS NAV
                   $realPending = [];
 
                   // Use a LEFT JOIN to find saloon_orders that DO NOT have a matching entry in training_dates
-                  $pendingQuery = "SELECT s.* FROM saloon_orders s LEFT JOIN training_dates t ON s.id = t.training_id_from_saloon_orders WHERE s.section = 'academy' AND t.training_id_from_saloon_orders IS NULL";
+                  $pendingQuery = "SELECT s.* FROM saloon_orders s LEFT JOIN training_dates t ON s.id = t.training_id_from_saloon_orders WHERE s.section = 'academy' AND s.pay_status = 'paid' AND s.status != 'completed'";
 
                   $res = mysqli_query($con, $pendingQuery);
 
@@ -1176,7 +1176,7 @@ BAKERS NAV
                   ?>
 
                   <!-- PENDING BOOKINGS -->
-                  <!-- <a href="academybooking.php">
+                  <a href="academybooking.php">
                     <div class="text-white p-2 pt-4">
                       <div style="position: relative;">
 
@@ -1196,7 +1196,7 @@ BAKERS NAV
                       </div>
                       <i class="fa fa-clock"></i>
                     </div>
-                  </a> -->
+                  </a>
                   <a href="deficientitems.php">
                     <div class="text-white p-2 pt-4 pe-3">
                       <div style="position: relative;">

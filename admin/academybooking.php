@@ -181,7 +181,7 @@ LEFT JOIN (
     GROUP BY act.item_for
 ) items 
     ON items.item_for = a.id
-WHERE s.section = 'academy'
+WHERE s.section = 'academy' AND s.pay_status = 'paid'
 ORDER BY s.s DESC;";
           $sql2 = mysqli_query($con, $sql);
           $i = 1;
@@ -388,7 +388,7 @@ ORDER BY s.s DESC;";
                   </button>
                   <div class="dropdown-menu">
                     <a href='viewacademy.php?order=<?= $row['id'] ?>' class="dropdown-item text-primary"><i class="fa fa-eye mx-2"></i>View</a>
-                    <a href='deleteacademy.php?order=<?= $row['id'] ?>' class="dropdown-item text-danger"><i class="fa fa-trash mx-2"></i>Delete</a>
+                    <a href='deleteacademy.php?order=<?= $row['id'] ?>' class="dropdown-item text-danger" onclick="return confirm('Are you sure you want to delete this booking: <?= $row['id'] ?>')"><i class="fa fa-trash mx-2"></i>Delete</a>
                   </div>
                 </div>
               </td>

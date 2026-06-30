@@ -1,14 +1,14 @@
 <?php
 include "../connect.php";
 $order = $_GET['order'];
-if ($order == '') {
+if ($order != '') {
     $toDelete = [
         ["table"=>"saloon_orders","column"=>"id"],
         ["table"=>"academy_cart","column"=>"id"],
         ["table"=>"academy_cart_training_items","column"=>"item_for"]
     ];
     foreach($toDelete as $toDel){
-        $sql = "DELETE FROM {$toDel['table']} WHERE {$toDel['table']} = '$order'";
+        $sql = "DELETE FROM {$toDel['table']} WHERE {$toDel['column']} = '$order'";
         mysqli_query($con, $sql);
     }
 }
