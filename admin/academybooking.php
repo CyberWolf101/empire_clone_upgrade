@@ -7,12 +7,12 @@ include "../mailer.php";
 ========================= */
 if (isset($_POST["set-date"])) {
 
-  $date = mysqli_real_escape_string($con, $_POST["date"]);
-  $training_id_from_saloon_orders = mysqli_real_escape_string($con, $_POST["training_id_from_saloon_orders"]);
-  $training_id = mysqli_real_escape_string($con, $_POST["real_training_id"]);
+  $date = $_POST["date"];
+  $training_id_from_saloon_orders = $_POST["training_id_from_saloon_orders"];
+  $training_id = $_POST["real_training_id"];
 
   // ✅ FIXED: correct key
-  $customer_id = mysqli_real_escape_string($con, $_POST["customer_id"]);
+  $customer_id = $_POST["customer_id"];
 
   $dbUpdatedOrInserted = false;
 
@@ -89,8 +89,6 @@ if (isset($_POST["set-date"])) {
         </html>";
 
       sendEmail($toEmail, $subject, $message);
-
-      
     }
   }
 
@@ -103,9 +101,9 @@ if (isset($_POST["set-date"])) {
 ========================= */
 if (isset($_POST["set-reminder"])) {
 
-  $id = mysqli_real_escape_string($con, $_POST["training_id_from_saloon_orders"]);
-  $interval = mysqli_real_escape_string($con, $_POST["interval"]);
-  $unit = mysqli_real_escape_string($con, $_POST["unit"]);
+  $id = $_POST["training_id_from_saloon_orders"];
+  $interval = $_POST["interval"];
+  $unit = $_POST["unit"];
 
   $query = "UPDATE training_dates 
             SET reminder_interval = '$interval', reminder_unit = '$unit' 
@@ -161,8 +159,7 @@ if (isset($_POST["set-reminder"])) {
     (
         SELECT c.unique_id
         FROM customers c
-        WHERE c.name = s.name
-        LIMIT 1
+        WHERE c.email = s.email
     ) AS customer_id,
     (
         SELECT td.reminder_interval
