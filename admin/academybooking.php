@@ -57,7 +57,7 @@ if (isset($_POST["set-date"])) {
       /* ITEMS */
       $itemsSql = "SELECT item_name 
                    FROM training_items_to_bring 
-                   WHERE training_id = '$training_id'";
+                   WHERE training_id = '0$training_id' OR training_id='$training_id'";
       $itemsRes = mysqli_query($con, $itemsSql);
 
       $itemsListString = "";
