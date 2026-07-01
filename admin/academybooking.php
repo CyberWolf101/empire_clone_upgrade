@@ -128,9 +128,6 @@ if (isset($_POST["set-reminder"])) {
     <li class="breadcrumb-item active" aria-current="page">Academy</li>
   </ol>
 </div>
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-  <h1 class="h3 mb-0 text-gray-800">Academy Bookings</h1>
-</div>
 
 <div class="col-xl-12 col-lg-12 mb-4">
   <div class="card">
