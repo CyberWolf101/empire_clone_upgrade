@@ -1,405 +1,312 @@
 <?php
 include "header.php";
 include "../mailer.php";
-?>
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-  <h1 class="h3 mb-0 text-gray-800">Academy Bookings</h1>
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="dashboard.php">Home</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Academy</li>
-  </ol>
-</div>
-<?php
-// Ensure $con is accessible and the sendEmail function is included/defined above this script
 
+/* =========================
+   HANDLE SET DATE
+========================= */
 if (isset($_POST["set-date"])) {
-  $customerName = isset($_POST["customer_name"]) ? mysqli_real_escape_string($con, $_POST["customer_name"]) : "";
-  $executeSQL = "";
+
   $date = mysqli_real_escape_string($con, $_POST["date"]);
   $training_id_from_saloon_orders = mysqli_real_escape_string($con, $_POST["training_id_from_saloon_orders"]);
   $training_id = mysqli_real_escape_string($con, $_POST["real_training_id"]);
 
-  // Format a reader-friendly version of the date for the email
-  $formattedDate = date("F j, Y", strtotime($date));
-
-  // 1. Check if the training date entry exists
-  $findSQL = "SELECT * FROM training_dates WHERE training_id_from_saloon_orders = '$training_id_from_saloon_orders'";
-  $res = mysqli_query($con, $findSQL);
-  $result = mysqli_fetch_array($res);
+  // ✅ FIXED: correct key
+  $customer_id = mysqli_real_escape_string($con, $_POST["customer_id"]);
 
   $dbUpdatedOrInserted = false;
 
+  $findSQL = "SELECT * FROM training_dates 
+              WHERE training_id_from_saloon_orders = '$training_id_from_saloon_orders'";
+  $res = mysqli_query($con, $findSQL);
+  $result = mysqli_fetch_assoc($res);
+
   if ($result) {
-    // Entry exists -> Update it
-    $executeSQL = "UPDATE training_dates SET start_date = '$date' WHERE training_id_from_saloon_orders = '$training_id_from_saloon_orders'";
-    if (mysqli_query($con, $executeSQL)) {
-      $dbUpdatedOrInserted = true;
-      echo "<script>alert('Start date updated successfully');</script>";
-    }
+    $executeSQL = "UPDATE training_dates 
+                   SET start_date = '$date' 
+                   WHERE training_id_from_saloon_orders = '$training_id_from_saloon_orders'";
   } else {
-    // Entry doesn't exist -> Insert it
-    $executeSQL = "INSERT INTO training_dates(start_date, training_id_from_saloon_orders) VALUES ('$date', '$training_id_from_saloon_orders')";
-    if (mysqli_query($con, $executeSQL)) {
-      $dbUpdatedOrInserted = true;
-      echo "<script>alert('Start date set successfully');</script>";
-    }
+    $executeSQL = "INSERT INTO training_dates 
+                   (start_date, training_id_from_saloon_orders) 
+                   VALUES ('$date', '$training_id_from_saloon_orders')";
   }
 
-  // 2. If database operation succeeded, gather information and trigger email orchestration
+  if (mysqli_query($con, $executeSQL)) {
+    $dbUpdatedOrInserted = true;
+  }
 
+  /* =========================
+     SEND EMAIL ONLY IF SUCCESS
+  ========================== */
+  if ($dbUpdatedOrInserted) {
 
-  /* A. FETCH CUSTOMER DETAILS 
-      Assumes your relational link is tied to 'training_id_from_saloon_orders'. 
-      Adjust table/column fields below if your customer mapping uses a different ID variant.
-    */
-  $customerSql = "SELECT * FROM customers WHERE unique_id = '$customerName'";
-  $customerRes = mysqli_query($con, $customerSql);
+    $customerSql = "SELECT * FROM customers WHERE unique_id = '$customer_id'";
+    $customerRes = mysqli_query($con, $customerSql);
 
-  if ($customerRes && mysqli_num_rows($customerRes) > 0) {
-    $customerData = mysqli_fetch_assoc($customerRes);
-    $toEmail = $customerData['email'];
-    $recipientName = $customerData['name'];
-    // echo $toEmail . " " . $recipientName;
-    /* B. FETCH "ITEMS TO BRING" FOR THIS SPECIFIC TRAINING
-        Adjust column names if your table signature differs from your previous backend steps
-      */
-    $itemsSql = "SELECT item_name FROM training_items_to_bring WHERE training_id = '$training_id'";
-    $itemsRes = mysqli_query($con, $itemsSql);
+    if ($customerRes && mysqli_num_rows($customerRes) > 0) {
 
-    $itemsListString = "";
-    if ($itemsRes && mysqli_num_rows($itemsRes) > 0) {
-      while ($itemRow = mysqli_fetch_assoc($itemsRes)) {
-        $itemsListString .= "<li>" . htmlspecialchars($itemRow['item_name']) . "</li>";
+      $customerData = mysqli_fetch_assoc($customerRes);
+      $toEmail = $customerData['email'];
+      $recipientName = $customerData['name'];
+
+      // ✅ SAFE DATE FORMAT
+      $formattedDate = (!empty($date) && strtotime($date))
+        ? date("F j, Y", strtotime($date))
+        : "Not set";
+
+      /* ITEMS */
+      $itemsSql = "SELECT item_name 
+                   FROM training_items_to_bring 
+                   WHERE training_id = '$training_id'";
+      $itemsRes = mysqli_query($con, $itemsSql);
+
+      $itemsListString = "";
+
+      if ($itemsRes && mysqli_num_rows($itemsRes) > 0) {
+        while ($itemRow = mysqli_fetch_assoc($itemsRes)) {
+          $itemsListString .= "<li>" . htmlspecialchars($itemRow['item_name']) . "</li>";
+        }
+      } else {
+        $itemsListString = "<li>No specific requirements listed.</li>";
       }
-    } else {
-      $itemsListString = "<li>No specific requirements listed. Bring your learning enthusiasm!</li>";
-    }
-    // echo $itemsListString;
 
-    /* C. COMPOSE EMAIL CONTENT (HTML Format)
-      */
-    $subject = "Important: Your Training Commencement Date & Checklists - CHBLUXURYEMPIRE";
+      $subject = "Training Schedule Update - CHBLUXURYEMPIRE";
 
-    $message = "
+      $message = "
         <html>
-        <head>
-          <title>Training Commencement Schedule</title>
-        </head>
         <body>
-          <h2>Hello, " . htmlspecialchars($recipientName) . "!</h2>
-          <p>We are excited to inform you that your upcoming training session schedule has been finalized.</p>
-          
-          <p><strong>Training Start Date:</strong> " . $formattedDate . "</p>
-          
-          <hr/>
-          <h3>Required Checklists (Things to Bring):</h3>
-          <ul>
-            " . $itemsListString . "
-          </ul>
-          <hr/>
-          
-          <p>Please make sure you arrive early with the required items listed above. If you have any inquiries, feel free to respond directly to this email message.</p>
-          <p>Best regards,<br/>Academy Training Team</p>
-        </body>
-        </html>
-      ";
+          <h2>Hello " . htmlspecialchars($recipientName) . "</h2>
 
-    /* D. CALL YOUR EXISTING sendEmail FUNCTION
-        Pass your variable requirements matching your local helper signature parameters
-      */
-    
-sendEmail($toEmail, $subject, $message);
-    unset($_POST["set-date"]);
+          <p>Your training schedule has been updated.</p>
+
+          <p><strong>Start Date:</strong> $formattedDate</p>
+
+          <h3>Items to Bring:</h3>
+          <ul>$itemsListString</ul>
+
+          <p>Best regards,<br>Training Team</p>
+        </body>
+        </html>";
+
+      sendEmail($toEmail, $subject, $message);
+
+      
+    }
   }
+
+  unset($_POST["set-date"]);
+}
+
+
+/* =========================
+   HANDLE REMINDER
+========================= */
+if (isset($_POST["set-reminder"])) {
+
+  $id = mysqli_real_escape_string($con, $_POST["training_id_from_saloon_orders"]);
+  $interval = mysqli_real_escape_string($con, $_POST["interval"]);
+  $unit = mysqli_real_escape_string($con, $_POST["unit"]);
+
+  $query = "UPDATE training_dates 
+            SET reminder_interval = '$interval', reminder_unit = '$unit' 
+            WHERE training_id_from_saloon_orders = '$id'";
+
+  if (mysqli_query($con, $query)) {
+    echo "<script>alert('Reminder updated successfully!');</script>";
+  } else {
+    echo "<script>alert('Failed to update reminder');</script>";
+  }
+
+  header("Refresh: 1");
+  exit;
 }
 ?>
-<!-- Invoice Example -->
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+  <h1 class="h3 mb-0 text-gray-800">Academy Bookings</h1>
+</div>
+
 <div class="col-xl-12 col-lg-12 mb-4">
   <div class="card">
-    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+    <div class="card-header">
       <h6 class="m-0 font-weight-bold text-primary">Rentals</h6>
     </div>
+
     <div class="table-responsive">
-      <table class="table align-items-center table-flush">
-        <thead class="thead-light">
+      <table class="table table-flush">
+        <thead>
           <tr>
-            <!-- <th>SN</th> -->
-            <th>Academy ID</th>
+            <th>ID</th>
             <th>Customer</th>
-            <th>Total Amount</th>
-            <th>Payment Status</th>
+            <th>Total</th>
+            <th>Payment</th>
             <th>Start Date</th>
-            <th>Reminder Interval</th>
+            <th>Reminder</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
         </thead>
+
         <tbody>
+
           <?php
           $sql = "SELECT
     s.*,
     a.training AS real_training_id,
-    a.discount_applied,
-    t.discount_added,
     a.price AS tuition_price,
-
-    COALESCE(items.training_items_total, 0) AS training_items_total,
-
+    COALESCE(items.training_items_total,0) AS training_items_total,
     (
         SELECT c.unique_id
         FROM customers c
         WHERE c.name = s.name
         LIMIT 1
     ) AS customer_id,
-
     (
         SELECT td.reminder_interval
         FROM training_dates td
         WHERE td.training_id_from_saloon_orders = s.id
         LIMIT 1
     ) AS reminder_interval,
-
     (
         SELECT td.reminder_unit
         FROM training_dates td
         WHERE td.training_id_from_saloon_orders = s.id
         LIMIT 1
     ) AS reminder_unit
-
 FROM saloon_orders s
-LEFT JOIN academy_cart a 
-    ON a.id = s.id
-LEFT JOIN training t 
-    ON t.id = a.training
+LEFT JOIN academy_cart a ON a.id = s.id
 LEFT JOIN (
-    SELECT 
-        act.item_for,
-        SUM(ti.price) AS training_items_total
+    SELECT act.item_for, SUM(ti.price) AS training_items_total
     FROM academy_cart_training_items act
-    JOIN training_items ti 
-        ON ti.item_id = act.training_item_id
+    JOIN training_items ti ON ti.item_id = act.training_item_id
     GROUP BY act.item_for
-) items 
-    ON items.item_for = a.id
-WHERE s.section = 'academy' AND s.pay_status = 'paid'
-ORDER BY s.s DESC;";
-          $sql2 = mysqli_query($con, $sql);
-          $i = 1;
-          while ($row = mysqli_fetch_array($sql2)) {
-            $pay_status = $row['pay_status'];
-            $status = $row['status'];
-            //color
-            $bg = "";
-            if (in_array($status, ["no", "No", "pending"])) {
-              $bg = "badge-warning";
-              $status = "booking";
-            } else if (in_array($status, ["Processed", "processed"])) {
-              $bg = "badge-primary";
-            } else if (in_array($status, ["Cancelled", "cancelled"])) {
-              $bg = "badge-danger";
-            } else if ($status == "processed" || $status == "completed") {
-              $bg = "badge-success";
-            }
-            $statusbg = "";
-            if (in_array($pay_status, ["pending", "Pending"])) {
-              $statusbg = "badge-warning";
-            } else if (in_array($pay_status, ["paid", "Paid"])) {
-              $statusbg = "badge-success";
-            } else if ($status == "cancelled") {
-              $statusbg = "badge-danger";
-            }
+) items ON items.item_for = a.id
+WHERE s.section='academy' AND s.pay_status='paid'
+ORDER BY s.id DESC";
+
+          $res = mysqli_query($con, $sql);
+
+          while ($row = mysqli_fetch_assoc($res)) {
+
+            $status = strtolower($row['status']);
+            $pay_status = strtolower($row['pay_status']);
+
+            $grandTotal = (float)$row['tuition_price'] + (float)$row['training_items_total'];
+
+            $datesSQL = "SELECT * FROM training_dates 
+                 WHERE training_id_from_saloon_orders = '{$row['id']}'";
+            $dateRes = mysqli_query($con, $datesSQL);
+            $dateRow = mysqli_fetch_assoc($dateRes);
+
           ?>
+
             <tr>
-              <!-- <td><?= $i++ ?></td> -->
               <td><?= $row['id'] ?></td>
               <td><?= $row['name'] ?></td>
-              <?php
-              $tuition = (float) $row['tuition_price'];
-              $addons = (float) $row['training_items_total'];
 
-              $subtotal = $tuition + $addons;
-
-              $discountPercent = ($row['discount_applied'] === 'true') ? $row['discount_added'] : 0;
-
-              $discountAmount = $tuition * ($discountPercent / 100);
-
-              //$grandTotal = $discountAmount;
-              $grandTotal = $subtotal - $discountAmount;
-              ?>
+              <td>₦<?= number_format($grandTotal, 2) ?></td>
 
               <td>
-                &#8358;<?= number_format($grandTotal, 2) ?>
+                <span class="badge"><?= $pay_status ?></span>
               </td>
-              <td><span class='badge <?= $statusbg ?>' style='text-transform:capitalize;'><?= $pay_status ?></span></td>
+
               <td>
-                <?php
-                $id = $row["id"];
-                $datesSQL = "SELECT * FROM training_dates WHERE training_id_from_saloon_orders = '$id'";
-                $response = mysqli_query($con, $datesSQL);
-                $result = mysqli_fetch_array($response);
-                if (empty($result)) {
-                ?>
-                  <span class="badge bg-warning text-white p-1">Unset</span>
-                <?php
+                <?php if ($dateRow) {
+                  echo $dateRow['start_date'];
                 } else {
-                ?>
-                  <?= $result["start_date"] ?>
-                <?php
-                }
-                ?>
-                <br>
-                <?php
-                if (in_array($row['status'], ["complete", "completed", "Completed"])) {
-                ?>
-                  <button class="btn btn-danger p-1" data-bs-toggle="modal" data-bs-target="#setStartDateModal">Set</button>
-                <?php
-                }
-                ?>
-                <!-- SET DATE -->
-                <form action="" method="post">
-                  <div class="modal fade" id="setStartDateModal">
-                    <div class="modal-dialog">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          Set Start Date
-                        </div>
+                  echo "<span class='badge bg-warning'>Unset</span>";
+                } ?>
+
+                <?php if ($status == "completed") { ?>
+                  <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#setStartDate<?= $row['id'] ?>">
+                    Set
+                  </button>
+                <?php } ?>
+
+                <!-- START DATE MODAL -->
+                <div class="modal fade" id="setStartDate<?= $row['id'] ?>">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <form method="post">
+                        <div class="modal-header">Set Start Date</div>
+
                         <div class="modal-body">
-                          <label for="" class="form-label">Select date</label>
                           <input type="date" name="date" class="form-control" required>
-                          <input type="hidden" name="training_id_from_saloon_orders" value="<?= $row["id"] ?>">
-                          <input type="hidden" name="real_training_id" value="<?= $row["real_training_id"] ?>">
-                          <input type="hidden" name="customer_name" value="<?= $row["customer_id"] ?>">
+
+                          <input type="hidden" name="training_id_from_saloon_orders" value="<?= $row['id'] ?>">
+                          <input type="hidden" name="real_training_id" value="<?= $row['real_training_id'] ?>">
+                          <input type="hidden" name="customer_id" value="<?= $row['customer_id'] ?>">
                         </div>
+
                         <div class="modal-footer">
-                          <button class="btn btn-secondary" type="button" data-bs-close="modal">Cancel</button>
-                          <button class="btn btn-danger" name="set-date" type="submit">Set Date</button>
+                          <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Close</button>
+                          <button class="btn btn-danger" name="set-date">Save</button>
                         </div>
-                      </div>
+                      </form>
                     </div>
                   </div>
-                </form>
+                </div>
+
               </td>
-              <!-- REMINDER INTERVAL -->
+
               <td>
-                <?php
-                if (!empty($row["reminder_interval"])) {
-                ?>
-                  <?= $row["reminder_interval"] ?>
-                  <?php
-                  $unitOutputs = [
-                    [
-                      "short_form" => "d",
-                      "full_form" => "Day(s)"
-                    ],
-                    [
-                      "short_form" => "w",
-                      "full_form" => "Weeks(s)"
-                    ],
-                    [
-                      "short_form" => "m",
-                      "full_form" => "Months(s)"
-                    ],
-                    [
-                      "short_form" => "y",
-                      "full_form" => "Year(s)"
-                    ]
-                  ];
-                  foreach ($unitOutputs as $output) {
-                    if ($row['reminder_unit'] == $output["short_form"]) {
-                  ?>
-                      <?= $output["full_form"] ?>
-                  <?php
-                    }
-                  }
-                  ?>
-                <?php
-                } else {
-                ?>
-                  <span class="badge bg-warning text-white p-1">Unset</span>
-                <?php
-                }
-                ?>
-                <?php
-                if (in_array($row['status'], ["complete", "completed", "Completed"])) {
-                ?>
-                  <button class="btn btn-danger p-1" data-bs-toggle="modal" data-bs-target="#setReminderModal">Set</button>
-                <?php
-                }
-                ?>
-                <form action="" method="post">
-                  <div class="modal fade" id="setReminderModal">
-                    <div class="modal-dialog">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          Set Reminder
-                        </div>
+                <?= $row['reminder_interval'] ?? "<span class='badge bg-warning'>Unset</span>" ?>
+
+                <?php if ($status == "completed") { ?>
+                  <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#reminder<?= $row['id'] ?>">
+                    Set
+                  </button>
+                <?php } ?>
+
+                <!-- REMINDER MODAL -->
+                <div class="modal fade" id="reminder<?= $row['id'] ?>">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <form method="post">
+                        <div class="modal-header">Set Reminder</div>
+
                         <div class="modal-body">
-                          <label for="" class="form-label">Enter Interval</label>
                           <input type="number" name="interval" class="form-control" required>
-                          <label for="" class="form-label">Select Unit</label>
-                          <select name="unit" id="" class="form-control">
-                            <option value="">---- SELECT UNIT ----</option>
+
+                          <select name="unit" class="form-control mt-2">
                             <option value="d">Day(s)</option>
                             <option value="w">Week(s)</option>
                             <option value="m">Month(s)</option>
                             <option value="y">Year(s)</option>
                           </select>
-                          <input type="hidden" name="training_id_from_saloon_orders" value="<?= $row["id"] ?>">
-                          <!-- <input type="hidden" name="real_training_id" value="<?= $row["real_training_id"] ?>"> -->
-                          <!-- <input type="hidden" name="customer_name" value="<?= $row["customer_id"] ?>"> -->
+
+                          <input type="hidden" name="training_id_from_saloon_orders" value="<?= $row['id'] ?>">
                         </div>
+
                         <div class="modal-footer">
-                          <button class="btn btn-secondary" data-bs-close="modal">Cancel</button>
-                          <button class="btn btn-danger" name="set-reminder" type="submit">Set Reminder</button>
+                          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          <button class="btn btn-primary" name="set-reminder">Save</button>
                         </div>
-                      </div>
+                      </form>
                     </div>
                   </div>
-                </form>
-                <?php
-                if (isset($_POST["set-reminder"])) {
-                  $id = $_POST["training_id_from_saloon_orders"];
-                  $interval = $_POST["interval"];
-                  $unit = $_POST["unit"];
-                  $query = "UPDATE training_dates SET reminder_interval = '$interval', reminder_unit = '$unit' WHERE training_id_from_saloon_orders = '$id'";
-                  if (mysqli_query($con, $query)) {
-                ?>
-                    <script>
-                      alert("Reminder updated successfully!");
-                    </script>
-                  <?php
-                  } else {
-                  ?>
-                    <script>
-                      alert("Reminder updated successfully!");
-                    </script>
-                <?php
-                  }
-                  unset($_POST["set-reminder"]);
-                  header("Refresh: 2");
-                }
-                ?>
-              </td>
-              <td><span class='badge <?= $bg ?>' style='text-transform:capitalize;'><?= $status ?></span></td>
-              <td>
-                <div class="dropdown">
-                  <button class='btn btn-sm btn-primary dropdown-toggle' data-toggle="dropdown">
-                    Action
-                  </button>
-                  <div class="dropdown-menu">
-                    <a href='viewacademy.php?order=<?= $row['id'] ?>' class="dropdown-item text-primary"><i class="fa fa-eye mx-2"></i>View</a>
-                    <a href='deleteacademy.php?order=<?= $row['id'] ?>' class="dropdown-item text-danger" onclick="return confirm('Are you sure you want to delete this booking: <?= $row['id'] ?>')"><i class="fa fa-trash mx-2"></i>Delete</a>
-                  </div>
                 </div>
+
               </td>
+
+              <td>
+                <span class="badge"><?= $status ?></span>
+              </td>
+
+              <td>
+                <a href="viewacademy.php?order=<?= $row['id'] ?>">View</a> |
+                <a href="deleteacademy.php?order=<?= $row['id'] ?>">Delete</a>
+              </td>
+
             </tr>
-          <?php
-          }
-          ?>
+
+          <?php } ?>
+
         </tbody>
       </table>
     </div>
-    <div class="card-footer"></div>
+
   </div>
 </div>
+
 <?php include "footer.php"; ?>
