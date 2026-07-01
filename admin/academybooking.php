@@ -144,7 +144,7 @@ if (isset($_POST["set-reminder"])) {
             <th>Total</th>
             <th>Payment</th>
             <th>Start Date</th>
-            <th>Reminder</th>
+            <!-- <th>Reminder</th> -->
             <th>Status</th>
             <th>Action</th>
           </tr>
@@ -251,9 +251,40 @@ ORDER BY s.id DESC";
                 </div>
 
               </td>
+<!-- 
+        
+REMINDER
 
-              <td>
+-->
+              <!-- <td>
                 <?= $row['reminder_interval'] ?? "<span class='badge bg-warning'>Unset</span>" ?>
+                <?php
+                  $unitOutputs = [
+                    [
+                      "short_form" => "d",
+                      "full_form" => "Day(s)"
+                    ],
+                    [
+                      "short_form" => "w",
+                      "full_form" => "Weeks(s)"
+                    ],
+                    [
+                      "short_form" => "m",
+                      "full_form" => "Months(s)"
+                    ],
+                    [
+                      "short_form" => "y",
+                      "full_form" => "Year(s)"
+                    ]
+                  ];
+                  foreach ($unitOutputs as $output) {
+                    if ($row['reminder_unit'] == $output["short_form"]) {
+                  ?>
+                      <?= $output["full_form"] ?>
+                  <?php
+                    }
+                  }
+                  ?>
 
                 <?php if ($status == "completed") { ?>
                   <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#reminder<?= $row['id'] ?>">
@@ -261,7 +292,7 @@ ORDER BY s.id DESC";
                   </button>
                 <?php } ?>
 
-                <!-- REMINDER MODAL -->
+                
                 <div class="modal fade" id="reminder<?= $row['id'] ?>">
                   <div class="modal-dialog">
                     <div class="modal-content">
@@ -269,9 +300,10 @@ ORDER BY s.id DESC";
                         <div class="modal-header">Set Reminder</div>
 
                         <div class="modal-body">
-                          <input type="number" name="interval" class="form-control" required>
+                          <input type="number" name="interval" class="form-control" placeholder="* Reminder Interval" required>
 
-                          <select name="unit" class="form-control mt-2">
+                          <select name="unit" class="form-control mt-2" required>
+                            <option value="">----- Reminder Unit -----</option>
                             <option value="d">Day(s)</option>
                             <option value="w">Week(s)</option>
                             <option value="m">Month(s)</option>
@@ -290,7 +322,7 @@ ORDER BY s.id DESC";
                   </div>
                 </div>
 
-              </td>
+              </td> -->
 
               <td>
                 <span class="badge"><?= $status ?></span>
@@ -298,7 +330,7 @@ ORDER BY s.id DESC";
 
               <td>
                 <a href="viewacademy.php?order=<?= $row['id'] ?>">View</a> |
-                <a href="deleteacademy.php?order=<?= $row['id'] ?>">Delete</a>
+                <a href="deleteacademy.php?order=<?= $row['id'] ?>" onclick="return confirm('Are you sure you want to delete booking ' + '<?= $row['id'] ?>' + '?' )">Delete</a>
               </td>
 
             </tr>
