@@ -113,49 +113,5 @@ if (isset($_POST['add'])) {
     header("Location: foodmenu.php?success=" . urlencode("Item '$name' updated successfully!"));
     exit;
 }
-if (isset($_POST["make-item-special"])) {
-    $itemId = isset($_GET["category"]) ? $_GET["category"] : "";
-    $sql = "UPDATE food_menu SET special_item = 'true' WHERE s = '$itemId'";
-    mysqli_query($con, $sql);
-    $newSQL = "UPDATE special_items SET status = 'active' WHERE item_id = '$itemId'";
-    mysqli_query($con, $newSQL);
-}
-if (isset($_POST["make-as-unspecial-item"])) {
-    $itemId = isset($_GET["category"]) ? $_GET["category"] : "";
-    $sql = "UPDATE food_menu SET special_item = 'false' WHERE s = '$itemId'";
-    mysqli_query($con, $sql);
-    $newSQL = "UPDATE special_items SET status = 'inactive' WHERE item_id = '$itemId'";
-    mysqli_query($con, $newSQL);
-}
-if (isset($_POST["add-ingredient"])) {
-    $itemId = isset($_GET["category"]) ? $_GET["category"] : "";
-    $getItem = "SELECT * FROM food_menu WHERE s = '$itemId'";
-    $itemRes = mysqli_query($con, $getItem);
-    $item = mysqli_fetch_assoc($itemRes);
-    $quantity = $_POST["quantity"];
-    $postIngredient = $_POST["item_id"];
-    $searchIngredient = "SELECT * FROM food_menu WHERE s = '$postIngredient'";
-    $result = mysqli_query($con, $searchIngredient);
-    $ingredient = mysqli_fetch_assoc($result);
-    /**
-     * REAL SPECIAL ITEMS AND INGREDIENT ADDITION
-     */
-    $itemName = $item["item"];
-    $category = $item["type"];
-    $ingredientName = $ingredient["item"];
-    $search = "SELECT * FROM special_items WHERE ingredient_name = '$ingredientName' AND item = '$itemName'";
-    $res = mysqli_query($con, $search);
-    $seen = [];
-    while ($row = mysqli_fetch_array($res)) {
-        $seen[] = $row;
-    }
-    if (!count($seen) > 0) {
-        $query = "INSERT INTO special_items(item, item_id, category, ingredient_id, ingredient_name, ingredient_quantity) VALUES ('$itemName','$itemId','$category','$postIngredient','$ingredientName','$quantity')";
-        mysqli_query($con, $query);
-    }
-}
-if (isset($_POST["delete-ingredient"])) {
-    $ingId = $_POST["ingredient-id"];
-    $query = "DELETE FROM special_items WHERE ingredient_id = '$ingId'";
-    mysqli_query($con, $query);
-}
+
+

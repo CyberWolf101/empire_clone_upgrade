@@ -48,22 +48,20 @@ if (isset($_GET['category'])) {
     <?php else: ?>
       <?php include "updatefood.php"; ?>
       <div class="arizona">
-        <?php
-        if ($special_item == 'true') {
-        ?>
-          <div class="badge bg-danger">special item</div>
-          <form action="" method="post">
-            <button class="btn btn-primary m-3" type="submit" name="make-as-unspecial-item">Make item ordinary</button>
-          </form>
-        <?php
-        } else {
-        ?>
-          <form action="" method="post">
-            <button class="btn btn-primary m-3" type="submit" name="make-item-special">Make item special</button>
-          </form>
-        <?php
-        }
-        ?>
+        <form action="toggle-special.php" method="post">
+    <input type="hidden" name="id" value="<?= htmlspecialchars($_GET['category']) ?>">
+
+    <?php if ($special_item == 'true') { ?>
+        <i class="fa fa-star text-warning fs-2"></i>
+        <button type="submit" name="make-as-unspecial-item" class="btn btn-primary m-3">
+            Make item ordinary
+        </button>
+    <?php } else { ?>
+        <button type="submit" name="make-item-special" class="btn btn-primary m-3">
+            Make item special
+        </button>
+    <?php } ?>
+</form>
         <form enctype="multipart/form-data" method="post" style="width:100%; margin:auto; text-align:center;">
           <input type="hidden" name="id" value="<?php echo htmlspecialchars($id); ?>" />
           <input type="hidden" name="action" id="action" value="add" />
@@ -175,8 +173,9 @@ if (isset($_GET['category'])) {
         <!-- INGREDIENTS ADDITION -->
         <p class="h3 text-gray-800">Add Ingredients / Item addition</p>
         <div align="center">
-          <form action="" method="post">
-            <select name="item_id" id="" class="form-control m-3">
+          <form action="edit-food.php" method="post">
+            <input type="hidden" name="id" value="<?= $_GET['category'] ?>">
+            <select name="item_id" id="" class="form-control m-3" required>
               <option value="">---- SELECT ITEM ----</option>
               <?php
               $items = [];
@@ -192,7 +191,7 @@ if (isset($_GET['category'])) {
               }
               ?>
             </select>
-            <input type="number" name="quantity" id="" placeholder="*Quantity" class="form-control m-3">
+            <input type="number" name="quantity" id="" placeholder="*Quantity" class="form-control m-3" required>
             <button type="submit" name="add-ingredient" class="btn btn-primary m-3">Add Ingredient</button>
           </form>
         </div>

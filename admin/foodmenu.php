@@ -133,7 +133,7 @@ $items_json = json_encode($items);
         <td>${item.type}</td>
         <td>${item.special_item == "true" ? "-" : item.quantity}</td>
         <!--<td>${item.visibility}</td>-->
-        <td>${item.special_item == "true" ? "<span class='badge bg-danger'>special item</span>" : ""}</td>
+        <td>${item.special_item == "true" ? "<i class='fa fa-star text-warning'></i>" : ""}</td>
         <td>
           <a href='editfood.php?category=${item.s}' class='btn btn-sm btn-primary'>
             Edit Item
