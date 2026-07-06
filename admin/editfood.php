@@ -286,7 +286,6 @@ if (isset($_GET['category'])) {
                     </div>
                   <?php endif; ?>
                 </div>
-
                 <input type="submit" name="add" value="Update Item Properties" class="btn btn-primary btn-block btn-lg shadow-sm">
               </form>
             </div>
