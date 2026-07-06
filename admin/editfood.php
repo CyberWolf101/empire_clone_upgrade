@@ -397,7 +397,7 @@ if (isset($_GET['category'])) {
                 <i class="fa fa-info-circle fa-2x text-warning mr-3"></i>
                 <div>
                   <h5 class="font-weight-bold mb-1">Standard Item Layout Mode</h5>
-                  <p class="mb-0 small text-secondary">To unlock complex recipe compound controls, recipes lists, and ingredient tracking modules for this dish, please toggle the <strong>"Feature on Menu"</strong> switch active.</p>
+                  <p class="mb-0 small text-secondary">To unlock complex recipe compound controls, recipes lists, and ingredient tracking modules for this dish, please toggle the <strong>"Menu feature"</strong> switch active.</p>
                 </div>
               </div>
             </div>
