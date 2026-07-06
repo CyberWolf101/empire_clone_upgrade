@@ -343,7 +343,7 @@ if (isset($_GET['category'])) {
                             <td class="text-center">
                               <form action="" method="post" onsubmit="return confirm('Are you sure you want to detach this ingredient?')">
                                 <input type="hidden" name="ingredient-id" value="<?= $ingredient["ingredient_id"] ?>">
-                                <button class="btn btn-sm btn-danger shadow-sm" type="submit" name="delete-ingredient"><i class="fa fa-trash mr-1"></i>Delete</button>
+                                <button class="btn btn-sm btn-danger shadow-sm" type="submit" name="delete-ingredient"><i class="fa fa-trash mr-1"></i></button>
                               </form>
                             </td>
                           </tr>
