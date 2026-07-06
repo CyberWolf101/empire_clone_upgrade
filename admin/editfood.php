@@ -49,19 +49,141 @@ if (isset($_GET['category'])) {
       <?php include "updatefood.php"; ?>
       <div class="arizona">
         <form action="toggle-special.php" method="post">
-    <input type="hidden" name="id" value="<?= htmlspecialchars($_GET['category']) ?>">
+          <!-- TOGGLE SWITCH -->
 
-    <?php if ($special_item == 'true') { ?>
-        <i class="fa fa-star text-warning fs-2"></i>
-        <button type="submit" name="make-as-unspecial-item" class="btn btn-primary m-3">
-            Make item ordinary
-        </button>
-    <?php } else { ?>
-        <button type="submit" name="make-item-special" class="btn btn-primary m-3">
-            Make item special
-        </button>
-    <?php } ?>
-</form>
+          <style>
+            /* Container for the toggle */
+            .stunning-toggle {
+              --switch-width: 40px;
+              --switch-height: 26px;
+              --circle-size: 18px;
+              --transition-speed: 0.35s;
+
+              /* Colors */
+              --bg-off: #e0e0e0;
+              --bg-on: linear-gradient(135deg, gold, yellow);
+              --circle-color: #ffffff;
+              --glow-color: rgba(127, 0, 255, 0.4);
+
+              display: inline-block;
+              width: var(--switch-width);
+              height: var(--switch-height);
+              position: relative;
+              cursor: pointer;
+            }
+
+            /* Hide the native checkbox */
+            .stunning-toggle input {
+              opacity: 0;
+              width: 0;
+              height: 0;
+            }
+
+            /* The track/background of the switch */
+            .stunning-toggle .slider {
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background-color: var(--bg-off);
+              border-radius: var(--switch-height);
+              transition: background var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+              box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            /* The moving circle (handle) */
+            .stunning-toggle .slider::before {
+              content: "";
+              position: absolute;
+              height: var(--circle-size);
+              width: var(--circle-size);
+              left: 4px;
+              bottom: 4px;
+              background-color: var(--circle-color);
+              border-radius: 50%;
+              transition: transform var(--transition-speed) cubic-bezier(0.25, 1, 0.5, 1);
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+
+            /* State: Checked (ON) */
+            .stunning-toggle input:checked+.slider {
+              background: var(--bg-on);
+              box-shadow: 0 8px 16px var(--glow-color), inset 0 1px 2px rgba(0, 0, 0, 0.1);
+            }
+
+            /* Move the circle when checked */
+            .stunning-toggle input:checked+.slider::before {
+              transform: translateX(calc(var(--switch-width) - var(--circle-size) - 8px));
+            }
+
+            /* Tactile interaction: Active/Pressed state */
+            .stunning-toggle:active .slider::before {
+              width: calc(var(--circle-size) + 4px);
+              /* Stretches slightly forward/backward on press */
+            }
+
+            .stunning-toggle input:checked:active+.slider::before {
+              transform: translateX(calc(var(--switch-width) - var(--circle-size) - 12px));
+              /* Adjusts alignment when stretching on the right side */
+            }
+
+            /* Container to stack toggle and text vertically */
+            .toggle-wrapper {
+              display: inline-flex;
+              flex-direction: column;
+              align-items: center;
+              /* Centers the text perfectly under the switch */
+              gap: 8px;
+              /* Controls the spacing between the switch and the text */
+            }
+
+            /* Styled text underneath the toggle */
+            .toggle-status-text {
+              font-family: sans-serif;
+              font-size: 11px;
+              /* Keeps it small but visible */
+              font-weight: 600;
+              /* Slightly bolded so it reads easily */
+              color: #666666;
+              /* Clean, neutral gray */
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              /* Adds a touch of modern styling */
+              margin: 0;
+              /* Resets default paragraph margins */
+              user-select: none;
+              /* Prevents accidental text highlighting on double click */
+            }
+
+            .toggle-status-text.text-active {
+              color: #ff007f;
+              /* Matches the vibrant pink/purple tone of your toggle */
+            }
+          </style>
+          <input type="hidden" name="id" value="<?= htmlspecialchars($_GET['category']) ?>">
+
+          <input type="hidden" name="toggle-special-status" value="1">
+          <div class="toggle-wrapper">
+            <label class="stunning-toggle">
+              <input
+                type="checkbox"
+                name="is_special"
+                value="true"
+                <?php echo ($special_item === 'true') ? 'checked' : ''; ?>
+                onChange="this.form.submit()" />
+              <span class="slider"></span>
+            </label>
+
+            <p class="toggle-status-text <?php echo $special_item == 'true' ? 'text-active' : ''; ?>">
+              <?php echo $special_item == "true" ? "Item is special" : "Item is ordinary" ?>
+            </p>
+          </div>
+
+          <?php if ($special_item === 'true'): ?>
+            <i class="fa fa-star text-warning fs-2 ms-2" title="Special Item"></i>
+          <?php endif; ?>
+        </form>
         <form enctype="multipart/form-data" method="post" style="width:100%; margin:auto; text-align:center;">
           <input type="hidden" name="id" value="<?php echo htmlspecialchars($id); ?>" />
           <input type="hidden" name="action" id="action" value="add" />

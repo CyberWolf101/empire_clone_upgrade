@@ -1,37 +1,36 @@
 <?php
 include "../connect.php";
 
-$itemId = mysqli_real_escape_string($con, $_POST["id"] ?? "");
+// 1. Ensure the request is a POST and check for our toggle flag
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle-special-status'])) {
+    
+    // Sanitize the item ID
+    $itemId = mysqli_real_escape_string($con, $_POST["id"] ?? "");
 
-if (isset($_POST["make-item-special"])) {
+    // 2. Check if the checkbox was ticked. 
+    // If it is checked, $_POST['is_special'] exists. If unchecked, it is completely absent from $_POST.
+    if (isset($_POST['is_special']) && $_POST['is_special'] === 'true') {
+        $menuStatus = 'true';
+        $specialStatus = 'active';
+    } else {
+        $menuStatus = 'false';
+        $specialStatus = 'inactive';
+    }
 
-    $sql = "UPDATE food_menu SET special_item='true' WHERE s='$itemId'";
-
+    // 3. Update the food_menu table
+    $sql = "UPDATE food_menu SET special_item='$menuStatus' WHERE s='$itemId'";
     if (!mysqli_query($con, $sql)) {
         die(mysqli_error($con));
     }
 
-    $newSQL = "UPDATE special_items SET status='active' WHERE item_id='$itemId'";
-
+    // 4. Update the special_items table
+    $newSQL = "UPDATE special_items SET status='$specialStatus' WHERE item_id='$itemId'";
     if (!mysqli_query($con, $newSQL)) {
         die(mysqli_error($con));
     }
 }
 
-if (isset($_POST["make-as-unspecial-item"])) {
-
-    $sql = "UPDATE food_menu SET special_item='false' WHERE s='$itemId'";
-
-    if (!mysqli_query($con, $sql)) {
-        die(mysqli_error($con));
-    }
-
-    $newSQL = "UPDATE special_items SET status='inactive' WHERE item_id='$itemId'";
-
-    if (!mysqli_query($con, $newSQL)) {
-        die(mysqli_error($con));
-    }
-}
-
-header("Location: editfood.php?category=$itemId");
+// 5. Redirect back to the edit page with the category ID
+$redirectId = urlencode($_POST["id"] ?? "");
+header("Location: editfood.php?category=$redirectId");
 exit;

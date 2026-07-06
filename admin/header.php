@@ -1226,7 +1226,7 @@ BAKERS NAV
                   </a>
                   <!-- PENDING TRANSFERS -->
                   <a href="pendingtransfers.php">
-                    <div class="text-white p-2 pt-4">
+                    <div class="text-white p-2 pt-4 px-3">
                       <div style="position: relative;">
 
                         <div class='notification-count'>
