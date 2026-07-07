@@ -382,3 +382,4 @@ ORDER BY order_date DESC
         </div>
     </div>
 </div>
+<?php include "footer.php" ?>
